@@ -415,9 +415,14 @@ export default function Artist() {
 
     try {
       const spotifyAlbum = await fetchSpotifyAlbum(album.id);
-      const albumWithBestData: SpotifyAlbum = spotifyAlbum
-        ? { ...album, ...spotifyAlbum }
-        : album;
+      const albumWithBestData: SpotifyAlbum = {
+        id: spotifyAlbum?.id ?? album.id,
+        name: spotifyAlbum?.name ?? album.name,
+        images: spotifyAlbum?.images ?? album.images,
+        release_date: spotifyAlbum?.release_date ?? album.release_date,
+        external_urls: spotifyAlbum?.external_urls ?? album.external_urls,
+        tracks: album.tracks,
+      };
 
       const fallbackTracks = album.tracks || [];
       const spotifyTracks = spotifyAlbum?.tracks?.items;
