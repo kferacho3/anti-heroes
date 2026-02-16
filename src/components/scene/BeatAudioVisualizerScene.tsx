@@ -4,7 +4,6 @@
 "use client";
 
 import { beatsData } from "@/data/beatData";
-import { useMonitorStore } from "@/store/useMonitorStore";
 import { pauseAllAudio } from "@/utils/pauseAllAudio";
 import { Html } from "@react-three/drei";
 import dynamic from "next/dynamic";
@@ -87,12 +86,6 @@ export default function BeatAudioVisualizerScene({
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
-
-  /* ---------- monitor texture swap ---------- */
-  const setScreen = useMonitorStore((s) => s.setScreenName);
-  useEffect(() => {
-    setScreen("antiheroesPerlinNoise");
-  }, [setScreen]);
 
   /* ---------- beat shuffle helper ---------- */
   function shuffleBeat() {

@@ -2,9 +2,6 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // ← appDir at top-level, not under `experimental`
-  appDir: true,
-
   images: {
     domains: [
       "i.scdn.co",
