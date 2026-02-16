@@ -5,22 +5,42 @@ import NavigationOverlay from "@/components/layout/NavigationOverlay";
 import AHShell from "@/components/layout/AHShell";
 import Sidebar from "@/components/layout/Sidebar";
 import TopBarNavbar from "@/components/layout/TopBarNavbar";
-import Albums from "@/components/pages/Albums";
-import Artist from "@/components/pages/Artist";
-import BeatsAvailable from "@/components/pages/BeatsAvailable";
-import Connect from "@/components/pages/Connect";
-import LandingAntiHeroes from "@/components/pages/LandingAntiHeroes";
-import Music from "@/components/pages/Music";
-import XaeneptunesWorld from "@/components/pages/XaeneptunesWorld";
-import Scene from "@/components/scene/Scene";
 import { Route, useRouteStore } from "@/store/useRouteStore";
 import { pauseAllAudio } from "@/utils/pauseAllAudio";
 import { PerformanceMonitor } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
 import { Bloom, EffectComposer, SMAA, Vignette } from "@react-three/postprocessing";
+import dynamic from "next/dynamic";
 import { Suspense, useEffect, useState } from "react";
 import { FaTimes } from "react-icons/fa";
 import * as THREE from "three";
+
+const PageLoader = () => (
+  <div className="flex min-h-[50vh] items-center justify-center">
+    <div className="h-10 w-10 rounded-full border-2 border-ah-blue border-t-transparent animate-spin" />
+  </div>
+);
+
+const LandingAntiHeroes = dynamic(() => import("@/components/pages/LandingAntiHeroes"), {
+  loading: () => <PageLoader />,
+});
+const Music = dynamic(() => import("@/components/pages/Music"), {
+  loading: () => <PageLoader />,
+});
+const Artist = dynamic(() => import("@/components/pages/Artist"), {
+  loading: () => <PageLoader />,
+});
+const BeatsAvailable = dynamic(() => import("@/components/pages/BeatsAvailable"), {
+  loading: () => <PageLoader />,
+});
+const Albums = dynamic(() => import("@/components/pages/Albums"), {
+  loading: () => <PageLoader />,
+});
+const XaeneptunesWorld = dynamic(() => import("@/components/pages/XaeneptunesWorld"), {
+  loading: () => <PageLoader />,
+});
+const Connect = dynamic(() => import("@/components/pages/Connect"), { ssr: false });
+const Scene = dynamic(() => import("@/components/scene/Scene"), { ssr: false });
 
 export default function HomePage() {
   const { activeRoute, setActiveRoute, hoveredRoute } = useRouteStore();
@@ -31,6 +51,7 @@ export default function HomePage() {
   const [environmentMode, setEnvironmentMode] = useState<"day" | "night">("night");
   const [dpr, setDpr] = useState(1);
   const [showConnectModal, setShowConnectModal] = useState(false);
+  const maxDpr = mobile ? 1.25 : 1.85;
 
   useEffect(() => {
     const resize = () => setMobile(window.innerWidth < 768);
@@ -40,8 +61,9 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    setDpr(Math.min(window.devicePixelRatio || 1, 2));
-  }, [route]);
+    const deviceDpr = window.devicePixelRatio || 1;
+    setDpr(Math.min(deviceDpr, maxDpr));
+  }, [route, maxDpr]);
 
   const changeRoute = (nextRoute: Route) => {
     if (nextRoute === "connect") {
@@ -108,6 +130,7 @@ export default function HomePage() {
   };
 
   const isVisualizerRoute = route === "beats-visualizer";
+  const postEffectsEnabled = !mobile;
 
   return (
     <>
@@ -138,8 +161,9 @@ export default function HomePage() {
           <Canvas
             shadows
             className="absolute inset-0"
-            camera={{ position: [0, 75, 200], fov: 75 }}
+            camera={{ position: [0, 75, mobile ? 220 : 200], fov: mobile ? 82 : 75 }}
             dpr={dpr}
+            performance={{ min: 0.5 }}
             gl={{
               alpha: true,
               powerPreference: "high-performance",
@@ -151,17 +175,23 @@ export default function HomePage() {
             }}
           >
             <Suspense fallback={null}>
-              <EffectComposer multisampling={0}>
-                <Vignette />
-                <Bloom
-                  mipmapBlur
-                  radius={0.7}
-                  luminanceThreshold={0.1}
-                  intensity={1}
-                  levels={1.5}
-                />
-                <SMAA />
-              </EffectComposer>
+              {postEffectsEnabled ? (
+                <EffectComposer multisampling={0}>
+                  <Vignette />
+                  <Bloom
+                    mipmapBlur
+                    radius={0.7}
+                    luminanceThreshold={0.1}
+                    intensity={0.95}
+                    levels={1.5}
+                  />
+                  <SMAA />
+                </EffectComposer>
+              ) : (
+                <EffectComposer multisampling={0}>
+                  <Vignette />
+                </EffectComposer>
+              )}
 
               <Scene
                 isMobile={mobile}
@@ -174,7 +204,7 @@ export default function HomePage() {
             </Suspense>
 
             <PerformanceMonitor
-              onIncline={() => setDpr((previous) => Math.min(previous + 0.25, 2))}
+              onIncline={() => setDpr((previous) => Math.min(previous + 0.2, maxDpr))}
               onDecline={() => setDpr((previous) => Math.max(previous - 0.25, 0.6))}
             />
           </Canvas>

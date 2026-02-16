@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 
@@ -36,12 +36,14 @@ interface PlaylistResponse {
 type Tab = "top-tracks" | "playlist";
 
 export default function Music() {
+  const reduceMotion = useReducedMotion();
   const [activeTab, setActiveTab] = useState<Tab>("top-tracks");
   const [topTracks, setTopTracks] = useState<SpotifyTrack[]>([]);
   const [playlistTracks, setPlaylistTracks] = useState<SpotifyTrack[]>([]);
   const [loadingTopTracks, setLoadingTopTracks] = useState(true);
   const [loadingPlaylist, setLoadingPlaylist] = useState(true);
   const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
+  const [visibleCount, setVisibleCount] = useState(12);
 
   const artistId = "7iysPipkcsfGFVEgUMDzHQ";
   const playlistId = "1NL9L9zkZjkxlAVV3Qcqfh";
@@ -97,6 +99,11 @@ export default function Music() {
   }, [activeTab, playlistTracks, topTracks]);
 
   const loading = activeTab === "top-tracks" ? loadingTopTracks : loadingPlaylist;
+  const visibleTracks = useMemo(() => tracks.slice(0, visibleCount), [tracks, visibleCount]);
+
+  useEffect(() => {
+    setVisibleCount(12);
+  }, [activeTab]);
 
   return (
     <section>
@@ -132,10 +139,10 @@ export default function Music() {
       <AnimatePresence mode="wait">
         <motion.div
           key={activeTab}
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -16 }}
-          transition={{ duration: 0.3 }}
+          initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 16 }}
+          animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+          exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -16 }}
+          transition={{ duration: reduceMotion ? 0.2 : 0.3 }}
         >
           {loading ? (
             <div className="flex h-64 items-center justify-center">
@@ -150,18 +157,18 @@ export default function Music() {
               No tracks found for this section.
             </p>
           ) : (
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {tracks.map((track, index) => {
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              {visibleTracks.map((track, index) => {
                 const albumImage = track.album?.images?.[0]?.url;
                 const spotifyUrl = track.external_urls?.spotify;
 
                 return (
                   <motion.article
                     key={`${track.id}-${index}`}
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.03 }}
-                    className="group ah-card rounded-2xl p-4"
+                    initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 12 }}
+                    animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+                    transition={{ delay: reduceMotion ? 0 : Math.min(index, 10) * 0.02 }}
+                    className="group ah-card content-auto rounded-2xl p-4"
                   >
                     <button
                       onClick={() => {
@@ -218,6 +225,17 @@ export default function Music() {
           )}
         </motion.div>
       </AnimatePresence>
+
+      {!loading && tracks.length > visibleCount && (
+        <div className="mt-8 flex justify-center">
+          <button
+            onClick={() => setVisibleCount((current) => Math.min(current + 12, tracks.length))}
+            className="rounded-sm border border-white/16 px-5 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white transition hover:border-ah-blue/55 hover:bg-ah-blue/10"
+          >
+            Load More
+          </button>
+        </div>
+      )}
     </section>
   );
 }

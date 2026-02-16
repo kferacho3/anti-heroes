@@ -1,7 +1,7 @@
 "use client";
 
 import { hardcodedAlbums } from "@/data/artistsData";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 
@@ -66,6 +66,7 @@ function getAlbumCoverUrl(album: SpotifyAlbum) {
 }
 
 export default function Albums() {
+  const reduceMotion = useReducedMotion();
   const [activeTab, setActiveTab] = useState<Tab>("associated");
   const [discographyAlbums, setDiscographyAlbums] = useState<SpotifyAlbum[]>([]);
   const [loadingDiscography, setLoadingDiscography] = useState(true);
@@ -230,9 +231,9 @@ export default function Albums() {
           {selectedAlbum ? (
             <motion.div
               key={selectedAlbum.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
+              initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 20 }}
+              animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+              exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -20 }}
               className="grid gap-8 lg:grid-cols-[340px_1fr]"
             >
               <aside className="ah-card h-fit rounded-2xl p-5 lg:sticky lg:top-24">
@@ -295,44 +296,48 @@ export default function Albums() {
                     return (
                       <article
                         key={`${track.id}-${index}`}
-                        className="ah-card flex items-center gap-4 rounded-2xl px-4 py-3"
+                        className="ah-card content-auto rounded-2xl px-4 py-3"
                       >
-                        <div className="w-5 text-center text-xs text-ah-soft">
-                          {index + 1}
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                          <div className="w-5 text-center text-xs text-ah-soft">
+                            {index + 1}
+                          </div>
+                          <div className="relative h-10 w-10 overflow-hidden rounded border border-white/12">
+                            <Image
+                              src={getAlbumCoverUrl(selectedAlbum)}
+                              alt={selectedAlbum.name}
+                              fill
+                              className="object-cover"
+                              sizes="40px"
+                            />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-semibold text-white">
+                              {track.name}
+                            </p>
+                            <p className="truncate text-xs uppercase tracking-[0.14em] text-ah-soft">
+                              {track.artists.map((artist) => artist.name).join(", ")}
+                            </p>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+                            {track.preview_url && (
+                              <audio
+                                controls
+                                src={track.preview_url}
+                                className="h-8 w-full min-w-[180px] sm:w-32"
+                                onClick={(event) => event.stopPropagation()}
+                              />
+                            )}
+                            {trackUrl && (
+                              <button
+                                onClick={() => window.open(trackUrl, "_blank")}
+                                className="rounded-sm border border-ah-blue/40 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-ah-blue transition hover:bg-ah-blue/10"
+                              >
+                                Open
+                              </button>
+                            )}
+                          </div>
                         </div>
-                        <div className="relative h-10 w-10 overflow-hidden rounded border border-white/12">
-                          <Image
-                            src={getAlbumCoverUrl(selectedAlbum)}
-                            alt={selectedAlbum.name}
-                            fill
-                            className="object-cover"
-                            sizes="40px"
-                          />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-semibold text-white">
-                            {track.name}
-                          </p>
-                          <p className="truncate text-xs uppercase tracking-[0.14em] text-ah-soft">
-                            {track.artists.map((artist) => artist.name).join(", ")}
-                          </p>
-                        </div>
-                        {track.preview_url && (
-                          <audio
-                            controls
-                            src={track.preview_url}
-                            className="h-8 w-24 md:w-32"
-                            onClick={(event) => event.stopPropagation()}
-                          />
-                        )}
-                        {trackUrl && (
-                          <button
-                            onClick={() => window.open(trackUrl, "_blank")}
-                            className="rounded-sm border border-ah-blue/40 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-ah-blue transition hover:bg-ah-blue/10"
-                          >
-                            Open
-                          </button>
-                        )}
                       </article>
                     );
                   })
@@ -346,16 +351,16 @@ export default function Albums() {
           ) : (
             <motion.div
               key="albums-grid"
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -14 }}
-              className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4"
+              initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 14 }}
+              animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+              exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -14 }}
+              className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4"
             >
               {filteredAlbums.map((album) => (
                 <button
                   key={album.id}
                   onClick={() => handleAlbumClick(album)}
-                  className="group ah-card rounded-2xl p-3 text-left transition hover:-translate-y-1 hover:border-ah-red/40"
+                  className="group ah-card content-auto rounded-2xl p-3 text-left transition hover:-translate-y-1 hover:border-ah-red/40"
                 >
                   <div className="relative aspect-square overflow-hidden rounded-xl border border-white/10">
                     <Image

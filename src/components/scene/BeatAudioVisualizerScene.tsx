@@ -4,6 +4,7 @@
 "use client";
 
 import { beatsData } from "@/data/beatData";
+import { visualizerDecorationAssets } from "@/data/visualAssets";
 import { pauseAllAudio } from "@/utils/pauseAllAudio";
 import { Html } from "@react-three/drei";
 import dynamic from "next/dynamic";
@@ -47,6 +48,10 @@ const randomCover = () =>
   `https://xaeneptune.s3.us-east-2.amazonaws.com/beats/Beat+Album+Covers/xaeneptuneBeats${
     Math.floor(Math.random() * 100) + 1
   }.png`;
+const randomBannerArt = () =>
+  visualizerDecorationAssets[
+    Math.floor(Math.random() * visualizerDecorationAssets.length)
+  ];
 
 /* ---------------------------------------------------------------- */
 export default function BeatAudioVisualizerScene({
@@ -70,6 +75,7 @@ export default function BeatAudioVisualizerScene({
   const [title, setTitle] = useState<string>("Unknown Title");
   const [artist, setArtist] = useState<string>("Xaeneptune");
   const [cover, setCover] = useState<string>(randomCover());
+  const [bannerArt, setBannerArt] = useState<string>(randomBannerArt());
 
   /* ---------- Visualizer-One controls ---------- */
   const [renderingMode, setRenderingMode] = useState<RenderingMode>("wireframe");
@@ -103,6 +109,7 @@ export default function BeatAudioVisualizerScene({
     setTitle(prettify(decodeURIComponent(file)));
     setArtist("Xaeneptune");
     setCover(randomCover());
+    setBannerArt(randomBannerArt());
     return pauseAllAudio;
   }, [propAudioUrl]);
 
@@ -119,6 +126,7 @@ export default function BeatAudioVisualizerScene({
     setTitle(prettify(filename));
     setArtist("Xaeneptune");
     setCover(randomCover());
+    setBannerArt(randomBannerArt());
   }
 
   function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -308,101 +316,106 @@ export default function BeatAudioVisualizerScene({
               <>
                 {/* Main Banner */}
                 <div className="absolute top-20 left-1/2 -translate-x-1/2 w-full max-w-5xl px-4 z-[99998]">
-                  <div className={`flex items-center justify-between gap-4 px-4 py-2
-                                  bg-black/70 backdrop-blur-lg rounded-lg
-                                  border border-teal-500/30 shadow-lg shadow-teal-500/20 font-mono
-                                  transition-all duration-800 ease-out overflow-hidden
-                                  ${bannerCollapsed ? 'banner-collapsing' : 'banner-expanding'}`}>
-                    
-                    {/* Collapse Toggle Button - Far Left */}
-                    <button
-                      onClick={() => setBannerCollapsed(!bannerCollapsed)}
-                      className="flex items-center justify-center w-6 h-6 rounded-full text-teal-300 hover:text-teal-200 transition-all duration-300 hover:bg-teal-500/20 active:scale-95 flex-shrink-0 hover:shadow-lg hover:shadow-teal-500/30"
-                      title={bannerCollapsed ? "Expand Banner" : "Collapse Banner"}>
-                      <span className={`text-xs transition-transform duration-500 ${bannerCollapsed ? 'rotate-180' : ''}`}>
-                        ▲
-                      </span>
-                    </button>
+                  <div className={`relative overflow-hidden rounded-lg border border-teal-500/35 font-mono shadow-lg shadow-teal-500/20 transition-all duration-800 ease-out ${bannerCollapsed ? 'banner-collapsing' : 'banner-expanding'}`}>
+                    <img
+                      src={bannerArt}
+                      alt="Visualizer decorative banner"
+                      className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-35"
+                    />
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/90 via-black/70 to-teal-950/70" />
+                    <div className="pointer-events-none absolute inset-y-0 left-0 w-48 bg-gradient-to-r from-teal-400/20 to-transparent" />
 
-                    {!bannerCollapsed && (
-                      <>
-                        <div className="flex items-center gap-3 flex-1 min-w-0">
-                          <img
-                            src={cover}
-                            alt="Album cover"
-                            className="h-8 w-8 rounded object-cover shadow-md shadow-black/40 flex-shrink-0"
-                          />
-                          <div className="flex flex-col min-w-0 flex-1">
-                            {/* Animated Song Title */}
-                            <div className="relative overflow-hidden h-4">
-                              <span 
-                                className="text-sm font-extrabold text-teal-300 tracking-wider leading-tight whitespace-nowrap text-scroll block"
-                                style={{
-                                  animationDuration: '15s',
-                                  animationIterationCount: 'infinite',
-                                  animationTimingFunction: 'linear'
-                                }}>
-                                {decodeURIComponent(title)
+                    <div className="relative z-10 flex items-center justify-between gap-4 px-4 py-2 backdrop-blur-lg">
+                      {/* Collapse Toggle Button - Far Left */}
+                      <button
+                        onClick={() => setBannerCollapsed(!bannerCollapsed)}
+                        className="flex items-center justify-center w-6 h-6 rounded-full text-teal-300 hover:text-teal-200 transition-all duration-300 hover:bg-teal-500/20 active:scale-95 flex-shrink-0 hover:shadow-lg hover:shadow-teal-500/30"
+                        title={bannerCollapsed ? "Expand Banner" : "Collapse Banner"}>
+                        <span className={`text-xs transition-transform duration-500 ${bannerCollapsed ? 'rotate-180' : ''}`}>
+                          ▲
+                        </span>
+                      </button>
+
+                      {!bannerCollapsed && (
+                        <>
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <img
+                              src={cover}
+                              alt="Album cover"
+                              className="h-8 w-8 rounded object-cover shadow-md shadow-black/40 flex-shrink-0"
+                            />
+                            <div className="flex flex-col min-w-0 flex-1">
+                              {/* Animated Song Title */}
+                              <div className="relative overflow-hidden h-4">
+                                <span
+                                  className="text-sm font-extrabold text-teal-300 tracking-wider leading-tight whitespace-nowrap text-scroll block"
+                                  style={{
+                                    animationDuration: '15s',
+                                    animationIterationCount: 'infinite',
+                                    animationTimingFunction: 'linear'
+                                  }}>
+                                  {decodeURIComponent(title)
+                                    .replace(/(\+|%20)/g, " ")
+                                    .replace(/%/g, "")
+                                    .replace(/\s{2,}/g, " ")
+                                    .trim()}
+                                </span>
+                              </div>
+                              <span className="text-xs text-teal-200 truncate">
+                                {decodeURIComponent(artist)
                                   .replace(/(\+|%20)/g, " ")
                                   .replace(/%/g, "")
-                                  .replace(/\s{2,}/g, " ")
                                   .trim()}
                               </span>
                             </div>
-                            <span className="text-xs text-teal-200 truncate">
-                              {decodeURIComponent(artist)
-                                .replace(/(\+|%20)/g, " ")
-                                .replace(/%/g, "")
-                                .trim()}
-                            </span>
                           </div>
-                        </div>
-                        
-                        {/* Compact Action Buttons */}
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          <button
-                            onClick={handleGoBack}
-                            className="flex items-center gap-1 px-2 py-1 rounded text-xs text-teal-300 hover:text-teal-200 transition-colors duration-200 hover:bg-teal-500/20 active:scale-95"
-                            title="Go Back">
-                            <FaMusic className="w-3 h-3" />
-                            <span>Beats</span>
-                          </button>
 
-                          <button
-                            onClick={shuffleBeat}
-                            className="flex items-center gap-1 px-2 py-1 rounded text-xs text-teal-300 hover:text-teal-200 transition-colors duration-200 hover:bg-teal-500/20 active:scale-95"
-                            title="Shuffle">
-                            <FaRandom className="w-3 h-3" />
-                            <span>Shuffle</span>
-                          </button>
+                          {/* Compact Action Buttons */}
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <button
+                              onClick={handleGoBack}
+                              className="flex items-center gap-1 px-2 py-1 rounded text-xs text-teal-300 hover:text-teal-200 transition-colors duration-200 hover:bg-teal-500/20 active:scale-95"
+                              title="Go Back">
+                              <FaMusic className="w-3 h-3" />
+                              <span>Beats</span>
+                            </button>
 
-                          <button
-                            onClick={() => setPaused((p) => !p)}
-                            className="flex items-center gap-1 px-2 py-1 rounded text-xs text-teal-300 hover:text-teal-200 transition-colors duration-200 hover:bg-teal-500/20 active:scale-95"
-                            title={paused ? "Resume" : "Pause"}>
-                            {paused ? (
-                              <FaPlay className="w-3 h-3" />
-                            ) : (
-                              <FaPause className="w-3 h-3" />
-                            )}
-                            <span>{paused ? "Resume" : "Pause"}</span>
-                          </button>
+                            <button
+                              onClick={shuffleBeat}
+                              className="flex items-center gap-1 px-2 py-1 rounded text-xs text-teal-300 hover:text-teal-200 transition-colors duration-200 hover:bg-teal-500/20 active:scale-95"
+                              title="Shuffle">
+                              <FaRandom className="w-3 h-3" />
+                              <span>Shuffle</span>
+                            </button>
 
-                          <label
-                            className="flex items-center gap-1 px-2 py-1 rounded text-xs cursor-pointer text-teal-300 hover:text-teal-200 transition-colors duration-200 hover:bg-teal-500/20 active:scale-95"
-                            title="Upload">
-                            <FaUpload className="w-3 h-3" />
-                            <span>Upload</span>
-                            <input
-                              type="file"
-                              accept="audio/*"
-                              onChange={handleUpload}
-                              className="hidden"
-                            />
-                          </label>
-                        </div>
-                      </>
-                    )}
+                            <button
+                              onClick={() => setPaused((p) => !p)}
+                              className="flex items-center gap-1 px-2 py-1 rounded text-xs text-teal-300 hover:text-teal-200 transition-colors duration-200 hover:bg-teal-500/20 active:scale-95"
+                              title={paused ? "Resume" : "Pause"}>
+                              {paused ? (
+                                <FaPlay className="w-3 h-3" />
+                              ) : (
+                                <FaPause className="w-3 h-3" />
+                              )}
+                              <span>{paused ? "Resume" : "Pause"}</span>
+                            </button>
+
+                            <label
+                              className="flex items-center gap-1 px-2 py-1 rounded text-xs cursor-pointer text-teal-300 hover:text-teal-200 transition-colors duration-200 hover:bg-teal-500/20 active:scale-95"
+                              title="Upload">
+                              <FaUpload className="w-3 h-3" />
+                              <span>Upload</span>
+                              <input
+                                type="file"
+                                accept="audio/*"
+                                onChange={handleUpload}
+                                className="hidden"
+                              />
+                            </label>
+                          </div>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
 

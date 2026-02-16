@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ChangeEvent, FormEvent, ReactNode, useEffect, useState } from "react";
 import {
   FaCheckCircle,
@@ -35,6 +35,7 @@ const inquiryTypes = [
 ];
 
 export default function Connect() {
+  const reduceMotion = useReducedMotion();
   const [formData, setFormData] = useState<FormData>({
     name: "",
     email: "",
@@ -120,16 +121,16 @@ ${formData.message}`.trim();
     <AnimatePresence>
       <motion.div
         className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/85 p-3 backdrop-blur-xl md:p-5"
-        initial={{ opacity: 0 }}
+        initial={reduceMotion ? { opacity: 0 } : { opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
       >
         <motion.div
-          initial={{ y: 24, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: 24, opacity: 0 }}
-          transition={{ type: "spring", stiffness: 250, damping: 24 }}
-          className="ah-card relative h-[90vh] w-full max-w-3xl overflow-y-auto rounded-3xl p-5 md:p-8"
+          initial={reduceMotion ? { opacity: 0 } : { y: 24, opacity: 0 }}
+          animate={reduceMotion ? { opacity: 1 } : { y: 0, opacity: 1 }}
+          exit={reduceMotion ? { opacity: 0 } : { y: 24, opacity: 0 }}
+          transition={reduceMotion ? { duration: 0.18 } : { type: "spring", stiffness: 250, damping: 24 }}
+          className="ah-card relative h-[92vh] max-h-[860px] w-full max-w-3xl overflow-y-auto overscroll-contain rounded-3xl p-4 sm:p-5 md:p-8"
         >
           <header className="mb-6">
             <p className="text-xs uppercase tracking-[0.24em] text-ah-soft">Direct Contact</p>
@@ -145,9 +146,9 @@ ${formData.message}`.trim();
             {showSuccess && (
               <motion.div
                 className="mb-5 flex items-center gap-2 rounded-xl border border-ah-blue/40 bg-ah-blue/10 px-4 py-3 text-ah-blue"
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
+                initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -10 }}
+                animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+                exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -10 }}
               >
                 <FaCheckCircle />
                 <span className="text-sm">Inquiry opened in your mail app.</span>

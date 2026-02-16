@@ -36,7 +36,7 @@ export default function Sidebar({ isOpen, onClose, setActiveRoute }: SidebarProp
           />
 
           <motion.aside
-            className="fixed right-0 top-0 z-[1001] flex h-screen w-full max-w-sm flex-col border-l border-white/12 bg-ah-black px-6 pb-8 pt-8"
+            className="fixed right-0 top-0 z-[1001] flex h-screen w-full max-w-[92vw] flex-col border-l border-white/12 bg-ah-black px-6 pb-[calc(env(safe-area-inset-bottom,0px)+20px)] pt-[calc(env(safe-area-inset-top,0px)+20px)] sm:max-w-sm"
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
             exit={{ x: "100%" }}

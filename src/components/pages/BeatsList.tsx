@@ -1,9 +1,10 @@
 "use client";
 
 import { BeatData, beatsData } from "@/data/beatData";
-import { AnimatePresence, motion } from "framer-motion";
+import { visualizerDecorationAssets } from "@/data/visualAssets";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import Image from "next/image";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import {
   FaChevronLeft,
   FaChevronRight,
@@ -65,6 +66,7 @@ const BeatsList: React.FC<BeatsListProps> = ({
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<"list" | "grid" | "card">("list");
   const [isMobile, setIsMobile] = useState(false);
+  const reduceMotion = useReducedMotion();
 
   /* ───────────── Inquiry Modal State ───────────── */
   const [inquiryBeat, setInquiryBeat] = useState<BeatData & { cover: string } | null>(null);
@@ -79,6 +81,11 @@ const BeatsList: React.FC<BeatsListProps> = ({
     audio: HTMLAudioElement;
   } | null>(null);
   const [showVisualizerAnyway, setShowVisualizerAnyway] = useState(false);
+
+  const deferredFilterBeatName = useDeferredValue(filterBeatName);
+  const deferredFilterBeatKey = useDeferredValue(filterBeatKey);
+  const deferredFilterBeatProducer = useDeferredValue(filterBeatProducer);
+  const deferredFilterBeatDate = useDeferredValue(filterBeatDate);
 
   /* ───────────── 30-second preview helpers ─────────── */
   const [previewBeat, setPreviewBeat] = useState<{
@@ -211,22 +218,26 @@ ${inquiryMessage}
       })),
     []
   ) as Array<BeatData & { cover: string }>;
+  const decorationRail = useMemo(
+    () => [...visualizerDecorationAssets, ...visualizerDecorationAssets],
+    [],
+  );
 
   /* ───────────── filtering ───────────── */
   const filteredBeats = useMemo(() => {
     const f = beatsWithCovers.filter((beat) => {
       const matchName = beat.beatName
         .toLowerCase()
-        .includes(filterBeatName.toLowerCase());
+        .includes(deferredFilterBeatName.toLowerCase());
       const matchKey = beat.beatKey
         .toLowerCase()
-        .includes(filterBeatKey.toLowerCase());
+        .includes(deferredFilterBeatKey.toLowerCase());
       const matchProducer = beat.beatProducer
         .toLowerCase()
-        .includes(filterBeatProducer.toLowerCase());
+        .includes(deferredFilterBeatProducer.toLowerCase());
       const matchDate = beat.beatDate
         .toLowerCase()
-        .includes(filterBeatDate.toLowerCase());
+        .includes(deferredFilterBeatDate.toLowerCase());
 
       let matchBpm = true;
       if (filterBeatPerMinMin !== "" && beat.beatPerMin !== null)
@@ -244,10 +255,10 @@ ${inquiryMessage}
     });
   }, [
     beatsWithCovers,
-    filterBeatName,
-    filterBeatKey,
-    filterBeatProducer,
-    filterBeatDate,
+    deferredFilterBeatName,
+    deferredFilterBeatKey,
+    deferredFilterBeatProducer,
+    deferredFilterBeatDate,
     filterBeatPerMinMin,
     filterBeatPerMinMax,
   ]);
@@ -268,10 +279,10 @@ ${inquiryMessage}
   const BeatRow = (beat: BeatData & { cover: string }, index: number) => (
     <motion.tr
       key={beat.audioFile}
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: index * 0.02 }}
-      className="group cursor-pointer border-b border-gray-800 hover:bg-gradient-to-r hover:from-purple-900/10 hover:to-emerald-900/10 transition-all duration-300"
+      initial={reduceMotion ? { opacity: 0 } : { opacity: 0, x: -20 }}
+      animate={reduceMotion ? { opacity: 1 } : { opacity: 1, x: 0 }}
+      transition={{ delay: reduceMotion ? 0 : Math.min(index, 16) * 0.015 }}
+      className="group content-auto cursor-pointer border-b border-gray-800 hover:bg-gradient-to-r hover:from-purple-900/10 hover:to-emerald-900/10 transition-all duration-300"
       onClick={() => handleBeatSelect(beat)}
     >
       <td className="py-4 pl-4 md:pl-6">
@@ -362,11 +373,11 @@ ${inquiryMessage}
   const BeatTile = (beat: BeatData & { cover: string }, index: number) => (
     <motion.div
       key={beat.audioFile}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.05 }}
+      initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 20 }}
+      animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+      transition={{ delay: reduceMotion ? 0 : Math.min(index, 12) * 0.03 }}
       whileHover={{ y: -5 }}
-      className="group relative flex flex-col gap-3 p-4 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-2xl border border-gray-700 hover:border-purple-500/50 transition-all duration-300 cursor-pointer overflow-hidden"
+      className="group content-auto relative flex flex-col gap-3 p-4 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-2xl border border-gray-700 hover:border-purple-500/50 transition-all duration-300 cursor-pointer overflow-hidden"
       onClick={() => handleBeatSelect(beat)}
     >
       <div className="absolute inset-0 bg-gradient-to-br from-purple-600/0 via-emerald-600/0 to-purple-600/0 group-hover:from-purple-600/10 group-hover:via-emerald-600/10 group-hover:to-purple-600/10 transition-all duration-500" />
@@ -444,11 +455,11 @@ ${inquiryMessage}
   const BeatCard = (beat: BeatData & { cover: string }, index: number) => (
     <motion.div
       key={beat.audioFile}
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: index * 0.03 }}
+      initial={reduceMotion ? { opacity: 0 } : { opacity: 0, x: -20 }}
+      animate={reduceMotion ? { opacity: 1 } : { opacity: 1, x: 0 }}
+      transition={{ delay: reduceMotion ? 0 : Math.min(index, 12) * 0.02 }}
       whileHover={{ x: 5 }}
-      className="group flex items-center gap-4 p-4 md:p-6 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 rounded-2xl border border-gray-700 hover:border-purple-500/50 shadow-lg hover:shadow-purple-500/10 transition-all duration-300 cursor-pointer"
+      className="group content-auto flex flex-col items-start gap-4 p-4 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 rounded-2xl border border-gray-700 hover:border-purple-500/50 shadow-lg hover:shadow-purple-500/10 transition-all duration-300 cursor-pointer md:flex-row md:items-center md:p-6"
       onClick={() => handleBeatSelect(beat)}
     >
       <motion.div
@@ -481,7 +492,7 @@ ${inquiryMessage}
         </div>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex w-full gap-2 md:w-auto">
         <motion.button
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
@@ -489,7 +500,7 @@ ${inquiryMessage}
             e.stopPropagation();
             togglePreview(beat);
           }}
-          className="p-3 rounded-xl bg-purple-600/20 hover:bg-purple-600/30 text-purple-400 transition-all duration-200"
+          className="flex-1 rounded-xl bg-purple-600/20 p-3 text-purple-400 transition-all duration-200 hover:bg-purple-600/30 md:flex-none"
           title="Play 30-sec preview"
         >
           {previewBeat?.beat.audioFile === beat.audioFile && isPreviewPlaying ? (
@@ -505,7 +516,7 @@ ${inquiryMessage}
             e.stopPropagation();
             handleBeatSelect(beat);
           }}
-          className="p-3 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 transition-all duration-200"
+          className="flex-1 rounded-xl bg-emerald-600/20 p-3 text-emerald-400 transition-all duration-200 hover:bg-emerald-600/30 md:flex-none"
           title="Full beat + visualizer"
         >
           <FaWaveSquare className="w-4 h-4" />
@@ -517,7 +528,7 @@ ${inquiryMessage}
             e.stopPropagation();
             handleInquiry(beat);
           }}
-          className="p-3 rounded-xl bg-yellow-600/20 hover:bg-yellow-600/30 text-yellow-400 transition-all duration-200"
+          className="flex-1 rounded-xl bg-yellow-600/20 p-3 text-yellow-400 transition-all duration-200 hover:bg-yellow-600/30 md:flex-none"
           title="Inquire about this beat"
         >
           <FaDollarSign className="w-4 h-4" />
@@ -543,9 +554,9 @@ ${inquiryMessage}
       <div className="relative z-10 flex flex-col h-screen">
         {/* Header */}
         <motion.header
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex flex-wrap items-center justify-between gap-4 px-4 md:px-8 py-6 border-b border-gray-800"
+          initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -20 }}
+          animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+          className="flex flex-wrap items-center justify-between gap-4 border-b border-gray-800 px-4 py-6 md:px-8"
         >
           <motion.h1
             className="text-2xl md:text-3xl font-black flex items-center gap-3"
@@ -564,7 +575,7 @@ ${inquiryMessage}
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2 }}
-            className="flex bg-gray-900/50 backdrop-blur-sm rounded-xl p-1 border border-gray-800"
+            className="flex bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-800 p-1"
           >
             {[
               { mode: "list" as const, icon: FaListUl, title: "List view" },
@@ -591,11 +602,11 @@ ${inquiryMessage}
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.3 }}
-            className="flex bg-gray-900/50 backdrop-blur-sm rounded-xl p-1 border border-gray-800"
+            className="flex w-full rounded-xl border border-gray-800 bg-gray-900/50 p-1 backdrop-blur-sm sm:w-auto"
           >
             <button
               onClick={() => onTabChange("beats")}
-              className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+              className={`flex-1 rounded-lg px-4 py-2 font-medium transition-all duration-200 sm:flex-none ${
                 !isBeatVisualizer
                   ? "bg-gradient-to-r from-purple-600 to-emerald-600 text-white"
                   : "text-gray-400 hover:text-white"
@@ -605,7 +616,7 @@ ${inquiryMessage}
             </button>
             <button
               onClick={() => onTabChange("visualizer")}
-              className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+              className={`flex-1 rounded-lg px-4 py-2 font-medium transition-all duration-200 sm:flex-none ${
                 isBeatVisualizer
                   ? "bg-gradient-to-r from-purple-600 to-emerald-600 text-white"
                   : "text-gray-400 hover:text-white"
@@ -616,12 +627,45 @@ ${inquiryMessage}
           </motion.div>
         </motion.header>
 
+        <motion.div
+          initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -12 }}
+          animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+          transition={{ delay: reduceMotion ? 0 : 0.35 }}
+          className="px-4 pb-4 md:px-8"
+        >
+          <div className="relative overflow-hidden rounded-2xl border border-gray-800 bg-black/50 px-3 py-3">
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(900px_circle_at_0%_0%,rgba(147,51,234,.16),transparent_60%)]" />
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(900px_circle_at_100%_100%,rgba(16,185,129,.14),transparent_60%)]" />
+            <motion.div
+              className="relative flex w-max gap-3"
+              animate={reduceMotion ? undefined : { x: ["0%", "-50%"] }}
+              transition={reduceMotion ? undefined : { duration: 28, repeat: Infinity, ease: "linear" }}
+            >
+              {decorationRail.map((src, idx) => (
+                <div
+                  key={`${src}-${idx}`}
+                  className="relative h-16 w-24 overflow-hidden rounded-lg border border-white/10"
+                >
+                  <Image
+                    src={src}
+                    alt=""
+                    fill
+                    sizes="96px"
+                    className="object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/65 to-transparent" />
+                </div>
+              ))}
+            </motion.div>
+          </div>
+        </motion.div>
+
         {/* Tool row */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-          className="flex flex-wrap items-center gap-4 px-4 md:px-8 py-4 border-b border-gray-800"
+          transition={{ delay: reduceMotion ? 0 : 0.4 }}
+          className="flex flex-wrap items-center gap-3 border-b border-gray-800 px-4 py-4 md:px-8"
         >
           <button
             onClick={() => setShowFilters((s) => !s)}
@@ -650,7 +694,7 @@ ${inquiryMessage}
             per page
           </label>
 
-          <div className="ml-auto text-sm text-gray-500">
+          <div className="text-sm text-gray-500 md:ml-auto">
             {totalBeats} beats found
           </div>
         </motion.div>

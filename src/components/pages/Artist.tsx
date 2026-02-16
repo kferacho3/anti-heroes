@@ -1,7 +1,7 @@
 "use client";
 
 import { hardcodedAlbums } from "@/data/artistsData";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 
@@ -272,6 +272,7 @@ function safeYear(date: string | undefined): string {
 }
 
 export default function Artist() {
+  const reduceMotion = useReducedMotion();
   const [mainArtist, setMainArtist] = useState<SpotifyArtist | null>(null);
   const [associatedArtists, setAssociatedArtists] = useState<SpotifyArtist[]>([]);
   const [loadingMain, setLoadingMain] = useState(true);
@@ -294,26 +295,29 @@ export default function Artist() {
   const mainArtistId = "7iysPipkcsfGFVEgUMDzHQ";
 
   const associatedArtistIds = useMemo(
-    () => [
-      "4ihlULofncvxd3Cz7ewTNV",
-      "3uwUJ78bwdDBLo3O04xlnL",
-      "4nRgpdGBG8DPYMHikqUp3w",
-      "6mFKPMFGbulPhOnj3UvzAF",
-      "0z3M3HSEsrgi5YmwY5e9fB",
-      "2pZnyv4zLqnSDktBqXQlZz",
-      "0zRLHcRfGiz3GCHk852mIL",
-      "6cPZNDrHphEZ3ok4t8K7ZT",
-      "5bNFzNn84AoUqClYZJKan5",
-      "1IwJ9sVzmn5hBSe02HsLnM",
-      "5pVOuKzA3hhsdScwg2k4o",
-      "3k8lBDenIm90lWaSpAYQeH",
-      "4O0urd9sL16UmRnmdHienf",
-      "05eq9g0p6jze8k6Wva5BUz",
-      "2pZnyv4zLqnSDktBqXQlZz",
-      "0z3M3HSEsrgi5YmwY5e9fB",
-      "4wtNgDt8QcZCPfx64NiBGi",
-      "6E9lvijZw6hhoNiEaZ765i",
-    ],
+    () =>
+      Array.from(
+        new Set([
+          "4ihlULofncvxd3Cz7ewTNV",
+          "3uwUJ78bwdDBLo3O04xlnL",
+          "4nRgpdGBG8DPYMHikqUp3w",
+          "6mFKPMFGbulPhOnj3UvzAF",
+          "0z3M3HSEsrgi5YmwY5e9fB",
+          "2pZnyv4zLqnSDktBqXQlZz",
+          "0zRLHcRfGiz3GCHk852mIL",
+          "6cPZNDrHphEZ3ok4t8K7ZT",
+          "5bNFzNn84AoUqClYZJKan5",
+          "1IwJ9sVzmn5hBSe02HsLnM",
+          "5pVOuKzA3hhsdScwg2k4o",
+          "3k8lBDenIm90lWaSpAYQeH",
+          "4O0urd9sL16UmRnmdHienf",
+          "05eq9g0p6jze8k6Wva5BUz",
+          "2pZnyv4zLqnSDktBqXQlZz",
+          "0z3M3HSEsrgi5YmwY5e9fB",
+          "4wtNgDt8QcZCPfx64NiBGi",
+          "6E9lvijZw6hhoNiEaZ765i",
+        ]),
+      ),
     [],
   );
 
@@ -518,7 +522,7 @@ export default function Artist() {
                   setSelectedArtist(artist);
                   setActiveArtistTab("top-tracks");
                 }}
-                className="group ah-card rounded-2xl p-4 text-left transition hover:-translate-y-1 hover:border-ah-red/45"
+                className="group ah-card content-auto rounded-2xl p-4 text-left transition hover:-translate-y-1 hover:border-ah-red/45"
               >
                 <div className="relative aspect-square overflow-hidden rounded-xl border border-white/10">
                   <Image
@@ -581,7 +585,7 @@ export default function Artist() {
         </div>
       </header>
 
-      <nav className="mb-8 flex gap-2">
+      <nav className="mb-8 flex flex-wrap gap-2">
         <button
           onClick={() => setActiveArtistTab("top-tracks")}
           className={`rounded-sm px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] transition ${
@@ -607,10 +611,10 @@ export default function Artist() {
       <AnimatePresence mode="wait">
         <motion.div
           key={activeArtistTab}
-          initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -14 }}
-          transition={{ duration: 0.3 }}
+          initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 14 }}
+          animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+          exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -14 }}
+          transition={{ duration: reduceMotion ? 0.2 : 0.3 }}
         >
           {activeArtistTab === "top-tracks" ? (
             loadingTopTracks ? (
@@ -626,14 +630,14 @@ export default function Artist() {
                 No top tracks found for this artist.
               </p>
             ) : (
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 {artistTopTracks.map((track, index) => {
                   const spotifyUrl =
                     track.external_urls?.spotify || track.album?.external_urls?.spotify;
                   const albumImage = track.album.images?.[0]?.url;
 
                   return (
-                    <article key={`${track.id}-${index}`} className="group ah-card rounded-2xl p-4">
+                    <article key={`${track.id}-${index}`} className="group ah-card content-auto rounded-2xl p-4">
                       <button
                         className="w-full text-left"
                         onClick={() => {
@@ -735,8 +739,8 @@ export default function Artist() {
                       track.external_urls?.spotify || track.album.external_urls?.spotify;
 
                     return (
-                      <article key={`${track.id}-${index}`} className="ah-card rounded-2xl px-4 py-3">
-                        <div className="flex items-center gap-4">
+                      <article key={`${track.id}-${index}`} className="ah-card content-auto rounded-2xl px-4 py-3">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                           <div className="w-5 text-center text-xs text-ah-soft">{index + 1}</div>
                           <div className="min-w-0 flex-1">
                             <p className="truncate text-sm font-semibold text-white">{track.name}</p>
@@ -768,12 +772,12 @@ export default function Artist() {
               No discography found for this artist.
             </p>
           ) : (
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
               {artistDiscography.map((group) => (
                 <button
                   key={group.album.id}
                   onClick={() => openDiscographyAlbum(group.album)}
-                  className="group ah-card rounded-2xl p-3 text-left transition hover:-translate-y-1 hover:border-ah-blue/50"
+                  className="group ah-card content-auto rounded-2xl p-3 text-left transition hover:-translate-y-1 hover:border-ah-blue/50"
                 >
                   <div className="relative aspect-square overflow-hidden rounded-xl border border-white/10">
                     {group.album.images?.[0]?.url ? (

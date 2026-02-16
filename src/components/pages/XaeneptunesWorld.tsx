@@ -1,16 +1,20 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
+import { xaeneptunePlanetAssets, xaeneptuneSecurityAsset } from "@/data/visualAssets";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import Image from "next/image";
 import { useMemo, useState } from "react";
 import { FaGlobeAmericas, FaInstagram, FaLinkedin, FaSoundcloud, FaYoutube } from "react-icons/fa";
 
 export default function XaeneptunesWorld() {
-  const [imageIndex, setImageIndex] = useState(() => Math.floor(Math.random() * 16) + 1);
-  const imageSrc = useMemo(
-    () =>
-      `https://xaeneptune.s3.us-east-2.amazonaws.com/images/Xaeneptune/Xaeneptune${imageIndex}.webp`,
-    [imageIndex],
+  const reduceMotion = useReducedMotion();
+  const [activePlanetIndex, setActivePlanetIndex] = useState(() =>
+    Math.floor(Math.random() * xaeneptunePlanetAssets.length),
+  );
+  const activePlanet = xaeneptunePlanetAssets[activePlanetIndex];
+  const planetRail = useMemo(
+    () => [...xaeneptunePlanetAssets, ...xaeneptunePlanetAssets],
+    [],
   );
 
   return (
@@ -27,52 +31,158 @@ export default function XaeneptunesWorld() {
           </p>
         </div>
 
-        <button
-          onClick={() => setImageIndex((prev) => (prev % 16) + 1)}
-          className="rounded-sm border border-white/14 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white transition hover:border-ah-red/60 hover:text-ah-red"
-        >
-          Shuffle Portrait
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            onClick={() =>
+              setActivePlanetIndex(
+                Math.floor(Math.random() * xaeneptunePlanetAssets.length),
+              )
+            }
+            className="rounded-sm border border-white/14 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white transition hover:border-ah-red/60 hover:text-ah-red"
+          >
+            Shuffle Planet
+          </button>
+          <a
+            href={xaeneptuneSecurityAsset}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded-sm border border-ah-blue/40 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-ah-blue transition hover:bg-ah-blue/15 hover:text-white"
+          >
+            Open SECURITY Art
+          </a>
+        </div>
       </header>
 
-      <div className="mb-12 grid gap-6 lg:grid-cols-[380px_1fr]">
-        <article className="ah-card rounded-2xl p-4">
-          <div className="relative aspect-square overflow-hidden rounded-xl border border-white/12">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={imageIndex}
-                initial={{ opacity: 0.2, scale: 0.96 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0.2, scale: 1.04 }}
-                transition={{ duration: 0.35 }}
-                className="absolute inset-0"
+      <div className="mb-8 overflow-hidden rounded-2xl border border-white/10 bg-black/35">
+        <div className="relative px-4 py-3">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(700px_circle_at_0%_0%,rgba(30,111,255,.18),transparent_60%)]" />
+          <motion.div
+            className="flex w-max gap-3"
+            animate={reduceMotion ? undefined : { x: ["0%", "-50%"] }}
+            transition={reduceMotion ? undefined : { duration: 32, repeat: Infinity, ease: "linear" }}
+          >
+            {planetRail.map((planet, idx) => (
+              <div
+                key={`${planet}-${idx}`}
+                className="relative h-12 w-12 rounded-full border border-white/20 bg-black/55"
               >
                 <Image
-                  src={imageSrc}
-                  alt="Xae Neptune portrait"
+                  src={planet}
+                  alt=""
                   fill
-                  className="object-cover"
-                  priority
-                  sizes="(max-width: 1024px) 100vw, 380px"
+                  sizes="48px"
+                  className="object-contain p-1"
                 />
-              </motion.div>
-            </AnimatePresence>
+              </div>
+            ))}
+          </motion.div>
+        </div>
+      </div>
+
+      <div className="mb-12 grid gap-6 xl:grid-cols-[1.45fr_.95fr]">
+        <article className="relative overflow-hidden rounded-3xl border border-white/12 bg-black/45 p-6 md:p-8">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(1100px_circle_at_8%_8%,rgba(30,111,255,.2),transparent_58%)]" />
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(900px_circle_at_92%_22%,rgba(208,25,42,.18),transparent_56%)]" />
+
+          <div className="relative z-10">
+            <p className="text-xs uppercase tracking-[0.18em] text-ah-soft">Planet Atlas</p>
+            <h3 className="mt-2 font-[var(--font-display)] text-3xl uppercase tracking-ah-tight text-white md:text-4xl">
+              Xaeneptune Orbit
+            </h3>
+            <p className="mt-2 max-w-2xl text-sm text-white/75">
+              Curated orbit studies from the Xaeneptune world set. Select any
+              planet to spotlight its identity.
+            </p>
+
+            <div className="mt-6 grid gap-5 lg:grid-cols-[1fr_230px]">
+              <div className="relative aspect-[16/10] overflow-hidden rounded-2xl border border-white/15 bg-black/65">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={activePlanet}
+                    initial={reduceMotion ? { opacity: 0 } : { opacity: 0.15, scale: 0.94 }}
+                    animate={reduceMotion ? { opacity: 1 } : { opacity: 1, scale: 1 }}
+                    exit={reduceMotion ? { opacity: 0 } : { opacity: 0.12, scale: 1.06 }}
+                    transition={{ duration: reduceMotion ? 0.18 : 0.38 }}
+                    className="absolute inset-0"
+                  >
+                    <Image
+                      src={activePlanet}
+                      alt={`Xaeneptune planet ${activePlanetIndex + 1}`}
+                      fill
+                      priority
+                      sizes="(max-width: 1024px) 100vw, 720px"
+                      className="object-contain p-4 drop-shadow-[0_20px_55px_rgba(30,111,255,.35)]"
+                    />
+                  </motion.div>
+                </AnimatePresence>
+                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(520px_circle_at_50%_50%,transparent_42%,rgba(0,0,0,.6))]" />
+              </div>
+
+              <div className="grid grid-cols-4 gap-2 sm:grid-cols-8 lg:grid-cols-4">
+                {xaeneptunePlanetAssets.map((planet, index) => (
+                  <button
+                    key={planet}
+                    onClick={() => setActivePlanetIndex(index)}
+                    className={`relative aspect-square overflow-hidden rounded-xl border transition ${
+                      index === activePlanetIndex
+                        ? "border-ah-blue bg-ah-blue/10"
+                        : "border-white/15 bg-black/45 hover:border-ah-red/45"
+                    }`}
+                    title={`Planet ${index + 1}`}
+                  >
+                    <Image
+                      src={planet}
+                      alt={`Planet ${index + 1}`}
+                      fill
+                      sizes="80px"
+                      className="object-contain p-1"
+                    />
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
-          <p className="mt-3 text-xs uppercase tracking-[0.16em] text-ah-soft">
-            Click shuffle to rotate portraits
-          </p>
         </article>
 
-        <div className="space-y-4">
-          {sections.map((section) => (
-            <article key={section.id} className="ah-card rounded-2xl p-5">
-              <h3 className="font-[var(--font-display)] text-2xl uppercase tracking-wide text-white">
-                {section.title}
-              </h3>
-              <p className="mt-2 text-sm leading-relaxed text-white/80">{section.body}</p>
-            </article>
-          ))}
-        </div>
+        <article className="ah-card rounded-3xl p-5">
+          <p className="text-xs uppercase tracking-[0.18em] text-ah-soft">Featured Project</p>
+          <h3 className="mt-2 font-[var(--font-display)] text-3xl uppercase tracking-wide text-white">
+            SECURITY
+          </h3>
+          <p className="mt-2 text-sm text-white/75">
+            A visual and sonic chapter built around pressure, vulnerability,
+            and self-definition.
+          </p>
+          <div className="relative mt-4 aspect-[3/4] overflow-hidden rounded-2xl border border-white/12">
+            <Image
+              src={xaeneptuneSecurityAsset}
+              alt="Xaeneptune SECURITY artwork"
+              fill
+              sizes="(max-width: 1280px) 100vw, 420px"
+              className="object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent" />
+          </div>
+          <a
+            href={xaeneptuneSecurityAsset}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 inline-flex rounded-sm border border-ah-red/40 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-ah-red transition hover:bg-ah-red/20 hover:text-white"
+          >
+            View Full Artwork
+          </a>
+        </article>
+      </div>
+
+      <div className="mb-12 space-y-4">
+        {sections.map((section) => (
+          <article key={section.id} className="ah-card rounded-2xl p-5">
+            <h3 className="font-[var(--font-display)] text-2xl uppercase tracking-wide text-white">
+              {section.title}
+            </h3>
+            <p className="mt-2 text-sm leading-relaxed text-white/80">{section.body}</p>
+          </article>
+        ))}
       </div>
 
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

@@ -43,12 +43,12 @@ export default function TopBarNavbar({ onHamburgerClick }: TopBarNavbarProps) {
 
   return (
     <motion.header
-      className="safe-top px-3 md:px-5"
+      className="safe-top px-2 md:px-5"
       initial="hidden"
       animate="show"
       variants={navAnim}
     >
-      <div className="mx-auto flex w-full max-w-7xl items-center justify-between rounded-2xl border border-white/12 bg-black/65 px-4 py-3 backdrop-blur-xl">
+      <div className="mx-auto flex w-full max-w-7xl items-center justify-between rounded-2xl border border-white/12 bg-black/65 px-3 py-2.5 backdrop-blur-xl md:px-4 md:py-3">
         <button
           onClick={() => setActiveRoute("home")}
           className="flex items-center gap-2 text-left"
@@ -61,11 +61,11 @@ export default function TopBarNavbar({ onHamburgerClick }: TopBarNavbarProps) {
             height={28}
             priority
           />
-          <div>
-            <p className="font-[var(--font-display)] text-xl uppercase tracking-wider text-white">
+          <div className="min-w-0">
+            <p className="truncate font-[var(--font-display)] text-base uppercase tracking-wider text-white sm:text-xl">
               Anti-Heroes
             </p>
-            <p className="text-[10px] uppercase tracking-[0.18em] text-ah-soft">
+            <p className="hidden text-[10px] uppercase tracking-[0.18em] text-ah-soft sm:block">
               Independent Music Platform
             </p>
           </div>

@@ -20,13 +20,13 @@ export default function AHShell({ children, title, subtitle }: AHShellProps) {
 
       <div
         className="relative z-10"
-        style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 84px)" }}
+        style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 74px)" }}
       >
         {(title || subtitle) && (
-          <header className="mx-auto w-full max-w-7xl px-6 pt-8 md:px-12 md:pt-12">
+          <header className="mx-auto w-full max-w-7xl px-4 pt-6 md:px-12 md:pt-10">
             {title && (
               <motion.h1
-                className="font-[var(--font-display)] text-4xl font-black uppercase tracking-ah-tight md:text-6xl"
+                className="font-[var(--font-display)] text-3xl font-black uppercase tracking-ah-tight sm:text-4xl md:text-6xl"
                 initial={{ opacity: 0, y: 14 }}
                 animate={{ opacity: 1, y: 0 }}
               >
@@ -46,7 +46,7 @@ export default function AHShell({ children, title, subtitle }: AHShellProps) {
           </header>
         )}
 
-        <main className="mx-auto w-full max-w-7xl px-6 pb-20 pt-8 md:px-12 md:pt-12">
+        <main className="mx-auto w-full max-w-7xl px-4 pb-28 pt-6 md:px-12 md:pb-20 md:pt-10">
           {children}
         </main>
 

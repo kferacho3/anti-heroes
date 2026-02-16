@@ -1,18 +1,57 @@
 "use client";
 
 import { useRouteStore } from "@/store/useRouteStore";
-import { motion } from "framer-motion";
+import { visualizerDecorationAssets } from "@/data/visualAssets";
+import { motion, useReducedMotion } from "framer-motion";
 import Image from "next/image";
+import { useEffect, useMemo, useState } from "react";
 
 const dropPreview = [
-  { name: "HELLBOUND", meta: "140 BPM • Trap / Dark" },
-  { name: "NIGHTFALL", meta: "154 BPM • Drill / Ambient" },
-  { name: "RITUAL", meta: "132 BPM • Alt / Experimental" },
-  { name: "ATOMIC", meta: "148 BPM • Rage / Hybrid" },
+  {
+    name: "HELLBOUND",
+    meta: "140 BPM • Trap / Dark",
+    artwork: visualizerDecorationAssets[0],
+  },
+  {
+    name: "NIGHTFALL",
+    meta: "154 BPM • Drill / Ambient",
+    artwork: visualizerDecorationAssets[1],
+  },
+  {
+    name: "RITUAL",
+    meta: "132 BPM • Alt / Experimental",
+    artwork: visualizerDecorationAssets[2],
+  },
+  {
+    name: "ATOMIC",
+    meta: "148 BPM • Rage / Hybrid",
+    artwork: visualizerDecorationAssets[3],
+  },
 ];
 
 export default function LandingAntiHeroes() {
   const { setActiveRoute } = useRouteStore();
+  const reduceMotion = useReducedMotion();
+  const [heroArtIndex, setHeroArtIndex] = useState(0);
+
+  useEffect(() => {
+    if (reduceMotion) return undefined;
+    const timer = setInterval(() => {
+      setHeroArtIndex((prev) => (prev + 1) % visualizerDecorationAssets.length);
+    }, 4800);
+    return () => clearInterval(timer);
+  }, [reduceMotion]);
+
+  const heroArt = visualizerDecorationAssets[heroArtIndex];
+  const sideArts = useMemo(
+    () =>
+      Array.from({ length: 3 }, (_, offset) =>
+        visualizerDecorationAssets[
+          (heroArtIndex + offset + 1) % visualizerDecorationAssets.length
+        ],
+      ),
+    [heroArtIndex],
+  );
 
   return (
     <section className="relative min-h-screen overflow-hidden bg-ah-black text-ah-white">
@@ -34,10 +73,10 @@ export default function LandingAntiHeroes() {
             </motion.p>
 
             <motion.h1
-              className="font-[var(--font-display)] text-6xl font-black uppercase leading-[0.92] tracking-ah-tight md:text-8xl"
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
+              className="font-[var(--font-display)] text-5xl font-black uppercase leading-[0.92] tracking-ah-tight sm:text-6xl md:text-8xl"
+              initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 16 }}
+              animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+              transition={{ duration: reduceMotion ? 0.2 : 0.6 }}
             >
               Anti-Heroes
             </motion.h1>
@@ -88,18 +127,54 @@ export default function LandingAntiHeroes() {
           </div>
 
           <motion.div
-            className="relative mx-auto h-[280px] w-[280px] sm:h-[380px] sm:w-[380px] md:mx-0 md:ml-auto md:h-[520px] md:w-[520px]"
+            className="relative mx-auto h-[300px] w-[300px] sm:h-[410px] sm:w-[410px] md:mx-0 md:ml-auto md:h-[540px] md:w-[540px]"
             initial={{ opacity: 0, scale: 0.94 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8 }}
           >
-            <Image
-              src="/AntiHeroLogo.png"
-              alt="Anti-Heroes Logo"
-              fill
-              priority
-              className="object-contain drop-shadow-[0_22px_90px_rgba(0,0,0,.7)]"
-            />
+            <div className="absolute inset-0 overflow-hidden rounded-[2rem] border border-white/15 shadow-[0_20px_100px_rgba(0,0,0,.5)]">
+              <Image
+                src={heroArt}
+                alt="Audio visualizer artwork"
+                fill
+                priority
+                sizes="(max-width: 768px) 300px, (max-width: 1024px) 410px, 540px"
+                className="object-cover scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-br from-ah-blue/20 via-black/35 to-ah-red/30" />
+              <div className="absolute inset-0 bg-[radial-gradient(700px_circle_at_18%_14%,rgba(255,255,255,.2),transparent_58%)]" />
+              <div className="absolute inset-0 p-10 sm:p-12 md:p-16">
+                <div className="relative h-full w-full">
+                  <Image
+                    src="/AntiHeroLogo.png"
+                    alt="Anti-Heroes Logo"
+                    fill
+                    className="object-contain drop-shadow-[0_18px_70px_rgba(0,0,0,.7)]"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="absolute -right-4 top-1/2 hidden -translate-y-1/2 flex-col gap-3 lg:flex">
+              {sideArts.map((src, idx) => (
+                <motion.div
+                  key={src}
+                  initial={{ opacity: 0, x: 14 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: idx * 0.08 }}
+                  className="relative h-24 w-16 overflow-hidden rounded-xl border border-white/20 bg-black/35 shadow-xl"
+                >
+                  <Image
+                    src={src}
+                    alt="Visualizer detail"
+                    fill
+                    sizes="64px"
+                    className="object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/55 to-transparent" />
+                </motion.div>
+              ))}
+            </div>
           </motion.div>
         </div>
 
@@ -126,9 +201,18 @@ export default function LandingAntiHeroes() {
             {dropPreview.map((drop) => (
               <article
                 key={drop.name}
-                className="ah-card rounded-2xl p-4 transition hover:-translate-y-1 hover:border-ah-red/45"
+                className="group ah-card rounded-2xl p-4 transition hover:-translate-y-1 hover:border-ah-red/45"
               >
-                <div className="mb-4 aspect-square rounded-xl border border-white/10 bg-black/50" />
+                <div className="relative mb-4 aspect-square overflow-hidden rounded-xl border border-white/10">
+                  <Image
+                    src={drop.artwork}
+                    alt={`${drop.name} visualizer artwork`}
+                    fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                    className="object-cover transition duration-500 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/20 to-transparent" />
+                </div>
                 <h3 className="font-[var(--font-display)] text-lg tracking-wide">
                   {drop.name}
                 </h3>

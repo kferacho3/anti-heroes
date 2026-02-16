@@ -1,7 +1,7 @@
 "use client";
 
 import { Route, useRouteStore } from "@/store/useRouteStore";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { ComponentType, useEffect, useState } from "react";
 import { BsSpeakerFill } from "react-icons/bs";
 import { FaCompactDisc, FaGlobe, FaMusic, FaPlug, FaUser } from "react-icons/fa";
@@ -39,6 +39,7 @@ export default function NavigationOverlay({
   const { activeRoute, hoveredRoute, setHoveredRoute } = useRouteStore();
   const [isMobile, setIsMobile] = useState(false);
   const [ready, setReady] = useState(false);
+  const reduceMotion = useReducedMotion();
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -60,13 +61,13 @@ export default function NavigationOverlay({
       style={{
         bottom: isMobile ? "calc(env(safe-area-inset-bottom,0px) + 12px)" : "18px",
       }}
-      initial={{ opacity: 0, y: 14 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35 }}
+      initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 14 }}
+      animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+      transition={{ duration: reduceMotion ? 0.18 : 0.35 }}
     >
       <div className="mx-auto w-fit rounded-2xl border border-white/14 bg-black/65 p-2 backdrop-blur-xl md:rounded-full md:p-3">
         {isMobile ? (
-          <div className="grid grid-cols-4 gap-1.5">
+          <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-4">
             {allRoutes.map((route) => {
               const Icon = routeIcons[route]!;
               const active = activeRoute === route;
@@ -77,7 +78,7 @@ export default function NavigationOverlay({
                   onClick={() => handleRouteChange(route)}
                   onMouseEnter={() => setHoveredRoute(route)}
                   onMouseLeave={() => setHoveredRoute(undefined)}
-                  className={`flex min-h-[56px] min-w-[72px] flex-col items-center justify-center gap-1 rounded-xl border px-2 py-2 text-[9px] font-semibold uppercase tracking-[0.15em] transition ${
+                  className={`flex min-h-[52px] min-w-0 flex-col items-center justify-center gap-1 rounded-xl border px-2 py-2 text-[9px] font-semibold uppercase tracking-[0.14em] transition ${
                     active || hovered
                       ? "border-ah-red/60 bg-ah-red/14 text-white"
                       : "border-white/14 bg-white/[0.03] text-ah-soft hover:text-white"
@@ -91,7 +92,7 @@ export default function NavigationOverlay({
 
             <button
               onClick={toggleEnvironment}
-              className={`col-span-4 mt-1 flex items-center justify-center gap-2 rounded-lg border px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.16em] transition ${
+              className={`col-span-3 mt-1 flex items-center justify-center gap-2 rounded-lg border px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.16em] transition sm:col-span-4 ${
                 environmentMode === "night"
                   ? "border-ah-blue/40 bg-ah-blue/14 text-ah-blue"
                   : "border-ah-red/40 bg-ah-red/14 text-ah-red"
