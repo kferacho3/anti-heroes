@@ -123,6 +123,16 @@ const BeatsList: React.FC<BeatsListProps> = ({
     setIsPreviewPlaying(false);
   };
 
+  const resetFilters = () => {
+    setFilterBeatName("");
+    setFilterBeatKey("");
+    setFilterBeatProducer("");
+    setFilterBeatDate("");
+    setFilterBeatPerMinMin("");
+    setFilterBeatPerMinMax("");
+    setCurrentPage(1);
+  };
+
   const togglePreview = (beat: BeatData & { cover: string }) => {
     if (previewBeat?.beat.audioFile === beat.audioFile && isPreviewPlaying) {
       previewAudioRef.current?.pause();
@@ -269,6 +279,14 @@ ${inquiryMessage}
 
   /* ───────────── pagination ───────────── */
   const totalBeats = filteredBeats.length;
+  const activeFilterCount = [
+    filterBeatName,
+    filterBeatKey,
+    filterBeatProducer,
+    filterBeatDate,
+    filterBeatPerMinMin,
+    filterBeatPerMinMax,
+  ].filter((value) => value !== "").length;
   const totalPages =
     beatsPerPage === "all" ? 1 : Math.ceil(totalBeats / beatsPerPage);
   const currentBeats =
@@ -333,6 +351,7 @@ ${inquiryMessage}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
             title="Play 30-sec preview"
+            aria-label="Play 30-second preview"
             onClick={(e) => {
               e.stopPropagation();
               togglePreview(beat);
@@ -349,6 +368,7 @@ ${inquiryMessage}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
             title="Full beat + visualizer"
+            aria-label="Play full beat with visualizer"
             onClick={(e) => {
               e.stopPropagation();
               handleBeatSelect(beat);
@@ -361,6 +381,7 @@ ${inquiryMessage}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
             title="Inquire about this beat"
+            aria-label="Inquire about this beat"
             onClick={(e) => {
               e.stopPropagation();
               handleInquiry(beat);
@@ -390,6 +411,7 @@ ${inquiryMessage}
         <motion.button
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
+          aria-label="Play 30-second preview"
           onClick={(e) => {
             e.stopPropagation();
             togglePreview(beat);
@@ -406,6 +428,7 @@ ${inquiryMessage}
         <motion.button
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
+          aria-label="Play full beat with visualizer"
           onClick={(e) => {
             e.stopPropagation();
             handleBeatSelect(beat);
@@ -418,6 +441,7 @@ ${inquiryMessage}
         <motion.button
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
+          aria-label="Inquire about this beat"
           onClick={(e) => {
             e.stopPropagation();
             handleInquiry(beat);
@@ -500,6 +524,7 @@ ${inquiryMessage}
         <motion.button
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
+          aria-label="Play 30-second preview"
           onClick={(e) => {
             e.stopPropagation();
             togglePreview(beat);
@@ -516,6 +541,7 @@ ${inquiryMessage}
         <motion.button
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
+          aria-label="Play full beat with visualizer"
           onClick={(e) => {
             e.stopPropagation();
             handleBeatSelect(beat);
@@ -528,6 +554,7 @@ ${inquiryMessage}
         <motion.button
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
+          aria-label="Inquire about this beat"
           onClick={(e) => {
             e.stopPropagation();
             handleInquiry(beat);
@@ -676,8 +703,17 @@ ${inquiryMessage}
             className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors"
           >
             <FaFilter className={showFilters ? "text-purple-400" : ""} />
-            Filters
+            Filters ({activeFilterCount})
           </button>
+
+          {activeFilterCount > 0 && (
+            <button
+              onClick={resetFilters}
+              className="rounded-lg border border-gray-800 bg-gray-900/45 px-3 py-1 text-xs uppercase tracking-[0.16em] text-gray-400 transition hover:border-purple-500 hover:text-white"
+            >
+              Clear Filters
+            </button>
+          )}
 
           <label className="flex items-center gap-2 text-sm text-gray-400">
             Show
@@ -889,6 +925,7 @@ ${inquiryMessage}
               onClick={stopPreview}
               className="p-2 hover:bg-red-500/20 rounded-lg text-red-400 transition-colors"
               title="Stop preview"
+              aria-label="Stop preview playback"
             >
               <FaTimes />
             </motion.button>

@@ -3,7 +3,7 @@
 import { xaeneptunePlanetAssets, xaeneptuneSecurityAsset } from "@/data/visualAssets";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import Image from "next/image";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FaGlobeAmericas, FaInstagram, FaLinkedin, FaSoundcloud, FaSpotify, FaYoutube } from "react-icons/fa";
 
 export default function XaeneptunesWorld() {
@@ -16,6 +16,15 @@ export default function XaeneptunesWorld() {
     () => [...xaeneptunePlanetAssets, ...xaeneptunePlanetAssets],
     [],
   );
+
+  useEffect(() => {
+    if (reduceMotion) return undefined;
+    const timer = window.setInterval(() => {
+      setActivePlanetIndex((current) => (current + 1) % xaeneptunePlanetAssets.length);
+    }, 5500);
+
+    return () => window.clearInterval(timer);
+  }, [reduceMotion]);
 
   return (
     <section>
@@ -85,7 +94,7 @@ export default function XaeneptunesWorld() {
               >
                 <Image
                   src={planet}
-                  alt=""
+                  alt="Xaeneptune planet decoration"
                   fill
                   sizes="48px"
                   className="object-contain p-1"

@@ -158,6 +158,32 @@ ${formData.message}`.trim();
           </AnimatePresence>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {inquiryTypes.map((type) => (
+                <button
+                  key={type.value}
+                  type="button"
+                  onClick={() =>
+                    setFormData((previous) => ({
+                      ...previous,
+                      inquiryType: type.value,
+                      subject:
+                        previous.subject ||
+                        `${type.label} Request`,
+                    }))
+                  }
+                  className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-left text-[11px] uppercase tracking-[0.14em] transition ${
+                    formData.inquiryType === type.value
+                      ? "border-ah-red/45 bg-ah-red/10 text-white"
+                      : "border-white/12 bg-white/[0.02] text-ah-soft hover:border-ah-blue/40 hover:text-white"
+                  }`}
+                >
+                  <type.icon />
+                  {type.label}
+                </button>
+              ))}
+            </div>
+
             <div className="grid gap-4 md:grid-cols-2">
               <Field
                 label="Your Name"

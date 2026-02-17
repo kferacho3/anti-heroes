@@ -315,6 +315,8 @@ export default function Artist() {
   );
   const [discographyTracks, setDiscographyTracks] = useState<SpotifyTrack[]>([]);
   const [loadingAlbumTracks, setLoadingAlbumTracks] = useState(false);
+  const [rosterSearch, setRosterSearch] = useState("");
+  const [rosterSort, setRosterSort] = useState<"followers" | "name">("followers");
 
   const mainArtistId = "7iysPipkcsfGFVEgUMDzHQ";
 
@@ -359,6 +361,27 @@ export default function Artist() {
       external_urls: { spotify: "https://soundcloud.com/xojune" },
     }),
     [],
+  );
+
+  const visibleAssociatedArtists = useMemo(() => {
+    const term = rosterSearch.trim().toLowerCase();
+    const filtered = associatedArtists.filter((artist) =>
+      artist.name.toLowerCase().includes(term),
+    );
+
+    return filtered.sort((left, right) => {
+      if (rosterSort === "name") return left.name.localeCompare(right.name);
+      return (right.followers?.total || 0) - (left.followers?.total || 0);
+    });
+  }, [associatedArtists, rosterSearch, rosterSort]);
+
+  const associatedFollowerTotal = useMemo(
+    () =>
+      associatedArtists.reduce(
+        (total, artist) => total + (artist.followers?.total || 0),
+        0,
+      ),
+    [associatedArtists],
   );
 
   useEffect(() => {
@@ -526,6 +549,14 @@ export default function Artist() {
           <p className="mt-2 max-w-2xl text-sm text-ah-soft md:text-base">
             Select an artist to view top tracks and collaboration discography.
           </p>
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <span className="rounded-full border border-white/14 bg-white/[0.03] px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-ah-soft">
+              Artists: {associatedArtists.length}
+            </span>
+            <span className="rounded-full border border-white/14 bg-white/[0.03] px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-ah-soft">
+              Combined Followers: {associatedFollowerTotal.toLocaleString()}
+            </span>
+          </div>
         </header>
 
         {(mainArtistError || associatedArtistsError) && (
@@ -579,34 +610,73 @@ export default function Artist() {
             />
           </div>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {associatedArtists.map((artist) => (
-              <button
-                key={artist.id}
-                onClick={() => {
-                  setSelectedArtist(artist);
-                  setActiveArtistTab("top-tracks");
-                }}
-                className="group ah-card content-auto rounded-2xl p-4 text-left transition hover:-translate-y-1 hover:border-ah-red/45"
-              >
-                <div className="relative aspect-square overflow-hidden rounded-xl border border-white/10">
-                  <Image
-                    src={getArtistImageUrl(artist)}
-                    alt={artist.name || "Artist profile"}
-                    fill
-                    className="object-cover transition duration-500 group-hover:scale-105"
-                    sizes="(max-width: 768px) 50vw, (max-width: 1280px) 33vw, 25vw"
-                  />
-                </div>
-                <h3 className="mt-3 line-clamp-1 font-[var(--font-display)] text-2xl uppercase tracking-wide text-white">
-                  {artist.name}
-                </h3>
-                <p className="mt-1 text-xs uppercase tracking-[0.16em] text-ah-soft">
-                  {artist.followers?.total?.toLocaleString() || "0"} Followers
-                </p>
-              </button>
-            ))}
-          </div>
+          <>
+            <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <input
+                value={rosterSearch}
+                onChange={(event) => setRosterSearch(event.target.value)}
+                placeholder="Search artists"
+                className="w-full rounded-xl border border-white/14 bg-black/45 px-3 py-2 text-sm text-white placeholder:text-ah-soft/70 focus:border-ah-blue/45 focus:outline-none md:max-w-xs"
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setRosterSort("followers")}
+                  className={`rounded-sm px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.18em] transition ${
+                    rosterSort === "followers"
+                      ? "bg-ah-blue text-white shadow-ah-glow-blue"
+                      : "border border-white/14 bg-white/[0.02] text-ah-soft hover:text-white"
+                  }`}
+                >
+                  Sort by Followers
+                </button>
+                <button
+                  onClick={() => setRosterSort("name")}
+                  className={`rounded-sm px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.18em] transition ${
+                    rosterSort === "name"
+                      ? "bg-ah-red text-white shadow-ah-glow-red"
+                      : "border border-white/14 bg-white/[0.02] text-ah-soft hover:text-white"
+                  }`}
+                >
+                  Sort A-Z
+                </button>
+              </div>
+            </div>
+
+            {visibleAssociatedArtists.length === 0 ? (
+              <p className="rounded-2xl border border-white/12 bg-white/[0.02] px-4 py-8 text-center text-ah-soft">
+                No artists match your search.
+              </p>
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {visibleAssociatedArtists.map((artist) => (
+                  <button
+                    key={artist.id}
+                    onClick={() => {
+                      setSelectedArtist(artist);
+                      setActiveArtistTab("top-tracks");
+                    }}
+                    className="group ah-card content-auto rounded-2xl p-4 text-left transition hover:-translate-y-1 hover:border-ah-red/45"
+                  >
+                    <div className="relative aspect-square overflow-hidden rounded-xl border border-white/10">
+                      <Image
+                        src={getArtistImageUrl(artist)}
+                        alt={artist.name || "Artist profile"}
+                        fill
+                        className="object-cover transition duration-500 group-hover:scale-105"
+                        sizes="(max-width: 768px) 50vw, (max-width: 1280px) 33vw, 25vw"
+                      />
+                    </div>
+                    <h3 className="mt-3 line-clamp-1 font-[var(--font-display)] text-2xl uppercase tracking-wide text-white">
+                      {artist.name}
+                    </h3>
+                    <p className="mt-1 text-xs uppercase tracking-[0.16em] text-ah-soft">
+                      {artist.followers?.total?.toLocaleString() || "0"} Followers
+                    </p>
+                  </button>
+                ))}
+              </div>
+            )}
+          </>
         )}
       </section>
     );

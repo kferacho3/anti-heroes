@@ -38,6 +38,24 @@ function dropMeta(album: SpotifyAlbum): string {
   return `${year} • ${tracks}`;
 }
 
+const platformHighlights = [
+  {
+    id: "catalog",
+    title: "Catalog Velocity",
+    body: "Daily release discipline with a catalog tuned for artists who need repeatable quality.",
+  },
+  {
+    id: "identity",
+    title: "Creative Identity",
+    body: "Distinct visual language and sonic direction across every route, release, and interaction.",
+  },
+  {
+    id: "ownership",
+    title: "Independent Ownership",
+    body: "A creator-first ecosystem designed for long-term ownership, licensing flexibility, and growth.",
+  },
+] as const;
+
 export default function LandingAntiHeroes() {
   const { setActiveRoute } = useRouteStore();
   const reduceMotion = useReducedMotion();
@@ -251,6 +269,20 @@ export default function LandingAntiHeroes() {
           transition={{ duration: 0.5 }}
           viewport={{ once: true }}
         >
+          <div className="mb-9 grid gap-4 md:grid-cols-3">
+            {platformHighlights.map((highlight) => (
+              <article key={highlight.id} className="ah-card rounded-2xl p-4">
+                <p className="text-[10px] uppercase tracking-[0.2em] text-ah-soft">
+                  {highlight.id}
+                </p>
+                <h3 className="mt-2 font-[var(--font-display)] text-2xl uppercase tracking-wide text-white">
+                  {highlight.title}
+                </h3>
+                <p className="mt-2 text-sm text-ah-soft">{highlight.body}</p>
+              </article>
+            ))}
+          </div>
+
           <div className="mb-6 flex items-end justify-between gap-4">
             <h2 className="font-[var(--font-display)] text-2xl font-black uppercase tracking-ah-tight md:text-3xl">
               Latest Drops

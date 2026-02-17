@@ -74,6 +74,8 @@ export default function Music() {
   const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [visibleCount, setVisibleCount] = useState(12);
+  const [reloadKey, setReloadKey] = useState(0);
+  const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
 
   const artistId = "7iysPipkcsfGFVEgUMDzHQ";
   const playlistId = "1NL9L9zkZjkxlAVV3Qcqfh";
@@ -135,9 +137,17 @@ export default function Music() {
       }
     };
 
-    fetchTopTracks();
-    fetchPlaylistTracks();
-  }, [artistId, playlistId]);
+    let mounted = true;
+    const load = async () => {
+      await Promise.all([fetchTopTracks(), fetchPlaylistTracks()]);
+      if (mounted) setLastSyncedAt(new Date().toISOString());
+    };
+
+    void load();
+    return () => {
+      mounted = false;
+    };
+  }, [artistId, playlistId, reloadKey]);
 
   const tracks = useMemo(() => {
     if (activeTab === "top-tracks") return topTracks;
@@ -187,6 +197,11 @@ export default function Music() {
           <span className="rounded-full border border-white/14 bg-white/[0.03] px-3 py-1 text-[10px] uppercase tracking-[0.18em] text-ah-soft">
             Playlist: {playlistTracks.length}
           </span>
+          {lastSyncedAt && (
+            <span className="rounded-full border border-white/14 bg-white/[0.03] px-3 py-1 text-[10px] uppercase tracking-[0.18em] text-ah-soft">
+              Synced: {new Date(lastSyncedAt).toLocaleTimeString()}
+            </span>
+          )}
         </div>
       </header>
 
@@ -234,6 +249,13 @@ export default function Music() {
             className="w-full rounded-xl border border-white/14 bg-black/45 py-2 pl-10 pr-3 text-sm text-white placeholder:text-ah-soft/70 focus:border-ah-blue/45 focus:outline-none"
           />
         </label>
+
+        <button
+          onClick={() => setReloadKey((current) => current + 1)}
+          className="rounded-sm border border-white/14 bg-white/[0.02] px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-ah-soft transition hover:border-ah-blue/45 hover:text-white"
+        >
+          Refresh Feed
+        </button>
       </div>
 
       <AnimatePresence mode="wait">

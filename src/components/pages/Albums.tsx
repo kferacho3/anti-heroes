@@ -74,6 +74,7 @@ export default function Albums() {
   const [loadingDiscography, setLoadingDiscography] = useState(true);
   const [discographyError, setDiscographyError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [sortMode, setSortMode] = useState<"latest" | "oldest" | "name">("latest");
   const [selectedAlbum, setSelectedAlbum] = useState<SpotifyAlbum | null>(null);
   const [albumTracks, setAlbumTracks] = useState<SpotifyTrack[]>([]);
   const [loadingAlbumTracks, setLoadingAlbumTracks] = useState(false);
@@ -167,6 +168,19 @@ export default function Albums() {
     );
   }, [activeTab, discographyAlbums, search]);
 
+  const visibleAlbums = useMemo(() => {
+    const cloned = [...filteredAlbums];
+    if (sortMode === "name") {
+      return cloned.sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    return cloned.sort((a, b) => {
+      const aTime = new Date(a.release_date || 0).getTime() || 0;
+      const bTime = new Date(b.release_date || 0).getTime() || 0;
+      return sortMode === "latest" ? bTime - aTime : aTime - bTime;
+    });
+  }, [filteredAlbums, sortMode]);
+
   const handleAlbumClick = async (album: SpotifyAlbum) => {
     setSelectedAlbum(album);
 
@@ -223,7 +237,7 @@ export default function Albums() {
             Releases: {discographyAlbums.length}
           </span>
           <span className="rounded-full border border-white/14 bg-white/[0.03] px-3 py-1 text-[10px] uppercase tracking-[0.17em] text-ah-soft">
-            Showing: {filteredAlbums.length}
+            Showing: {visibleAlbums.length}
           </span>
         </div>
       </header>
@@ -255,6 +269,15 @@ export default function Albums() {
             placeholder="Search releases"
             className="w-full rounded-xl border border-white/14 bg-black/45 px-3 py-2 text-sm text-white placeholder:text-ah-soft/70 focus:border-ah-blue/45 focus:outline-none md:max-w-xs"
           />
+          <select
+            value={sortMode}
+            onChange={(event) => setSortMode(event.target.value as typeof sortMode)}
+            className="w-full rounded-xl border border-white/14 bg-black/45 px-3 py-2 text-sm text-white focus:border-ah-blue/45 focus:outline-none md:max-w-[180px]"
+          >
+            <option value="latest">Latest First</option>
+            <option value="oldest">Oldest First</option>
+            <option value="name">Name A-Z</option>
+          </select>
         </div>
       )}
 
@@ -402,7 +425,7 @@ export default function Albums() {
               exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -14 }}
               className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4"
             >
-              {filteredAlbums.map((album) => (
+              {visibleAlbums.map((album) => (
                 <button
                   key={album.id}
                   onClick={() => handleAlbumClick(album)}
