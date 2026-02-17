@@ -66,6 +66,7 @@ export default function HomePage() {
   }, [route, maxDpr]);
 
   const changeRoute = (nextRoute: Route) => {
+    setSidebarOpen(false);
     if (nextRoute === "connect") {
       setShowConnectModal(true);
       return;
@@ -138,11 +139,15 @@ export default function HomePage() {
         <Sidebar
           isOpen={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
+          activeRoute={route}
           setActiveRoute={(nextRoute: Route) => {
             if (nextRoute === "connect") {
               setShowConnectModal(true);
               setSidebarOpen(false);
               return;
+            }
+            if (route === "beats-visualizer" && nextRoute !== "beats-visualizer") {
+              pauseAllAudio();
             }
             setActiveRoute(nextRoute);
             setSidebarOpen(false);

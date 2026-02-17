@@ -9,6 +9,7 @@ import { FaApple, FaInstagram, FaSoundcloud, FaSpotify, FaTimes, FaYoutube } fro
 type SidebarProps = {
   isOpen: boolean;
   onClose: () => void;
+  activeRoute: Route;
   setActiveRoute: (route: Route) => void;
 };
 
@@ -22,7 +23,7 @@ const links: Array<{ label: string; route: Route }> = [
   { label: "Connect", route: "connect" },
 ];
 
-export default function Sidebar({ isOpen, onClose, setActiveRoute }: SidebarProps) {
+export default function Sidebar({ isOpen, onClose, activeRoute, setActiveRoute }: SidebarProps) {
   const reduceMotion = useReducedMotion();
 
   useEffect(() => {
@@ -98,11 +99,16 @@ export default function Sidebar({ isOpen, onClose, setActiveRoute }: SidebarProp
                 {links.map((link) => (
                   <li key={link.route}>
                     <button
+                      aria-current={activeRoute === link.route ? "page" : undefined}
                       onClick={() => {
                         setActiveRoute(link.route);
                         onClose();
                       }}
-                      className="w-full rounded-xl border border-white/10 bg-white/[0.02] px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.2em] text-white transition hover:border-ah-red/50 hover:bg-ah-red/10"
+                      className={`w-full rounded-xl border px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.2em] transition ${
+                        activeRoute === link.route
+                          ? "border-ah-red/55 bg-ah-red/14 text-white shadow-ah-glow-red"
+                          : "border-white/10 bg-white/[0.02] text-white hover:border-ah-red/50 hover:bg-ah-red/10"
+                      }`}
                     >
                       {link.label}
                     </button>

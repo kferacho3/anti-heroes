@@ -297,14 +297,18 @@ export default function Artist() {
   const [associatedArtists, setAssociatedArtists] = useState<SpotifyArtist[]>([]);
   const [loadingMain, setLoadingMain] = useState(true);
   const [loadingAssociated, setLoadingAssociated] = useState(true);
+  const [mainArtistError, setMainArtistError] = useState<string | null>(null);
+  const [associatedArtistsError, setAssociatedArtistsError] = useState<string | null>(null);
 
   const [selectedArtist, setSelectedArtist] = useState<SpotifyArtist | null>(null);
   const [activeArtistTab, setActiveArtistTab] = useState<ArtistTab>("top-tracks");
 
   const [artistTopTracks, setArtistTopTracks] = useState<SpotifyTrack[]>([]);
   const [loadingTopTracks, setLoadingTopTracks] = useState(false);
+  const [topTracksError, setTopTracksError] = useState<string | null>(null);
   const [artistDiscography, setArtistDiscography] = useState<DiscographyGroup[]>([]);
   const [loadingDiscography, setLoadingDiscography] = useState(false);
+  const [discographyError, setDiscographyError] = useState<string | null>(null);
 
   const [selectedDiscographyAlbum, setSelectedDiscographyAlbum] = useState<SpotifyAlbum | null>(
     null,
@@ -360,13 +364,18 @@ export default function Artist() {
   useEffect(() => {
     const fetchMainArtist = async () => {
       try {
+        setMainArtistError(null);
         const response = await fetch(`/api/spotify/artist?artistId=${mainArtistId}`);
-        if (!response.ok) throw new Error("Failed to fetch main artist");
         const data = (await response.json()) as unknown;
+        if (!response.ok) {
+          const errorPayload = data as { error?: string };
+          throw new Error(errorPayload.error || "Failed to fetch main artist");
+        }
         setMainArtist(isSpotifyArtist(data) ? data : null);
       } catch (error) {
         console.error("Error fetching main artist:", error);
         setMainArtist(null);
+        setMainArtistError((error as Error).message || "Unable to load main artist.");
       } finally {
         setLoadingMain(false);
       }
@@ -378,6 +387,7 @@ export default function Artist() {
   useEffect(() => {
     const fetchAssociatedArtists = async () => {
       try {
+        setAssociatedArtistsError(null);
         const responses = await Promise.allSettled(
           associatedArtistIds.map(async (id) => {
             const response = await fetch(`/api/spotify/artist?artistId=${id}`);
@@ -396,6 +406,7 @@ export default function Artist() {
       } catch (error) {
         console.error("Error fetching associated artists:", error);
         setAssociatedArtists([xoJuneArtist]);
+        setAssociatedArtistsError((error as Error).message || "Unable to load artist roster.");
       } finally {
         setLoadingAssociated(false);
       }
@@ -410,6 +421,8 @@ export default function Artist() {
     const fetchSelectedArtistData = async () => {
       setLoadingTopTracks(true);
       setLoadingDiscography(true);
+      setTopTracksError(null);
+      setDiscographyError(null);
       setSelectedDiscographyAlbum(null);
       setDiscographyTracks([]);
 
@@ -420,12 +433,17 @@ export default function Artist() {
           const response = await fetch(
             `/api/spotify/artist-top-tracks?artistId=${selectedArtist.id}`,
           );
+          if (!response.ok) {
+            const payload = (await response.json()) as { error?: string };
+            throw new Error(payload.error || "Failed to fetch top tracks");
+          }
           const data: TopTracksResponse = await response.json();
           setArtistTopTracks((data.tracks || []).slice(0, 10));
         }
       } catch (error) {
         console.error("Error fetching artist top tracks:", error);
         setArtistTopTracks([]);
+        setTopTracksError((error as Error).message || "Unable to load top tracks.");
       } finally {
         setLoadingTopTracks(false);
       }
@@ -436,6 +454,7 @@ export default function Artist() {
       } catch (error) {
         console.error("Error building artist discography:", error);
         setArtistDiscography([]);
+        setDiscographyError((error as Error).message || "Unable to load discography.");
       } finally {
         setLoadingDiscography(false);
       }
@@ -508,6 +527,21 @@ export default function Artist() {
             Select an artist to view top tracks and collaboration discography.
           </p>
         </header>
+
+        {(mainArtistError || associatedArtistsError) && (
+          <div className="mb-6 space-y-2">
+            {mainArtistError && (
+              <p className="rounded-xl border border-ah-red/35 bg-ah-red/10 px-4 py-3 text-sm text-ah-soft">
+                Main artist sync issue: {mainArtistError}
+              </p>
+            )}
+            {associatedArtistsError && (
+              <p className="rounded-xl border border-ah-red/35 bg-ah-red/10 px-4 py-3 text-sm text-ah-soft">
+                Roster sync issue: {associatedArtistsError}
+              </p>
+            )}
+          </div>
+        )}
 
         {mainArtist && (
           <article className="ah-card mb-8 flex flex-col items-start gap-4 rounded-2xl p-5 md:flex-row md:items-center">
@@ -658,7 +692,7 @@ export default function Artist() {
               </div>
             ) : artistTopTracks.length === 0 ? (
               <p className="rounded-2xl border border-white/12 bg-white/[0.02] px-4 py-8 text-center text-ah-soft">
-                No top tracks found for this artist.
+                {topTracksError || "No top tracks found for this artist."}
               </p>
             ) : (
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -800,7 +834,7 @@ export default function Artist() {
             </div>
           ) : artistDiscography.length === 0 ? (
             <p className="rounded-2xl border border-white/12 bg-white/[0.02] px-4 py-8 text-center text-ah-soft">
-              No discography found for this artist.
+              {discographyError || "No discography found for this artist."}
             </p>
           ) : (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">

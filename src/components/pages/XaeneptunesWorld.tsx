@@ -4,7 +4,7 @@ import { xaeneptunePlanetAssets, xaeneptuneSecurityAsset } from "@/data/visualAs
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import Image from "next/image";
 import { useMemo, useState } from "react";
-import { FaGlobeAmericas, FaInstagram, FaLinkedin, FaSoundcloud, FaYoutube } from "react-icons/fa";
+import { FaGlobeAmericas, FaInstagram, FaLinkedin, FaSoundcloud, FaSpotify, FaYoutube } from "react-icons/fa";
 
 export default function XaeneptunesWorld() {
   const reduceMotion = useReducedMotion();
@@ -29,6 +29,14 @@ export default function XaeneptunesWorld() {
             Producer, composer, and creative technologist shaping a catalog built on
             experimentation and consistency.
           </p>
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <span className="rounded-full border border-white/14 bg-white/[0.03] px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-ah-soft">
+              Planets: {xaeneptunePlanetAssets.length}
+            </span>
+            <span className="rounded-full border border-white/14 bg-white/[0.03] px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-ah-soft">
+              Featured: SECURITY
+            </span>
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
@@ -49,6 +57,15 @@ export default function XaeneptunesWorld() {
             className="rounded-sm border border-ah-blue/40 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-ah-blue transition hover:bg-ah-blue/15 hover:text-white"
           >
             Open SECURITY Art
+          </a>
+          <a
+            href="https://open.spotify.com/artist/7iysPipkcsfGFVEgUMDzHQ"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 rounded-sm border border-white/14 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white transition hover:border-ah-red/55 hover:text-ah-red"
+          >
+            <FaSpotify />
+            Open Spotify
           </a>
         </div>
       </header>

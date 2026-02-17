@@ -17,11 +17,12 @@ export async function GET(request: Request) {
       },
     );
     if (!response.ok) {
+      const errorText = await response.text();
       console.error(
-        `Error fetching album data for ID ${albumId}: ${response.status} ${await response.text()}`,
+        `Error fetching album data for ID ${albumId}: ${response.status} ${errorText}`,
       );
       return NextResponse.json(
-        { error: "Failed to fetch album data" },
+        { error: "Failed to fetch album data", detail: errorText },
         { status: response.status },
       );
     }
@@ -29,8 +30,9 @@ export async function GET(request: Request) {
     return NextResponse.json(albumData);
   } catch (error) {
     console.error("Error in /api/spotify/album:", error);
+    const message = error instanceof Error ? error.message : "Failed to fetch album data";
     return NextResponse.json(
-      { error: "Failed to fetch album data" },
+      { error: message },
       { status: 500 },
     );
   }

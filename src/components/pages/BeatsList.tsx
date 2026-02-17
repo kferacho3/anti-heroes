@@ -135,7 +135,9 @@ const BeatsList: React.FC<BeatsListProps> = ({
   const startPreview = (beat: BeatData & { cover: string }) => {
     stopPreview();
     const audio = new Audio(beat.audioFile);
-    audio.play();
+    void audio.play().catch((error) => {
+      console.error("Preview playback failed:", error);
+    });
     previewAudioRef.current = audio;
     setPreviewBeat({ name: beat.beatName, cover: beat.cover, beat });
     setIsPreviewPlaying(true);
@@ -146,7 +148,9 @@ const BeatsList: React.FC<BeatsListProps> = ({
   const handleBeatSelect = (beat: BeatData & { cover: string }) => {
     if (isMobile && !showVisualizerAnyway) {
       const audio = new Audio(beat.audioFile);
-      audio.play();
+      void audio.play().catch((error) => {
+        console.error("Mobile preview playback failed:", error);
+      });
       setMobileModalBeat({ beat, audio });
     } else {
       onBeatSelect(beat.audioFile);
@@ -292,7 +296,7 @@ ${inquiryMessage}
         >
           <Image
             src={beat.cover}
-            alt=""
+            alt={`${cleanBeatName(beat.beatName)} cover art`}
             fill
             className="rounded-lg object-cover shadow-lg group-hover:shadow-purple-500/20"
           />
@@ -428,7 +432,7 @@ ${inquiryMessage}
       <div className="relative aspect-square rounded-xl overflow-hidden">
         <Image
           src={beat.cover}
-          alt=""
+          alt={`${cleanBeatName(beat.beatName)} cover art`}
           fill
           className="object-cover group-hover:scale-110 transition-transform duration-500"
         />
@@ -468,7 +472,7 @@ ${inquiryMessage}
       >
         <Image
           src={beat.cover}
-          alt=""
+          alt={`${cleanBeatName(beat.beatName)} cover art`}
           fill
           className="object-cover"
         />
@@ -648,7 +652,7 @@ ${inquiryMessage}
                 >
                   <Image
                     src={src}
-                    alt=""
+                    alt="Audio visualizer decoration"
                     fill
                     sizes="96px"
                     className="object-cover"
@@ -906,7 +910,7 @@ ${inquiryMessage}
             >
               <Image
                 src={previewBeat.cover}
-                alt=""
+                alt={`${cleanBeatName(previewBeat.name)} preview cover`}
                 fill
                 className="object-cover"
               />
@@ -964,7 +968,7 @@ ${inquiryMessage}
               >
                 <Image
                   src={mobileModalBeat.beat.cover}
-                  alt=""
+                  alt={`${cleanBeatName(mobileModalBeat.beat.beatName)} cover art`}
                   fill
                   className="object-cover"
                 />
@@ -1094,7 +1098,7 @@ ${inquiryMessage}
                 <div className="relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
                   <Image
                     src={inquiryBeat.cover}
-                    alt=""
+                    alt={`${cleanBeatName(inquiryBeat.beatName)} cover art`}
                     fill
                     className="object-cover"
                   />

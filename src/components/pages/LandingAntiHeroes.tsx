@@ -18,6 +18,8 @@ interface SpotifyAlbum {
 
 interface ArtistAlbumsResponse {
   items: SpotifyAlbum[];
+  error?: string;
+  detail?: string;
 }
 
 const XAENEPTUNE_ARTIST_ID = "7iysPipkcsfGFVEgUMDzHQ";
@@ -64,9 +66,12 @@ export default function LandingAntiHeroes() {
           { signal: controller.signal, cache: "no-store" },
         );
 
-        if (!response.ok) throw new Error("Failed to fetch latest drops");
-
         const data: ArtistAlbumsResponse = await response.json();
+        if (!response.ok) {
+          const detail = data.detail ? ` (${data.detail})` : "";
+          throw new Error(`${data.error || "Failed to fetch latest drops"}${detail}`);
+        }
+
         const unique = new Map<string, SpotifyAlbum>();
         (data.items || []).forEach((album) => {
           if (!unique.has(album.id)) unique.set(album.id, album);
@@ -79,7 +84,7 @@ export default function LandingAntiHeroes() {
       } catch (error) {
         if ((error as Error).name === "AbortError") return;
         setLatestDrops([]);
-        setDropsError("Unable to load live drops right now.");
+        setDropsError((error as Error).message || "Unable to load live drops right now.");
       } finally {
         if (!controller.signal.aborted) setLoadingDrops(false);
       }
@@ -137,6 +142,20 @@ export default function LandingAntiHeroes() {
               Dark luxury and controlled rebellion. Built for artists who own
               their catalog, shape their sound, and move without permission.
             </motion.p>
+
+            <motion.div
+              className="mt-5 flex flex-wrap items-center gap-2"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.24 }}
+            >
+              <span className="rounded-full border border-ah-blue/45 bg-ah-blue/12 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-ah-blue">
+                Live Spotify Sync
+              </span>
+              <span className="rounded-full border border-white/14 bg-white/[0.02] px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-ah-soft">
+                Latest Drops: {latestDrops.length}
+              </span>
+            </motion.div>
 
             <motion.div
               className="mt-8 flex flex-wrap gap-3"
@@ -309,7 +328,7 @@ export default function LandingAntiHeroes() {
 
           {!loadingDrops && dropsError && (
             <p className="mt-5 rounded-xl border border-ah-red/30 bg-ah-red/10 px-4 py-3 text-sm text-ah-soft">
-              {dropsError}
+              Spotify sync issue: {dropsError}
             </p>
           )}
         </motion.section>

@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ChangeEvent, FormEvent, ReactNode, useEffect, useState } from "react";
+import { ChangeEvent, FormEvent, ReactNode, useState } from "react";
 import {
   FaCheckCircle,
   FaClock,
@@ -47,13 +47,6 @@ export default function Connect() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [errors, setErrors] = useState<Partial<FormData>>({});
-
-  useEffect(() => {
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, []);
 
   const handleChange = (
     event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
@@ -140,6 +133,14 @@ ${formData.message}`.trim();
             <p className="mt-2 max-w-xl text-sm text-ah-soft">
               Licensing, production, collaboration, and custom project inquiries.
             </p>
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              <span className="rounded-full border border-white/14 bg-white/[0.03] px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-ah-soft">
+                Response Window: 24-48h
+              </span>
+              <span className="rounded-full border border-white/14 bg-white/[0.03] px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-ah-soft">
+                contact@antiheroes.co
+              </span>
+            </div>
           </header>
 
           <AnimatePresence>

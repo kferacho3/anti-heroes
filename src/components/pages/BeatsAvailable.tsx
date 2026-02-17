@@ -2,7 +2,7 @@
 
 import { useVisualizer } from "@/context/VisualizerContext";
 import { useRouteStore } from "@/store/useRouteStore";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import BeatsList from "./BeatsList";
 
 export default function BeatsAvailable(): React.ReactElement {
@@ -37,12 +37,6 @@ export default function BeatsAvailable(): React.ReactElement {
     setIsBeatVisualizer(false);
     setActiveRoute("beats");
   };
-
-  useEffect(() => {
-    if (selectedBeat) {
-      console.log("Selected beat:", selectedBeat);
-    }
-  }, [selectedBeat]);
 
   return (
     <div className="min-h-screen">

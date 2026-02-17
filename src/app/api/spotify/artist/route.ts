@@ -14,11 +14,12 @@ export async function GET(request: Request) {
       },
     );
     if (!response.ok) {
+      const errorText = await response.text();
       console.error(
-        `Error fetching artist data for ID ${artistId}: ${response.status} ${await response.text()}`,
+        `Error fetching artist data for ID ${artistId}: ${response.status} ${errorText}`,
       );
       return NextResponse.json(
-        { error: "Failed to fetch artist data" },
+        { error: "Failed to fetch artist data", detail: errorText },
         { status: response.status },
       );
     }
@@ -26,8 +27,9 @@ export async function GET(request: Request) {
     return NextResponse.json(artistData);
   } catch (error) {
     console.error("Error in /api/spotify/artist:", error);
+    const message = error instanceof Error ? error.message : "Failed to fetch artist data";
     return NextResponse.json(
-      { error: "Failed to fetch artist data" },
+      { error: message },
       { status: 500 },
     );
   }

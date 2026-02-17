@@ -31,6 +31,8 @@ interface SpotifyAlbum {
 
 interface ArtistAlbumsResponse {
   items: SpotifyAlbum[];
+  error?: string;
+  detail?: string;
 }
 
 type Tab = "associated" | "personal" | "executive";
@@ -70,6 +72,8 @@ export default function Albums() {
   const [activeTab, setActiveTab] = useState<Tab>("associated");
   const [discographyAlbums, setDiscographyAlbums] = useState<SpotifyAlbum[]>([]);
   const [loadingDiscography, setLoadingDiscography] = useState(true);
+  const [discographyError, setDiscographyError] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
   const [selectedAlbum, setSelectedAlbum] = useState<SpotifyAlbum | null>(null);
   const [albumTracks, setAlbumTracks] = useState<SpotifyTrack[]>([]);
   const [loadingAlbumTracks, setLoadingAlbumTracks] = useState(false);
@@ -77,18 +81,23 @@ export default function Albums() {
   useEffect(() => {
     const fetchDiscographyAlbums = async () => {
       setLoadingDiscography(true);
+      setDiscographyError(null);
       try {
         const albumsRes = await fetch(
           "/api/spotify/artist-albums?artistId=7iysPipkcsfGFVEgUMDzHQ&include_groups=album,single&limit=50",
         );
+        const albumsData: ArtistAlbumsResponse = await albumsRes.json();
 
         if (!albumsRes.ok) {
-          console.error(`Error fetching artist albums: ${await albumsRes.text()}`);
+          const detail = albumsData.detail ? ` (${albumsData.detail})` : "";
+          console.error(`Error fetching artist albums: ${albumsData.error || "Unknown error"}`);
+          setDiscographyError(
+            `${albumsData.error || "Failed to fetch artist albums"}${detail}`,
+          );
           setDiscographyAlbums([]);
           return;
         }
 
-        const albumsData: ArtistAlbumsResponse = await albumsRes.json();
         const fetchedAlbums = albumsData.items || [];
         const fetchedIds = new Set(fetchedAlbums.map((album) => album.id));
 
@@ -125,6 +134,7 @@ export default function Albums() {
       } catch (error) {
         console.error("Error fetching discography albums:", error);
         setDiscographyAlbums([]);
+        setDiscographyError("Unable to load discography from Spotify.");
       } finally {
         setLoadingDiscography(false);
       }
@@ -134,22 +144,35 @@ export default function Albums() {
   }, []);
 
   const filteredAlbums = useMemo(() => {
+    const normalizedSearch = search.trim().toLowerCase();
+
     if (activeTab === "personal") {
-      return discographyAlbums.filter((album) => personalAlbumIds.includes(album.id));
+      return discographyAlbums.filter(
+        (album) =>
+          personalAlbumIds.includes(album.id) &&
+          album.name.toLowerCase().includes(normalizedSearch),
+      );
     }
 
     if (activeTab === "executive") {
-      return discographyAlbums.filter((album) => executiveAlbumIds.includes(album.id));
+      return discographyAlbums.filter(
+        (album) =>
+          executiveAlbumIds.includes(album.id) &&
+          album.name.toLowerCase().includes(normalizedSearch),
+      );
     }
 
-    return discographyAlbums;
-  }, [activeTab, discographyAlbums]);
+    return discographyAlbums.filter((album) =>
+      album.name.toLowerCase().includes(normalizedSearch),
+    );
+  }, [activeTab, discographyAlbums, search]);
 
   const handleAlbumClick = async (album: SpotifyAlbum) => {
     setSelectedAlbum(album);
 
     if (album.tracks && album.tracks.length > 0) {
       setAlbumTracks(album.tracks);
+      setLoadingAlbumTracks(false);
       return;
     }
 
@@ -159,6 +182,7 @@ export default function Albums() {
       if (!res.ok) {
         console.error(`Error fetching tracks for album ${album.id}: ${await res.text()}`);
         setAlbumTracks([]);
+        setLoadingAlbumTracks(false);
         return;
       }
 
@@ -194,28 +218,50 @@ export default function Albums() {
         <p className="mt-2 max-w-2xl text-sm text-ah-soft md:text-base">
           Personal releases, associated projects, and executive-produced records.
         </p>
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <span className="rounded-full border border-white/14 bg-white/[0.03] px-3 py-1 text-[10px] uppercase tracking-[0.17em] text-ah-soft">
+            Releases: {discographyAlbums.length}
+          </span>
+          <span className="rounded-full border border-white/14 bg-white/[0.03] px-3 py-1 text-[10px] uppercase tracking-[0.17em] text-ah-soft">
+            Showing: {filteredAlbums.length}
+          </span>
+        </div>
       </header>
 
       {!selectedAlbum && (
-        <div className="mb-8 flex flex-wrap gap-2">
-          {[
-            { key: "associated", label: "All Albums" },
-            { key: "personal", label: "Personal" },
-            { key: "executive", label: "Executive" },
-          ].map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key as Tab)}
-              className={`rounded-sm px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] transition ${
-                activeTab === tab.key
-                  ? "bg-ah-red text-white shadow-ah-glow-red"
-                  : "border border-white/14 bg-white/[0.02] text-ah-soft hover:text-white"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+        <div className="mb-8 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-wrap gap-2">
+            {[
+              { key: "associated", label: "All Albums" },
+              { key: "personal", label: "Personal" },
+              { key: "executive", label: "Executive" },
+            ].map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key as Tab)}
+                className={`rounded-sm px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] transition ${
+                  activeTab === tab.key
+                    ? "bg-ah-red text-white shadow-ah-glow-red"
+                    : "border border-white/14 bg-white/[0.02] text-ah-soft hover:text-white"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+          <input
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search releases"
+            className="w-full rounded-xl border border-white/14 bg-black/45 px-3 py-2 text-sm text-white placeholder:text-ah-soft/70 focus:border-ah-blue/45 focus:outline-none md:max-w-xs"
+          />
         </div>
+      )}
+
+      {!selectedAlbum && discographyError && (
+        <p className="mb-6 rounded-xl border border-ah-red/35 bg-ah-red/10 px-4 py-3 text-sm text-ah-soft">
+          Spotify sync issue: {discographyError}
+        </p>
       )}
 
       {loadingDiscography ? (
