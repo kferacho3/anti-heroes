@@ -13,9 +13,7 @@ export default async function handler(
 
   const clientId =
     process.env.SPOTIFY_CLIENT_ID || process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID;
-  const clientSecret =
-    process.env.SPOTIFY_CLIENT_SECRET ||
-    process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_SECRET;
+  const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
   const redirectUri =
     process.env.NODE_ENV === "production"
       ? process.env.SPOTIFY_REDIRECT_URI_PROD

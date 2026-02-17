@@ -24,13 +24,16 @@ Spotify API routes require server-side credentials.
 2. Set:
    - `SPOTIFY_CLIENT_ID`
    - `SPOTIFY_CLIENT_SECRET`
+   - `NEXT_PUBLIC_SPOTIFY_CLIENT_ID` (optional, for legacy client-side references)
 3. Restart the dev server after changing env vars.
 
 Without these, routes like `/api/spotify/artist-albums` will fail with `invalid_client`.
 
+`SPOTIFY_CLIENT_SECRET` must stay server-side only. Do not prefix it with `NEXT_PUBLIC_`.
+
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) for typography optimization.
 
 ## Learn More
 

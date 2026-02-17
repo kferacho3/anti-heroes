@@ -2,9 +2,7 @@
 export async function getSpotifyToken(): Promise<string> {
   const clientId =
     process.env.SPOTIFY_CLIENT_ID || process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID;
-  const clientSecret =
-    process.env.SPOTIFY_CLIENT_SECRET ||
-    process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_SECRET;
+  const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
   const tokenUrl = "https://accounts.spotify.com/api/token";
 
   if (!clientId || !clientSecret) {
@@ -33,7 +31,7 @@ export async function getSpotifyToken(): Promise<string> {
   if (!response.ok) {
     const errorText = await response.text();
     console.error(`Error fetching Spotify token: ${response.status} ${errorText}`);
-    throw new Error("Failed to fetch Spotify token");
+    throw new Error(`Failed to fetch Spotify token: ${response.status} ${errorText}`);
   }
 
   const data = await response.json();

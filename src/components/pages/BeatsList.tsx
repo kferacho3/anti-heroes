@@ -555,7 +555,7 @@ ${inquiryMessage}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-purple-900/10 via-transparent to-transparent" />
       </motion.div>
 
-      <div className="relative z-10 flex flex-col h-screen">
+      <div className="relative z-10 flex min-h-screen flex-col">
         {/* Header */}
         <motion.header
           initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -20 }}
@@ -751,40 +751,28 @@ ${inquiryMessage}
           )}
         </AnimatePresence>
 
-        {/* Content */}
-   <main
-  ref={mainContentRef}
-  className="flex-1 overflow-y-auto px-4 md:px-8 py-6"
-  style={{ paddingBottom: 'var(--footer-h,3.5rem)' }}   // 👈 new
->
-{viewMode === "list" && (
-    <div /* allow horizontal scroll on very small screens            */
-         className="overflow-x-auto">
-      <table className="w-full">
-        {/* sticky header so column titles stay in view               */}
-        <thead className="sticky top-0 z-10 bg-black/95 backdrop-blur-sm">
-          <tr className="border-b border-gray-800 text-left text-sm text-gray-400">
-            <th className="py-3 pl-4 md:pl-6"></th>
-            <th className="py-3 px-4">Title</th>
-            <th className="py-3 px-4 hidden md:table-cell">Producer</th>
-            <th className="py-3 px-4 hidden lg:table-cell">Key</th>
-            <th className="py-3 px-4 hidden lg:table-cell">BPM</th>
-            <th className="py-3 px-4 hidden xl:table-cell">Date</th>
-            <th className="py-3 pr-4 md:pr-6 text-right">Actions</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {currentBeats.map((beat, idx) => BeatRow(beat, idx))}
-        </tbody>
-      </table>
-      {/* extra margin so *all* rows can scroll fully into view       */}
-      <div className="h-16 md:hidden" />
-    </div>
-  )}
+        <main ref={mainContentRef} className="flex-1 overflow-y-auto px-4 py-6 md:px-8">
+          {viewMode === "list" && (
+            <div className="overflow-x-auto pb-4">
+              <table className="w-full">
+                <thead className="sticky top-0 z-10 bg-black/95 backdrop-blur-sm">
+                  <tr className="border-b border-gray-800 text-left text-sm text-gray-400">
+                    <th className="py-3 pl-4 md:pl-6"></th>
+                    <th className="py-3 px-4">Title</th>
+                    <th className="py-3 px-4 hidden md:table-cell">Producer</th>
+                    <th className="py-3 px-4 hidden lg:table-cell">Key</th>
+                    <th className="py-3 px-4 hidden lg:table-cell">BPM</th>
+                    <th className="py-3 px-4 hidden xl:table-cell">Date</th>
+                    <th className="py-3 pr-4 md:pr-6 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>{currentBeats.map((beat, idx) => BeatRow(beat, idx))}</tbody>
+              </table>
+            </div>
+          )}
 
           {viewMode === "grid" && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 lg:grid-cols-3 xl:grid-cols-4">
               {currentBeats.map((beat, index) => BeatTile(beat, index))}
             </div>
           )}
@@ -801,95 +789,71 @@ ${inquiryMessage}
               animate={{ opacity: 1 }}
               className="flex flex-col items-center justify-center py-20"
             >
-              <FaMusic className="text-6xl text-gray-700 mb-4" />
-              <p className="text-gray-500 text-lg">No beats found matching your criteria</p>
+              <FaMusic className="mb-4 text-6xl text-gray-700" />
+              <p className="text-lg text-gray-500">No beats found matching your criteria</p>
             </motion.div>
           )}
         </main>
 
-        {/* Pagination */}
         <AnimatePresence>
           {beatsPerPage !== "all" && totalPages > 1 && (
-  /* pagination footer – mobile-height fixed */
-<motion.footer
-  initial={{ opacity: 0, y: 50 }}
-  animate={{ opacity: 1, y: 0 }}
-  exit={{ opacity: 0, y: 50 }}
-  /* ↓ expose the current height through a CSS var */
-  style={{ '--footer-h': '3.5rem' } as React.CSSProperties}
-  className="
-      fixed bottom-0 left-0 right-0 z-20
-      bg-black/90 backdrop-blur-md border-t border-gray-800
-      /* 60 % shorter bar on mobile            */
-      py-2 md:py-4      /* ⇐ was py-4 everywhere */
-  "
->
-  <div className="flex items-center justify-center gap-2 md:gap-4 scale-90 md:scale-100">
-    {/* ◀ previous */}
-    <motion.button
-      whileHover={{ scale: 1.1 }}
-      whileTap={{ scale: 0.95 }}
-      onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-      disabled={currentPage === 1}
-      className="
-        p-1.5 md:p-2 rounded-lg
-        bg-gray-900/50 border border-gray-800
-        disabled:opacity-40 disabled:cursor-not-allowed
-        hover:border-purple-500 transition-colors
-      "
-    >
-      <FaChevronLeft className="w-4 h-4 md:w-5 md:h-5" />
-    </motion.button>
+            <motion.footer
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 24 }}
+              className="z-20 border-t border-gray-800 bg-black/90 px-4 py-2 backdrop-blur-md md:px-8 md:py-4"
+            >
+              <div className="flex items-center justify-center gap-2 md:gap-4">
+                <motion.button
+                  whileHover={{ scale: 1.08 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="rounded-lg border border-gray-800 bg-gray-900/50 p-1.5 transition-colors hover:border-purple-500 disabled:cursor-not-allowed disabled:opacity-40 md:p-2"
+                  aria-label="Previous page"
+                >
+                  <FaChevronLeft className="h-4 w-4 md:h-5 md:w-5" />
+                </motion.button>
 
-    {/* numeric buttons */}
-    <div className="flex items-center gap-1.5 md:gap-2">
-      {[...Array(Math.min(5, totalPages))].map((_, i) => {
-        let pageNum;
-        if (totalPages <= 5)            pageNum = i + 1;
-        else if (currentPage <= 3)      pageNum = i + 1;
-        else if (currentPage >= totalPages - 2) pageNum = totalPages - 4 + i;
-        else                            pageNum = currentPage - 2 + i;
+                <div className="flex items-center gap-1.5 md:gap-2">
+                  {[...Array(Math.min(5, totalPages))].map((_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) pageNum = i + 1;
+                    else if (currentPage <= 3) pageNum = i + 1;
+                    else if (currentPage >= totalPages - 2) pageNum = totalPages - 4 + i;
+                    else pageNum = currentPage - 2 + i;
 
-        return (
-          <motion.button
-            key={pageNum}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setCurrentPage(pageNum)}
-            className={`
-              w-8 h-8 md:w-10 md:h-10 rounded-lg font-medium
-              transition-all duration-200
-              ${
-                currentPage === pageNum
-                  ? "bg-gradient-to-r from-purple-600 to-emerald-600 text-white"
-                  : "bg-gray-900/50 border border-gray-800 text-gray-400 hover:text-white hover:border-purple-500"
-              }
-            `}
-          >
-            {pageNum}
-          </motion.button>
-        );
-      })}
-    </div>
+                    return (
+                      <motion.button
+                        key={pageNum}
+                        whileHover={{ scale: 1.08 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`h-8 w-8 rounded-lg font-medium transition-all duration-200 md:h-10 md:w-10 ${
+                          currentPage === pageNum
+                            ? "bg-gradient-to-r from-purple-600 to-emerald-600 text-white"
+                            : "border border-gray-800 bg-gray-900/50 text-gray-400 hover:border-purple-500 hover:text-white"
+                        }`}
+                        aria-label={`Go to page ${pageNum}`}
+                      >
+                        {pageNum}
+                      </motion.button>
+                    );
+                  })}
+                </div>
 
-    {/* ▶ next */}
-    <motion.button
-      whileHover={{ scale: 1.1 }}
-      whileTap={{ scale: 0.95 }}
-      onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-      disabled={currentPage === totalPages}
-      className="
-        p-1.5 md:p-2 rounded-lg
-        bg-gray-900/50 border border-gray-800
-        disabled:opacity-40 disabled:cursor-not-allowed
-        hover:border-purple-500 transition-colors
-      "
-    >
-      <FaChevronRight className="w-4 h-4 md:w-5 md:h-5" />
-    </motion.button>
-  </div>
-</motion.footer>
-
+                <motion.button
+                  whileHover={{ scale: 1.08 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  className="rounded-lg border border-gray-800 bg-gray-900/50 p-1.5 transition-colors hover:border-purple-500 disabled:cursor-not-allowed disabled:opacity-40 md:p-2"
+                  aria-label="Next page"
+                >
+                  <FaChevronRight className="h-4 w-4 md:h-5 md:w-5" />
+                </motion.button>
+              </div>
+            </motion.footer>
           )}
         </AnimatePresence>
       </div>

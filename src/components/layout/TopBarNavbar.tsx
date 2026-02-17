@@ -26,7 +26,7 @@ const navAnim = {
 };
 
 export default function TopBarNavbar({ onHamburgerClick }: TopBarNavbarProps) {
-  const { setActiveRoute, setVisualizerMode } = useRouteStore();
+  const { activeRoute, setActiveRoute, setVisualizerMode } = useRouteStore();
   const { setIsBeatVisualizer } = useVisualizer();
 
   const handleBeats = () => {
@@ -74,13 +74,21 @@ export default function TopBarNavbar({ onHamburgerClick }: TopBarNavbarProps) {
         <div className="hidden items-center gap-2 md:flex">
           <button
             onClick={handleBeats}
-            className="rounded-sm border border-white/16 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-white transition hover:border-ah-red/70 hover:text-ah-red"
+            className={`rounded-sm border px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.2em] transition ${
+              activeRoute === "beats"
+                ? "border-ah-red/70 bg-ah-red/14 text-white shadow-ah-glow-red"
+                : "border-white/16 text-white hover:border-ah-red/70 hover:text-ah-red"
+            }`}
           >
             Beats
           </button>
           <button
             onClick={handleVisualizer}
-            className="rounded-sm bg-ah-blue px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-white transition hover:shadow-ah-glow-blue"
+            className={`rounded-sm px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-white transition ${
+              activeRoute === "beats-visualizer"
+                ? "bg-ah-blue shadow-ah-glow-blue"
+                : "border border-ah-blue/65 bg-ah-blue/12 hover:bg-ah-blue hover:shadow-ah-glow-blue"
+            }`}
           >
             Visualizer
           </button>

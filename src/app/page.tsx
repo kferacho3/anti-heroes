@@ -65,6 +65,16 @@ export default function HomePage() {
     setDpr(Math.min(deviceDpr, maxDpr));
   }, [route, maxDpr]);
 
+  useEffect(() => {
+    if (!showConnectModal) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [showConnectModal]);
+
   const changeRoute = (nextRoute: Route) => {
     setSidebarOpen(false);
     if (nextRoute === "connect") {

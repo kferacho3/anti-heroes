@@ -58,7 +58,7 @@ export default function Sidebar({ isOpen, onClose, activeRoute, setActiveRoute }
           />
 
           <motion.aside
-            className="fixed inset-y-0 right-0 z-[11001] flex h-screen w-full max-w-[92vw] flex-col border-l border-white/12 bg-ah-black/95 px-6 pb-[calc(env(safe-area-inset-bottom,0px)+20px)] pt-[calc(env(safe-area-inset-top,0px)+20px)] shadow-[0_0_0_1px_rgba(255,255,255,.06),0_28px_90px_rgba(0,0,0,.6)] sm:max-w-sm"
+            className="fixed inset-y-0 right-0 z-[11001] flex h-[100dvh] w-full max-w-[92vw] flex-col border-l border-white/12 bg-ah-black/95 px-6 pb-[calc(env(safe-area-inset-bottom,0px)+20px)] pt-[calc(env(safe-area-inset-top,0px)+20px)] shadow-[0_0_0_1px_rgba(255,255,255,.06),0_28px_90px_rgba(0,0,0,.6)] sm:max-w-sm"
             initial={reduceMotion ? { opacity: 0 } : { x: "100%", opacity: 0.6 }}
             animate={reduceMotion ? { opacity: 1 } : { x: 0, opacity: 1 }}
             exit={reduceMotion ? { opacity: 0 } : { x: "100%", opacity: 0.6 }}
