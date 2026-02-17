@@ -3,7 +3,7 @@
 import { hardcodedAlbums } from "@/data/artistsData";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 interface SpotifyArtist {
   id: string;
@@ -317,6 +317,7 @@ export default function Artist() {
   const [loadingAlbumTracks, setLoadingAlbumTracks] = useState(false);
   const [rosterSearch, setRosterSearch] = useState("");
   const [rosterSort, setRosterSort] = useState<"followers" | "name">("followers");
+  const rosterSearchRef = useRef<HTMLInputElement>(null);
 
   const mainArtistId = "7iysPipkcsfGFVEgUMDzHQ";
 
@@ -486,6 +487,31 @@ export default function Artist() {
     fetchSelectedArtistData();
   }, [selectedArtist]);
 
+  useEffect(() => {
+    if (selectedArtist) return undefined;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      const isTyping =
+        target?.tagName === "INPUT" ||
+        target?.tagName === "TEXTAREA" ||
+        target?.tagName === "SELECT" ||
+        target?.isContentEditable;
+
+      if (!isTyping && event.key === "/") {
+        event.preventDefault();
+        rosterSearchRef.current?.focus();
+      }
+
+      if (event.key === "Escape" && rosterSearch) {
+        setRosterSearch("");
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [rosterSearch, selectedArtist]);
+
   const openDiscographyAlbum = async (album: SpotifyAlbum) => {
     setSelectedDiscographyAlbum(album);
     setLoadingAlbumTracks(true);
@@ -613,6 +639,7 @@ export default function Artist() {
           <>
             <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <input
+                ref={rosterSearchRef}
                 value={rosterSearch}
                 onChange={(event) => setRosterSearch(event.target.value)}
                 placeholder="Search artists"
@@ -639,7 +666,7 @@ export default function Artist() {
                       ? "bg-ah-red text-white shadow-ah-glow-red"
                       : "border border-white/14 bg-white/[0.02] text-ah-soft hover:text-white"
                   }`}
-                    >
+                >
                   Sort A-Z
                 </button>
                 <button

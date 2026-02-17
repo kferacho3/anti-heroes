@@ -739,6 +739,10 @@ ${inquiryMessage}
           </div>
         </motion.div>
 
+        <div className="px-4 pb-2 text-[11px] uppercase tracking-[0.16em] text-gray-500 md:px-8">
+          Tip: combine name + BPM filters to zero in on licensing-ready picks faster.
+        </div>
+
         {/* Filters panel */}
         <AnimatePresence>
           {showFilters && (

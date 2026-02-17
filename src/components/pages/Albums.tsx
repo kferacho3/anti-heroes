@@ -290,6 +290,12 @@ export default function Albums() {
         </div>
       )}
 
+      {!selectedAlbum && (
+        <p className="mb-6 text-[11px] uppercase tracking-[0.18em] text-ah-soft">
+          Filter by category, search by title, then sort by release order.
+        </p>
+      )}
+
       {!selectedAlbum && discographyError && (
         <p className="mb-6 rounded-xl border border-ah-red/35 bg-ah-red/10 px-4 py-3 text-sm text-ah-soft">
           Spotify sync issue: {discographyError}

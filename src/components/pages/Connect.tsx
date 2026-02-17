@@ -158,6 +158,10 @@ ${formData.message}`.trim();
           </AnimatePresence>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            <p className="text-[11px] uppercase tracking-[0.18em] text-ah-soft">
+              Click any inquiry tile to auto-fill category and subject.
+            </p>
+
             <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
               {inquiryTypes.map((type) => (
                 <button

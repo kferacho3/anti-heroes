@@ -46,6 +46,9 @@ export default function XaeneptunesWorld() {
             <span className="rounded-full border border-white/14 bg-white/[0.03] px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-ah-soft">
               Featured: SECURITY
             </span>
+            <span className="rounded-full border border-white/14 bg-white/[0.03] px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-ah-soft">
+              Orbit: {autoRotate ? "Auto" : "Manual"}
+            </span>
           </div>
         </div>
 

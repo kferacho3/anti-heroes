@@ -285,6 +285,10 @@ export default function Music() {
         </button>
       </div>
 
+      <p className="mb-6 text-[11px] uppercase tracking-[0.18em] text-ah-soft">
+        Shortcut: press `/` to search, `Shift + R` to refresh the feed.
+      </p>
+
       <AnimatePresence mode="wait">
         <motion.div
           key={activeTab}
