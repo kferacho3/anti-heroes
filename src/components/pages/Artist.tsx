@@ -151,6 +151,26 @@ function isSimilar(name1: string, name2: string): boolean {
   return longestCommonSubstring(first, second) >= 5;
 }
 
+function isSpotifyArtist(value: unknown): value is SpotifyArtist {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Partial<SpotifyArtist>;
+  return (
+    typeof candidate.id === "string" &&
+    candidate.id.trim().length > 0 &&
+    typeof candidate.name === "string" &&
+    candidate.name.trim().length > 0
+  );
+}
+
+function uniqueArtistsById(artists: SpotifyArtist[]): SpotifyArtist[] {
+  const seen = new Set<string>();
+  return artists.filter((artist) => {
+    if (seen.has(artist.id)) return false;
+    seen.add(artist.id);
+    return true;
+  });
+}
+
 function getAhmadFallbackTopTracks(): SpotifyTrack[] {
   const jordanyear = hardcodedAlbums["6PBCQ44h15c7VN35lAzu3M"];
   const social = hardcodedAlbums["55Xr7mE7Zya6ccCViy7yyh"];
@@ -341,10 +361,12 @@ export default function Artist() {
     const fetchMainArtist = async () => {
       try {
         const response = await fetch(`/api/spotify/artist?artistId=${mainArtistId}`);
-        const data: SpotifyArtist = await response.json();
-        setMainArtist(data);
+        if (!response.ok) throw new Error("Failed to fetch main artist");
+        const data = (await response.json()) as unknown;
+        setMainArtist(isSpotifyArtist(data) ? data : null);
       } catch (error) {
         console.error("Error fetching main artist:", error);
+        setMainArtist(null);
       } finally {
         setLoadingMain(false);
       }
@@ -356,12 +378,21 @@ export default function Artist() {
   useEffect(() => {
     const fetchAssociatedArtists = async () => {
       try {
-        const responses = await Promise.all(
-          associatedArtistIds.map((id) =>
-            fetch(`/api/spotify/artist?artistId=${id}`).then((response) => response.json()),
-          ),
+        const responses = await Promise.allSettled(
+          associatedArtistIds.map(async (id) => {
+            const response = await fetch(`/api/spotify/artist?artistId=${id}`);
+            if (!response.ok) return null;
+            const data = (await response.json()) as unknown;
+            return isSpotifyArtist(data) ? data : null;
+          }),
         );
-        setAssociatedArtists([...responses, xoJuneArtist]);
+
+        const validArtists = responses
+          .filter((result): result is PromiseFulfilledResult<SpotifyArtist | null> => result.status === "fulfilled")
+          .map((result) => result.value)
+          .filter((artist): artist is SpotifyArtist => Boolean(artist));
+
+        setAssociatedArtists(uniqueArtistsById([...validArtists, xoJuneArtist]));
       } catch (error) {
         console.error("Error fetching associated artists:", error);
         setAssociatedArtists([xoJuneArtist]);
@@ -527,7 +558,7 @@ export default function Artist() {
                 <div className="relative aspect-square overflow-hidden rounded-xl border border-white/10">
                   <Image
                     src={getArtistImageUrl(artist)}
-                    alt={artist.name}
+                    alt={artist.name || "Artist profile"}
                     fill
                     className="object-cover transition duration-500 group-hover:scale-105"
                     sizes="(max-width: 768px) 50vw, (max-width: 1280px) 33vw, 25vw"
