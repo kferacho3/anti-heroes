@@ -6,33 +6,43 @@ import { motion, useReducedMotion } from "framer-motion";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 
-const dropPreview = [
-  {
-    name: "HELLBOUND",
-    meta: "140 BPM • Trap / Dark",
-    artwork: visualizerDecorationAssets[0],
-  },
-  {
-    name: "NIGHTFALL",
-    meta: "154 BPM • Drill / Ambient",
-    artwork: visualizerDecorationAssets[1],
-  },
-  {
-    name: "RITUAL",
-    meta: "132 BPM • Alt / Experimental",
-    artwork: visualizerDecorationAssets[2],
-  },
-  {
-    name: "ATOMIC",
-    meta: "148 BPM • Rage / Hybrid",
-    artwork: visualizerDecorationAssets[3],
-  },
-];
+interface SpotifyAlbum {
+  id: string;
+  name: string;
+  release_date: string;
+  album_type?: string;
+  total_tracks?: number;
+  images?: { url: string }[];
+  external_urls?: { spotify?: string };
+}
+
+interface ArtistAlbumsResponse {
+  items: SpotifyAlbum[];
+}
+
+const XAENEPTUNE_ARTIST_ID = "7iysPipkcsfGFVEgUMDzHQ";
+
+function parseReleaseDate(value: string | undefined): number {
+  if (!value) return 0;
+  const [year, month = "01", day = "01"] = value.split("-");
+  const parsed = Date.parse(`${year}-${month}-${day}`);
+  return Number.isNaN(parsed) ? 0 : parsed;
+}
+
+function dropMeta(album: SpotifyAlbum): string {
+  const year = album.release_date?.slice(0, 4) || "Unknown";
+  const type = album.album_type === "single" ? "Single" : "Album";
+  const tracks = album.total_tracks ? `${album.total_tracks} Tracks` : type;
+  return `${year} • ${tracks}`;
+}
 
 export default function LandingAntiHeroes() {
   const { setActiveRoute } = useRouteStore();
   const reduceMotion = useReducedMotion();
   const [heroArtIndex, setHeroArtIndex] = useState(0);
+  const [latestDrops, setLatestDrops] = useState<SpotifyAlbum[]>([]);
+  const [loadingDrops, setLoadingDrops] = useState(true);
+  const [dropsError, setDropsError] = useState<string | null>(null);
 
   useEffect(() => {
     if (reduceMotion) return undefined;
@@ -41,6 +51,43 @@ export default function LandingAntiHeroes() {
     }, 4800);
     return () => clearInterval(timer);
   }, [reduceMotion]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const fetchLatestDrops = async () => {
+      setLoadingDrops(true);
+      setDropsError(null);
+      try {
+        const response = await fetch(
+          `/api/spotify/artist-albums?artistId=${XAENEPTUNE_ARTIST_ID}`,
+          { signal: controller.signal, cache: "no-store" },
+        );
+
+        if (!response.ok) throw new Error("Failed to fetch latest drops");
+
+        const data: ArtistAlbumsResponse = await response.json();
+        const unique = new Map<string, SpotifyAlbum>();
+        (data.items || []).forEach((album) => {
+          if (!unique.has(album.id)) unique.set(album.id, album);
+        });
+
+        const sorted = Array.from(unique.values()).sort(
+          (a, b) => parseReleaseDate(b.release_date) - parseReleaseDate(a.release_date),
+        );
+        setLatestDrops(sorted.slice(0, 4));
+      } catch (error) {
+        if ((error as Error).name === "AbortError") return;
+        setLatestDrops([]);
+        setDropsError("Unable to load live drops right now.");
+      } finally {
+        if (!controller.signal.aborted) setLoadingDrops(false);
+      }
+    };
+
+    fetchLatestDrops();
+    return () => controller.abort();
+  }, []);
 
   const heroArt = visualizerDecorationAssets[heroArtIndex];
   const sideArts = useMemo(
@@ -198,36 +245,73 @@ export default function LandingAntiHeroes() {
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {dropPreview.map((drop) => (
-              <article
-                key={drop.name}
-                className="group ah-card rounded-2xl p-4 transition hover:-translate-y-1 hover:border-ah-red/45"
-              >
-                <div className="relative mb-4 aspect-square overflow-hidden rounded-xl border border-white/10">
-                  <Image
-                    src={drop.artwork}
-                    alt={`${drop.name} visualizer artwork`}
-                    fill
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                    className="object-cover transition duration-500 group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/20 to-transparent" />
-                </div>
-                <h3 className="font-[var(--font-display)] text-lg tracking-wide">
-                  {drop.name}
-                </h3>
-                <p className="mt-1 text-xs uppercase tracking-[0.18em] text-ah-soft">
-                  {drop.meta}
-                </p>
-                <button
-                  onClick={() => setActiveRoute("beats")}
-                  className="mt-4 w-full rounded-sm border border-white/15 bg-white/5 px-3 py-2 text-[11px] uppercase tracking-[0.2em] text-white transition hover:border-ah-blue/70 hover:bg-ah-blue/10"
+            {loadingDrops &&
+              Array.from({ length: 4 }, (_, index) => (
+                <article key={`loading-${index}`} className="ah-card rounded-2xl p-4">
+                  <div className="mb-4 aspect-square animate-pulse rounded-xl border border-white/10 bg-white/5" />
+                  <div className="h-5 w-4/5 animate-pulse rounded bg-white/10" />
+                  <div className="mt-2 h-3 w-2/5 animate-pulse rounded bg-white/10" />
+                  <div className="mt-4 h-9 animate-pulse rounded-sm bg-white/10" />
+                </article>
+              ))}
+
+            {!loadingDrops &&
+              latestDrops.map((album) => (
+                <article
+                  key={album.id}
+                  className="group ah-card rounded-2xl p-4 transition hover:-translate-y-1 hover:border-ah-red/45"
                 >
-                  Play Preview
-                </button>
-              </article>
-            ))}
+                  <div className="relative mb-4 aspect-square overflow-hidden rounded-xl border border-white/10 bg-black/40">
+                    {album.images?.[0]?.url ? (
+                      <Image
+                        src={album.images[0].url}
+                        alt={`${album.name} cover`}
+                        fill
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                        className="object-cover transition duration-500 group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-lg font-semibold uppercase text-ah-soft">
+                        {album.name}
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/15 to-transparent" />
+                  </div>
+
+                  <h3 className="line-clamp-2 font-[var(--font-display)] text-lg tracking-wide">
+                    {album.name}
+                  </h3>
+                  <p className="mt-1 text-xs uppercase tracking-[0.18em] text-ah-soft">
+                    {dropMeta(album)}
+                  </p>
+
+                  <div className="mt-4 flex gap-2">
+                    <button
+                      onClick={() => setActiveRoute("albums")}
+                      className="flex-1 rounded-sm border border-white/15 bg-white/5 px-3 py-2 text-[10px] uppercase tracking-[0.18em] text-white transition hover:border-ah-blue/70 hover:bg-ah-blue/10"
+                    >
+                      View Release
+                    </button>
+                    {album.external_urls?.spotify && (
+                      <a
+                        href={album.external_urls.spotify}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="rounded-sm border border-ah-blue/45 px-3 py-2 text-[10px] uppercase tracking-[0.18em] text-ah-blue transition hover:bg-ah-blue/15 hover:text-white"
+                      >
+                        Spotify
+                      </a>
+                    )}
+                  </div>
+                </article>
+              ))}
           </div>
+
+          {!loadingDrops && dropsError && (
+            <p className="mt-5 rounded-xl border border-ah-red/30 bg-ah-red/10 px-4 py-3 text-sm text-ah-soft">
+              {dropsError}
+            </p>
+          )}
         </motion.section>
       </div>
     </section>
