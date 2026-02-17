@@ -6,36 +6,39 @@ import { motion, useReducedMotion } from "framer-motion";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 
-interface SpotifyAlbum {
+interface SpotifyPlaylistTrack {
   id: string;
   name: string;
-  release_date: string;
-  album_type?: string;
-  total_tracks?: number;
-  images?: { url: string }[];
+  artists?: { name: string }[];
   external_urls?: { spotify?: string };
+  album?: {
+    name: string;
+    release_date?: string;
+    images?: { url: string }[];
+    external_urls?: { spotify?: string };
+  };
 }
 
-interface ArtistAlbumsResponse {
-  items: SpotifyAlbum[];
+interface PlaylistTrackItem {
+  added_at?: string;
+  track?: SpotifyPlaylistTrack | null;
+}
+
+interface PlaylistResponse {
+  tracks?: { items?: PlaylistTrackItem[] };
   error?: string;
   detail?: string;
 }
 
-const XAENEPTUNE_ARTIST_ID = "7iysPipkcsfGFVEgUMDzHQ";
+const XAENEPTUNE_PLAYLIST_ID = "1NL9L9zkZjkxlAVV3Qcqfh";
+const XAENEPTUNE_PLAYLIST_URL =
+  "https://open.spotify.com/playlist/1NL9L9zkZjkxlAVV3Qcqfh";
 
-function parseReleaseDate(value: string | undefined): number {
+function safeYear(value: string | undefined): string {
   if (!value) return 0;
-  const [year, month = "01", day = "01"] = value.split("-");
-  const parsed = Date.parse(`${year}-${month}-${day}`);
-  return Number.isNaN(parsed) ? 0 : parsed;
-}
-
-function dropMeta(album: SpotifyAlbum): string {
-  const year = album.release_date?.slice(0, 4) || "Unknown";
-  const type = album.album_type === "single" ? "Single" : "Album";
-  const tracks = album.total_tracks ? `${album.total_tracks} Tracks` : type;
-  return `${year} • ${tracks}`;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return "Unknown";
+  return String(parsed.getFullYear());
 }
 
 const platformHighlights = [
