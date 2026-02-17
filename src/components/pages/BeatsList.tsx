@@ -232,9 +232,13 @@ ${inquiryMessage}
       })),
     []
   ) as Array<BeatData & { cover: string }>;
-  const decorationRail = useMemo(
-    () => [...visualizerDecorationAssets, ...visualizerDecorationAssets],
+  const decorationBaseRail = useMemo(
+    () => Array.from({ length: 4 }, () => visualizerDecorationAssets).flat(),
     [],
+  );
+  const decorationRail = useMemo(
+    () => [...decorationBaseRail, ...decorationBaseRail],
+    [decorationBaseRail],
   );
 
   /* ───────────── filtering ───────────── */
