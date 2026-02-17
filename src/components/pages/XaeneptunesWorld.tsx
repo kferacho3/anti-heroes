@@ -8,6 +8,7 @@ import { FaGlobeAmericas, FaInstagram, FaLinkedin, FaSoundcloud, FaSpotify, FaYo
 
 export default function XaeneptunesWorld() {
   const reduceMotion = useReducedMotion();
+  const [autoRotate, setAutoRotate] = useState(true);
   const [activePlanetIndex, setActivePlanetIndex] = useState(() =>
     Math.floor(Math.random() * xaeneptunePlanetAssets.length),
   );
@@ -18,13 +19,13 @@ export default function XaeneptunesWorld() {
   );
 
   useEffect(() => {
-    if (reduceMotion) return undefined;
+    if (reduceMotion || !autoRotate) return undefined;
     const timer = window.setInterval(() => {
       setActivePlanetIndex((current) => (current + 1) % xaeneptunePlanetAssets.length);
     }, 5500);
 
     return () => window.clearInterval(timer);
-  }, [reduceMotion]);
+  }, [autoRotate, reduceMotion]);
 
   return (
     <section>
@@ -58,6 +59,12 @@ export default function XaeneptunesWorld() {
             className="rounded-sm border border-white/14 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white transition hover:border-ah-red/60 hover:text-ah-red"
           >
             Shuffle Planet
+          </button>
+          <button
+            onClick={() => setAutoRotate((current) => !current)}
+            className="rounded-sm border border-white/14 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white transition hover:border-ah-blue/45 hover:text-ah-blue"
+          >
+            {autoRotate ? "Pause Orbit" : "Resume Orbit"}
           </button>
           <a
             href={xaeneptuneSecurityAsset}

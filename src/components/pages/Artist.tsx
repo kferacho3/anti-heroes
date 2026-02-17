@@ -618,7 +618,10 @@ export default function Artist() {
                 placeholder="Search artists"
                 className="w-full rounded-xl border border-white/14 bg-black/45 px-3 py-2 text-sm text-white placeholder:text-ah-soft/70 focus:border-ah-blue/45 focus:outline-none md:max-w-xs"
               />
-              <div className="flex gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="rounded-sm border border-white/14 bg-white/[0.02] px-3 py-2 text-[10px] uppercase tracking-[0.18em] text-ah-soft">
+                  Results: {visibleAssociatedArtists.length}
+                </span>
                 <button
                   onClick={() => setRosterSort("followers")}
                   className={`rounded-sm px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.18em] transition ${
@@ -636,8 +639,17 @@ export default function Artist() {
                       ? "bg-ah-red text-white shadow-ah-glow-red"
                       : "border border-white/14 bg-white/[0.02] text-ah-soft hover:text-white"
                   }`}
-                >
+                    >
                   Sort A-Z
+                </button>
+                <button
+                  onClick={() => {
+                    setRosterSearch("");
+                    setRosterSort("followers");
+                  }}
+                  className="rounded-sm border border-white/14 bg-white/[0.02] px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-ah-soft transition hover:border-white/35 hover:text-white"
+                >
+                  Reset
                 </button>
               </div>
             </div>

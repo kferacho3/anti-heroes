@@ -278,6 +278,31 @@ ${formData.message}`.trim();
                 {isSubmitting ? "Preparing..." : "Send Inquiry"}
               </button>
             </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-white/10 pt-4 text-[11px] uppercase tracking-[0.16em] text-ah-soft">
+              <a
+                href="mailto:contact@antiheroes.co"
+                className="transition hover:text-white"
+              >
+                Email Direct
+              </a>
+              <a
+                href="https://www.instagram.com/xaeneptune/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="transition hover:text-white"
+              >
+                Instagram DM
+              </a>
+              <a
+                href="https://open.spotify.com/artist/7iysPipkcsfGFVEgUMDzHQ"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="transition hover:text-white"
+              >
+                Spotify Profile
+              </a>
+            </div>
           </form>
         </motion.div>
       </motion.div>

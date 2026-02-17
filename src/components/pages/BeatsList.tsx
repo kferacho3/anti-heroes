@@ -735,7 +735,7 @@ ${inquiryMessage}
           </label>
 
           <div className="text-sm text-gray-500 md:ml-auto">
-            {totalBeats} beats found
+            {totalBeats} of {beatsWithCovers.length} beats shown
           </div>
         </motion.div>
 

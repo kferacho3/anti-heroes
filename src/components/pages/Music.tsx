@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { FaExternalLinkAlt, FaSearch } from "react-icons/fa";
 
 interface SpotifyArtist {
@@ -76,6 +76,7 @@ export default function Music() {
   const [visibleCount, setVisibleCount] = useState(12);
   const [reloadKey, setReloadKey] = useState(0);
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const artistId = "7iysPipkcsfGFVEgUMDzHQ";
   const playlistId = "1NL9L9zkZjkxlAVV3Qcqfh";
@@ -179,6 +180,30 @@ export default function Music() {
     setVisibleCount(12);
   }, [activeTab, search]);
 
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      const isTyping =
+        target?.tagName === "INPUT" ||
+        target?.tagName === "TEXTAREA" ||
+        target?.tagName === "SELECT" ||
+        target?.isContentEditable;
+
+      if (isTyping) return;
+      if (event.key === "/") {
+        event.preventDefault();
+        searchInputRef.current?.focus();
+      }
+      if (event.key.toLowerCase() === "r" && event.shiftKey) {
+        event.preventDefault();
+        setReloadKey((current) => current + 1);
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
   return (
     <section>
       <header className="mb-8">
@@ -243,6 +268,7 @@ export default function Music() {
         <label className="relative block w-full md:max-w-xs">
           <FaSearch className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ah-soft" />
           <input
+            ref={searchInputRef}
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search tracks, artists, albums"
@@ -252,9 +278,10 @@ export default function Music() {
 
         <button
           onClick={() => setReloadKey((current) => current + 1)}
-          className="rounded-sm border border-white/14 bg-white/[0.02] px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-ah-soft transition hover:border-ah-blue/45 hover:text-white"
+          disabled={loadingTopTracks || loadingPlaylist}
+          className="rounded-sm border border-white/14 bg-white/[0.02] px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-ah-soft transition hover:border-ah-blue/45 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
         >
-          Refresh Feed
+          {loadingTopTracks || loadingPlaylist ? "Refreshing..." : "Refresh Feed"}
         </button>
       </div>
 

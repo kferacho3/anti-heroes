@@ -278,6 +278,15 @@ export default function Albums() {
             <option value="oldest">Oldest First</option>
             <option value="name">Name A-Z</option>
           </select>
+          <button
+            onClick={() => {
+              setSearch("");
+              setSortMode("latest");
+            }}
+            className="rounded-sm border border-white/14 bg-white/[0.02] px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-ah-soft transition hover:border-white/35 hover:text-white"
+          >
+            Reset
+          </button>
         </div>
       )}
 
