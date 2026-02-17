@@ -134,7 +134,7 @@ export default function HomePage() {
 
   return (
     <>
-      <div className="fixed left-0 top-0 z-[1000] w-full">
+      <div className="fixed left-0 top-0 z-[11000] w-full">
         <Sidebar
           isOpen={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
@@ -151,7 +151,7 @@ export default function HomePage() {
       </div>
 
       {!isVisualizerRoute && (
-        <div className="fixed left-0 top-0 z-[9999] w-full">
+        <div className="fixed left-0 top-0 z-[9000] w-full">
           <TopBarNavbar onHamburgerClick={() => setSidebarOpen((open) => !open)} />
         </div>
       )}

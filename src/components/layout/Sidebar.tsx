@@ -1,8 +1,9 @@
 "use client";
 
 import { Route } from "@/store/useRouteStore";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import Image from "next/image";
+import { useEffect } from "react";
 import { FaApple, FaInstagram, FaSoundcloud, FaSpotify, FaTimes, FaYoutube } from "react-icons/fa";
 
 type SidebarProps = {
@@ -22,25 +23,49 @@ const links: Array<{ label: string; route: Route }> = [
 ];
 
 export default function Sidebar({ isOpen, onClose, setActiveRoute }: SidebarProps) {
+  const reduceMotion = useReducedMotion();
+
+  useEffect(() => {
+    if (!isOpen) return undefined;
+
+    const previousOverflow = document.body.style.overflow;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [isOpen, onClose]);
+
   return (
     <AnimatePresence>
       {isOpen && (
         <>
           <motion.button
             aria-label="Close menu overlay"
-            className="fixed inset-0 z-[1000] bg-black/70 backdrop-blur-sm"
+            className="fixed inset-0 z-[11000] bg-black/72 backdrop-blur-md"
             onClick={onClose}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: reduceMotion ? 0.16 : 0.24 }}
           />
 
           <motion.aside
-            className="fixed right-0 top-0 z-[1001] flex h-screen w-full max-w-[92vw] flex-col border-l border-white/12 bg-ah-black px-6 pb-[calc(env(safe-area-inset-bottom,0px)+20px)] pt-[calc(env(safe-area-inset-top,0px)+20px)] sm:max-w-sm"
-            initial={{ x: "100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "100%" }}
-            transition={{ type: "spring", stiffness: 220, damping: 28 }}
+            className="fixed inset-y-0 right-0 z-[11001] flex h-screen w-full max-w-[92vw] flex-col border-l border-white/12 bg-ah-black/95 px-6 pb-[calc(env(safe-area-inset-bottom,0px)+20px)] pt-[calc(env(safe-area-inset-top,0px)+20px)] shadow-[0_0_0_1px_rgba(255,255,255,.06),0_28px_90px_rgba(0,0,0,.6)] sm:max-w-sm"
+            initial={reduceMotion ? { opacity: 0 } : { x: "100%", opacity: 0.6 }}
+            animate={reduceMotion ? { opacity: 1 } : { x: 0, opacity: 1 }}
+            exit={reduceMotion ? { opacity: 0 } : { x: "100%", opacity: 0.6 }}
+            transition={
+              reduceMotion
+                ? { duration: 0.18 }
+                : { type: "spring", stiffness: 280, damping: 34, mass: 0.8 }
+            }
           >
             <div className="mb-8 flex items-center justify-between">
               <div className="flex items-center gap-3">
