@@ -35,7 +35,7 @@ const XAENEPTUNE_PLAYLIST_URL =
   "https://open.spotify.com/playlist/1NL9L9zkZjkxlAVV3Qcqfh";
 
 function safeYear(value: string | undefined): string {
-  if (!value) return 0;
+  if (!value) return "Unknown";
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) return "Unknown";
   return String(parsed.getFullYear());
@@ -63,7 +63,7 @@ export default function LandingAntiHeroes() {
   const { setActiveRoute } = useRouteStore();
   const reduceMotion = useReducedMotion();
   const [heroArtIndex, setHeroArtIndex] = useState(0);
-  const [latestDrops, setLatestDrops] = useState<SpotifyAlbum[]>([]);
+  const [latestDrops, setLatestDrops] = useState<PlaylistTrackItem[]>([]);
   const [loadingDrops, setLoadingDrops] = useState(true);
   const [dropsError, setDropsError] = useState<string | null>(null);
 
@@ -83,25 +83,20 @@ export default function LandingAntiHeroes() {
       setDropsError(null);
       try {
         const response = await fetch(
-          `/api/spotify/artist-albums?artistId=${XAENEPTUNE_ARTIST_ID}`,
+          `/api/spotify/playlist?playlistId=${XAENEPTUNE_PLAYLIST_ID}`,
           { signal: controller.signal, cache: "no-store" },
         );
 
-        const data: ArtistAlbumsResponse = await response.json();
+        const data: PlaylistResponse = await response.json();
         if (!response.ok) {
           const detail = data.detail ? ` (${data.detail})` : "";
           throw new Error(`${data.error || "Failed to fetch latest drops"}${detail}`);
         }
 
-        const unique = new Map<string, SpotifyAlbum>();
-        (data.items || []).forEach((album) => {
-          if (!unique.has(album.id)) unique.set(album.id, album);
-        });
-
-        const sorted = Array.from(unique.values()).sort(
-          (a, b) => parseReleaseDate(b.release_date) - parseReleaseDate(a.release_date),
+        const items = (data.tracks?.items || []).filter(
+          (item): item is PlaylistTrackItem => Boolean(item?.track?.id && item.track?.name),
         );
-        setLatestDrops(sorted.slice(0, 4));
+        setLatestDrops(items.slice(-9).reverse());
       } catch (error) {
         if ((error as Error).name === "AbortError") return;
         setLatestDrops([]);
@@ -290,17 +285,19 @@ export default function LandingAntiHeroes() {
             <h2 className="font-[var(--font-display)] text-2xl font-black uppercase tracking-ah-tight md:text-3xl">
               Latest Drops
             </h2>
-            <button
-              onClick={() => setActiveRoute("albums")}
+            <a
+              href={XAENEPTUNE_PLAYLIST_URL}
+              target="_blank"
+              rel="noopener noreferrer"
               className="text-[11px] uppercase tracking-[0.22em] text-ah-soft transition hover:text-ah-white"
             >
-              View Full Discography
-            </button>
+              View More - Full Playlist
+            </a>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {loadingDrops &&
-              Array.from({ length: 4 }, (_, index) => (
+              Array.from({ length: 9 }, (_, index) => (
                 <article key={`loading-${index}`} className="ah-card rounded-2xl p-4">
                   <div className="mb-4 aspect-square animate-pulse rounded-xl border border-white/10 bg-white/5" />
                   <div className="h-5 w-4/5 animate-pulse rounded bg-white/10" />
@@ -310,45 +307,59 @@ export default function LandingAntiHeroes() {
               ))}
 
             {!loadingDrops &&
-              latestDrops.map((album) => (
+              latestDrops.map((item, index) => {
+                const track = item.track;
+                if (!track) return null;
+                const albumArt = track.album?.images?.[0]?.url;
+                const spotifyUrl =
+                  track.external_urls?.spotify ||
+                  track.album?.external_urls?.spotify ||
+                  XAENEPTUNE_PLAYLIST_URL;
+                const artists = track.artists?.map((artist) => artist.name).join(", ") || "Unknown Artist";
+                const releaseYear = safeYear(track.album?.release_date);
+
+                return (
                 <article
-                  key={album.id}
+                  key={`${track.id}-${index}`}
                   className="group ah-card rounded-2xl p-4 transition hover:-translate-y-1 hover:border-ah-red/45"
                 >
                   <div className="relative mb-4 aspect-square overflow-hidden rounded-xl border border-white/10 bg-black/40">
-                    {album.images?.[0]?.url ? (
+                    {albumArt ? (
                       <Image
-                        src={album.images[0].url}
-                        alt={`${album.name} cover`}
+                        src={albumArt}
+                        alt={`${track.name} cover`}
                         fill
-                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                         className="object-cover transition duration-500 group-hover:scale-105"
                       />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center text-lg font-semibold uppercase text-ah-soft">
-                        {album.name}
+                        {track.name}
                       </div>
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/15 to-transparent" />
                   </div>
 
                   <h3 className="line-clamp-2 font-[var(--font-display)] text-lg tracking-wide">
-                    {album.name}
+                    {track.name}
                   </h3>
                   <p className="mt-1 text-xs uppercase tracking-[0.18em] text-ah-soft">
-                    {dropMeta(album)}
+                    {artists}
+                  </p>
+                  <p className="mt-1 text-xs uppercase tracking-[0.18em] text-ah-soft">
+                    {releaseYear} • {track.album?.name || "Playlist Single"}
                   </p>
 
                   <div className="mt-4 flex gap-2">
                     <button
-                      onClick={() => setActiveRoute("albums")}
+                      onClick={() => setActiveRoute("music")}
                       className="flex-1 rounded-sm border border-white/15 bg-white/5 px-3 py-2 text-[10px] uppercase tracking-[0.18em] text-white transition hover:border-ah-blue/70 hover:bg-ah-blue/10"
                     >
-                      View Release
+                      Open Music
                     </button>
-                    {album.external_urls?.spotify && (
+                    {spotifyUrl && (
                       <a
-                        href={album.external_urls.spotify}
+                        href={spotifyUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="rounded-sm border border-ah-blue/45 px-3 py-2 text-[10px] uppercase tracking-[0.18em] text-ah-blue transition hover:bg-ah-blue/15 hover:text-white"
@@ -358,7 +369,8 @@ export default function LandingAntiHeroes() {
                     )}
                   </div>
                 </article>
-              ))}
+                );
+              })}
           </div>
 
           {!loadingDrops && dropsError && (
