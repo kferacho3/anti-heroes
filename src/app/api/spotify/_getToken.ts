@@ -1,13 +1,24 @@
 // /src/app/api/spotify/_getToken.ts
 export async function getSpotifyToken(): Promise<string> {
-  const clientId = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID;
-  const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
+  const clientId =
+    process.env.SPOTIFY_CLIENT_ID || process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID;
+  const clientSecret =
+    process.env.SPOTIFY_CLIENT_SECRET ||
+    process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_SECRET;
   const tokenUrl = "https://accounts.spotify.com/api/token";
 
-  console.log("=== /api/spotify/_getToken DEBUG INFO ===");
-  console.log("NODE_ENV:", process.env.NODE_ENV);
-  console.log("clientId:", clientId);
-  console.log("clientSecret starts with:", clientSecret?.slice(0, 5));
+  if (!clientId || !clientSecret) {
+    const missing = [
+      !clientId ? "SPOTIFY_CLIENT_ID" : null,
+      !clientSecret ? "SPOTIFY_CLIENT_SECRET" : null,
+    ]
+      .filter(Boolean)
+      .join(", ");
+
+    throw new Error(
+      `Missing Spotify credentials (${missing}). Set env vars and restart the server.`,
+    );
+  }
 
   const response = await fetch(tokenUrl, {
     method: "POST",

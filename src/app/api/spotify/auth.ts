@@ -11,19 +11,22 @@ export default async function handler(
     return res.status(400).json({ error: "Missing code parameter" });
   }
 
-  const clientId = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID;
-  const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
+  const clientId =
+    process.env.SPOTIFY_CLIENT_ID || process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID;
+  const clientSecret =
+    process.env.SPOTIFY_CLIENT_SECRET ||
+    process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_SECRET;
   const redirectUri =
     process.env.NODE_ENV === "production"
       ? process.env.SPOTIFY_REDIRECT_URI_PROD
       : process.env.SPOTIFY_REDIRECT_URI_DEV;
 
-  // Debug logging (server-side)
-  console.log("=== /api/spotify/auth DEBUG INFO ===");
-  console.log("NODE_ENV:", process.env.NODE_ENV);
-  console.log("clientId:", clientId);
-  console.log("clientSecret starts with:", clientSecret?.slice(0, 5));
-  console.log("Using redirectUri =>", redirectUri);
+  if (!clientId || !clientSecret || !redirectUri) {
+    return res.status(500).json({
+      error:
+        "Missing Spotify auth env vars. Required: SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, and redirect URI vars.",
+    });
+  }
 
   const tokenEndpoint = "https://accounts.spotify.com/api/token";
 
