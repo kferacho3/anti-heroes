@@ -52,20 +52,20 @@ export default function XaeneptunesWorld() {
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center md:w-auto">
           <button
             onClick={() =>
               setActivePlanetIndex(
                 Math.floor(Math.random() * xaeneptunePlanetAssets.length),
               )
             }
-            className="rounded-sm border border-white/14 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white transition hover:border-ah-red/60 hover:text-ah-red"
+            className="w-full rounded-sm border border-white/14 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-white transition hover:border-ah-red/60 hover:text-ah-red sm:w-auto sm:tracking-[0.2em]"
           >
             Shuffle Planet
           </button>
           <button
             onClick={() => setAutoRotate((current) => !current)}
-            className="rounded-sm border border-white/14 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white transition hover:border-ah-blue/45 hover:text-ah-blue"
+            className="w-full rounded-sm border border-white/14 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-white transition hover:border-ah-blue/45 hover:text-ah-blue sm:w-auto sm:tracking-[0.2em]"
           >
             {autoRotate ? "Pause Orbit" : "Resume Orbit"}
           </button>
@@ -73,7 +73,7 @@ export default function XaeneptunesWorld() {
             href={xaeneptuneSecurityAsset}
             target="_blank"
             rel="noopener noreferrer"
-            className="rounded-sm border border-ah-blue/40 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-ah-blue transition hover:bg-ah-blue/15 hover:text-white"
+            className="w-full rounded-sm border border-ah-blue/40 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-ah-blue transition hover:bg-ah-blue/15 hover:text-white sm:w-auto sm:tracking-[0.2em]"
           >
             Open SECURITY Art
           </a>
@@ -81,7 +81,7 @@ export default function XaeneptunesWorld() {
             href="https://open.spotify.com/artist/7iysPipkcsfGFVEgUMDzHQ"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-sm border border-white/14 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white transition hover:border-ah-red/55 hover:text-ah-red"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-sm border border-white/14 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-white transition hover:border-ah-red/55 hover:text-ah-red sm:w-auto sm:justify-start sm:tracking-[0.2em]"
           >
             <FaSpotify />
             Open Spotify

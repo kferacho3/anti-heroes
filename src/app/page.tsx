@@ -225,11 +225,17 @@ export default function HomePage() {
           </Canvas>
         </div>
       ) : (
-        <div className="relative min-h-screen">{renderHtmlContent()}</div>
+        <div className="relative min-h-screen min-h-[100svh]">{renderHtmlContent()}</div>
       )}
 
       {route !== "home" && route !== "beats-visualizer" && (
-        <div className="fixed left-3 z-[9998]" style={{ bottom: "calc(env(safe-area-inset-bottom,0px) + 12px)" }}>
+        <div
+          className="fixed z-[9998]"
+          style={{
+            left: "calc(env(safe-area-inset-left,0px) + 12px)",
+            bottom: "calc(env(safe-area-inset-bottom,0px) + 12px)",
+          }}
+        >
           <GoBackButton onClick={() => changeRoute("home")} />
         </div>
       )}
@@ -250,7 +256,10 @@ export default function HomePage() {
           <button
             onClick={() => setShowConnectModal(false)}
             className="fixed right-5 z-[100001] rounded-full border border-white/20 bg-black/70 p-3 text-white backdrop-blur-md transition hover:border-white/45"
-            style={{ top: "calc(env(safe-area-inset-top,0px) + 14px)" }}
+            style={{
+              top: "calc(env(safe-area-inset-top,0px) + 14px)",
+              right: "calc(env(safe-area-inset-right,0px) + 14px)",
+            }}
             aria-label="Close connect modal"
           >
             <FaTimes />

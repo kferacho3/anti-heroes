@@ -411,7 +411,7 @@ ${inquiryMessage}
     >
       <div className="absolute inset-0 bg-gradient-to-br from-purple-600/0 via-emerald-600/0 to-purple-600/0 group-hover:from-purple-600/10 group-hover:via-emerald-600/10 group-hover:to-purple-600/10 transition-all duration-500" />
       
-      <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
+      <div className="absolute top-2 right-2 z-10 flex gap-1 opacity-100 transition-opacity duration-300 md:opacity-0 md:group-hover:opacity-100">
         <motion.button
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
@@ -574,7 +574,7 @@ ${inquiryMessage}
 
   /* ───────────── JSX ───────────── */
   return (
-    <div className="w-full min-h-screen bg-black text-white relative overflow-hidden">
+    <div className="relative w-full min-h-screen min-h-[100svh] overflow-hidden bg-black text-white">
       {/* Animated background */}
       <motion.div
         className="absolute inset-0"
@@ -586,7 +586,7 @@ ${inquiryMessage}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-purple-900/10 via-transparent to-transparent" />
       </motion.div>
 
-      <div className="relative z-10 flex min-h-screen flex-col">
+      <div className="relative z-10 flex min-h-screen min-h-[100svh] flex-col">
         {/* Header */}
         <motion.header
           initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -20 }}
@@ -594,13 +594,13 @@ ${inquiryMessage}
           className="flex flex-wrap items-center justify-between gap-4 border-b border-gray-800 px-4 py-6 md:px-8"
         >
           <motion.h1
-            className="text-2xl md:text-3xl font-black flex items-center gap-3"
+            className="flex items-center gap-3 text-xl font-black sm:text-2xl md:text-3xl"
             initial={{ letterSpacing: "0.2em", opacity: 0 }}
             animate={{ letterSpacing: "0.05em", opacity: 1 }}
             transition={{ duration: 0.5 }}
           >
             <FaMusic className="text-purple-400" />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-emerald-300">
+            <span className="break-words text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-emerald-300">
               BEATS MARKETPLACE
             </span>
           </motion.h1>
@@ -719,7 +719,7 @@ ${inquiryMessage}
             </button>
           )}
 
-          <label className="flex items-center gap-2 text-sm text-gray-400">
+          <label className="flex w-full items-center gap-2 text-sm text-gray-400 sm:w-auto">
             Show
             <select
               value={beatsPerPage}
@@ -738,7 +738,7 @@ ${inquiryMessage}
             per page
           </label>
 
-          <div className="text-sm text-gray-500 md:ml-auto">
+          <div className="w-full text-sm text-gray-500 md:ml-auto md:w-auto">
             {totalBeats} of {beatsWithCovers.length} beats shown
           </div>
         </motion.div>
@@ -756,7 +756,7 @@ ${inquiryMessage}
               exit={{ height: 0, opacity: 0 }}
               className="overflow-hidden border-b border-gray-800"
             >
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 p-4 md:px-8">
+              <div className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 md:grid-cols-3 md:px-8 lg:grid-cols-6">
                 {[
                   { placeholder: "Name", value: filterBeatName, setter: setFilterBeatName },
                   { placeholder: "Key", value: filterBeatKey, setter: setFilterBeatKey },
@@ -795,7 +795,7 @@ ${inquiryMessage}
           )}
         </AnimatePresence>
 
-        <main ref={mainContentRef} className="flex-1 overflow-y-auto px-4 py-6 md:px-8">
+        <main ref={mainContentRef} className="flex-1 overflow-y-auto overscroll-contain px-4 py-6 md:px-8">
           {viewMode === "list" && (
             <div className="overflow-x-auto pb-4">
               <table className="w-full">
@@ -909,7 +909,7 @@ ${inquiryMessage}
             initial={{ opacity: 0, y: 50, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 50, scale: 0.9 }}
-            className="fixed bottom-20 md:bottom-8 right-4 md:right-8 flex items-center gap-4 bg-gray-900/95 backdrop-blur-xl rounded-2xl shadow-2xl shadow-purple-500/20 p-4 border border-purple-500/30 max-w-xs md:max-w-sm z-30"
+            className="fixed bottom-[calc(env(safe-area-inset-bottom,0px)+4.75rem)] left-4 right-4 z-30 flex items-center gap-4 rounded-2xl border border-purple-500/30 bg-gray-900/95 p-4 shadow-2xl shadow-purple-500/20 backdrop-blur-xl sm:left-auto sm:right-8 sm:max-w-sm md:bottom-8"
           >
             <motion.div
               animate={{ rotate: isPreviewPlaying ? 360 : 0 }}
@@ -948,14 +948,14 @@ ${inquiryMessage}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/95 backdrop-blur-xl z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/95 p-4 pb-[calc(env(safe-area-inset-bottom,0px)+1rem)] pt-[calc(env(safe-area-inset-top,0px)+1rem)] backdrop-blur-xl"
             onClick={closeMobileModal}
           >
             <motion.div
               initial={{ scale: 0.9, y: 50 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 50 }}
-              className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-3xl p-6 md:p-8 max-w-md w-full border border-purple-500/30 shadow-2xl"
+              className="relative my-auto max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-3xl border border-purple-500/30 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-6 shadow-2xl md:p-8"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Close button */}
@@ -973,7 +973,7 @@ ${inquiryMessage}
                 initial={{ scale: 0 }}
                 animate={{ scale: 1, rotate: [0, 5, -5, 0] }}
                 transition={{ duration: 0.5 }}
-                className="relative w-48 h-48 mx-auto mb-6 rounded-2xl overflow-hidden shadow-2xl"
+                className="relative mx-auto mb-6 h-40 w-40 overflow-hidden rounded-2xl shadow-2xl sm:h-48 sm:w-48"
               >
                 <Image
                   src={mobileModalBeat.beat.cover}
@@ -989,8 +989,8 @@ ${inquiryMessage}
               </motion.div>
 
               {/* Beat info */}
-              <div className="text-center mb-6">
-                <h3 className="text-2xl font-bold text-white mb-2">
+              <div className="mb-6 text-center">
+                <h3 className="mb-2 text-xl font-bold text-white sm:text-2xl">
                   {mobileModalBeat.beat.beatName}
                 </h3>
                 <p className="text-gray-400">{mobileModalBeat.beat.beatProducer}</p>
@@ -1038,7 +1038,7 @@ ${inquiryMessage}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => handleInquiry(mobileModalBeat.beat)}
-                  className="w-full py-3 bg-gradient-to-r from-yellow-600 to-orange-600 text-white font-medium rounded-xl hover:shadow-lg hover:shadow-yellow-500/25 transition-all duration-300 flex items-center justify-center gap-2"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-yellow-600 to-orange-600 py-3 font-medium text-white transition-all duration-300 hover:shadow-lg hover:shadow-yellow-500/25"
                 >
                   <FaDollarSign />
                   Inquire About This Beat
@@ -1059,7 +1059,7 @@ ${inquiryMessage}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={closeMobileModal}
-                  className="w-full py-3 bg-gray-800/50 text-gray-300 font-medium rounded-xl border border-gray-700 hover:border-gray-600 transition-all duration-300"
+                  className="w-full rounded-xl border border-gray-700 bg-gray-800/50 py-3 font-medium text-gray-300 transition-all duration-300 hover:border-gray-600"
                 >
                   Continue Listening
                 </motion.button>
@@ -1076,14 +1076,14 @@ ${inquiryMessage}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/95 backdrop-blur-xl z-50 flex items-center justify-center p-4 overflow-y-auto"
+            className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/95 p-4 pb-[calc(env(safe-area-inset-bottom,0px)+1rem)] pt-[calc(env(safe-area-inset-top,0px)+1rem)] backdrop-blur-xl"
             onClick={() => setInquiryBeat(null)}
           >
             <motion.div
               initial={{ scale: 0.9, y: 50 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 50 }}
-              className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-3xl p-6 md:p-8 max-w-2xl w-full border border-purple-500/30 shadow-2xl my-8"
+              className="my-auto max-h-[calc(100dvh-2rem)] w-full max-w-2xl overflow-y-auto rounded-3xl border border-purple-500/30 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-6 shadow-2xl md:p-8"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
@@ -1103,7 +1103,7 @@ ${inquiryMessage}
               </div>
 
               {/* Beat info */}
-              <div className="flex items-center gap-4 p-4 bg-gray-800/50 rounded-xl mb-6">
+              <div className="mb-6 flex flex-col items-start gap-4 rounded-xl bg-gray-800/50 p-4 sm:flex-row sm:items-center">
                 <div className="relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
                   <Image
                     src={inquiryBeat.cover}
@@ -1186,12 +1186,12 @@ ${inquiryMessage}
                   />
                 </div>
 
-                <div className="flex gap-3 pt-4">
+                <div className="flex flex-col gap-3 pt-4 sm:flex-row">
                   <motion.button
                     type="submit"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="flex-1 py-3 bg-gradient-to-r from-purple-600 to-emerald-600 text-white font-medium rounded-xl hover:shadow-lg hover:shadow-purple-500/25 transition-all duration-300 flex items-center justify-center gap-2"
+                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-emerald-600 py-3 font-medium text-white transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/25 sm:flex-1"
                   >
                     <FaPaperPlane />
                     Send Inquiry
@@ -1201,7 +1201,7 @@ ${inquiryMessage}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => setInquiryBeat(null)}
-                    className="px-6 py-3 bg-gray-800/50 text-gray-300 font-medium rounded-xl border border-gray-700 hover:border-gray-600 transition-all duration-300"
+                    className="w-full rounded-xl border border-gray-700 bg-gray-800/50 px-6 py-3 font-medium text-gray-300 transition-all duration-300 hover:border-gray-600 sm:w-auto"
                   >
                     Cancel
                   </motion.button>

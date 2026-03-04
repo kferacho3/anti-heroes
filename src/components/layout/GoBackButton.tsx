@@ -13,7 +13,7 @@ export default function GoBackButton({ onClick }: GoBackButtonProps) {
       onClick={onClick}
       whileHover={{ scale: 1.03 }}
       whileTap={{ scale: 0.97 }}
-      className="pointer-events-auto flex items-center gap-2 rounded-full border border-white/20 bg-black/65 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white backdrop-blur-md transition hover:border-ah-red/70 hover:text-ah-red"
+      className="pointer-events-auto flex items-center gap-2 rounded-full border border-white/20 bg-black/65 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-white backdrop-blur-md transition hover:border-ah-red/70 hover:text-ah-red sm:tracking-[0.2em]"
       aria-label="Return to home"
     >
       <IoMdArrowBack className="text-base" />

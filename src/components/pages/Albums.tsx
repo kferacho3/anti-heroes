@@ -53,6 +53,10 @@ function safeYear(date: string | undefined) {
   return String(d.getFullYear());
 }
 
+function openExternal(url: string) {
+  window.open(url, "_blank", "noopener,noreferrer");
+}
+
 function getAlbumCoverUrl(album: SpotifyAlbum) {
   const url = album.images?.[0]?.url || "";
   if (!url.includes("open.spotify.com/album")) return url;
@@ -244,7 +248,7 @@ export default function Albums() {
 
       {!selectedAlbum && (
         <div className="mb-8 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div className="flex flex-wrap gap-2">
+          <div className="grid w-full grid-cols-3 gap-2 md:w-auto md:flex md:flex-wrap">
             {[
               { key: "associated", label: "All Albums" },
               { key: "personal", label: "Personal" },
@@ -253,7 +257,7 @@ export default function Albums() {
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key as Tab)}
-                className={`rounded-sm px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] transition ${
+                className={`rounded-sm px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] transition sm:tracking-[0.2em] ${
                   activeTab === tab.key
                     ? "bg-ah-red text-white shadow-ah-glow-red"
                     : "border border-white/14 bg-white/[0.02] text-ah-soft hover:text-white"
@@ -283,7 +287,7 @@ export default function Albums() {
               setSearch("");
               setSortMode("latest");
             }}
-            className="rounded-sm border border-white/14 bg-white/[0.02] px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-ah-soft transition hover:border-white/35 hover:text-white"
+            className="w-full rounded-sm border border-white/14 bg-white/[0.02] px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-ah-soft transition hover:border-white/35 hover:text-white sm:tracking-[0.2em] md:w-auto"
           >
             Reset
           </button>
@@ -408,13 +412,13 @@ export default function Albums() {
                               <audio
                                 controls
                                 src={track.preview_url}
-                                className="h-8 w-full min-w-[180px] sm:w-32"
+                                className="h-8 w-full sm:min-w-[180px] sm:w-auto"
                                 onClick={(event) => event.stopPropagation()}
                               />
                             )}
                             {trackUrl && (
                               <button
-                                onClick={() => window.open(trackUrl, "_blank")}
+                                onClick={() => openExternal(trackUrl)}
                                 className="rounded-sm border border-ah-blue/40 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-ah-blue transition hover:bg-ah-blue/10"
                               >
                                 Open

@@ -291,6 +291,10 @@ function safeYear(date: string | undefined): string {
   return String(parsed.getFullYear());
 }
 
+function openExternal(url: string) {
+  window.open(url, "_blank", "noopener,noreferrer");
+}
+
 export default function Artist() {
   const reduceMotion = useReducedMotion();
   const [mainArtist, setMainArtist] = useState<SpotifyArtist | null>(null);
@@ -651,7 +655,7 @@ export default function Artist() {
                 </span>
                 <button
                   onClick={() => setRosterSort("followers")}
-                  className={`rounded-sm px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.18em] transition ${
+                  className={`rounded-sm px-3 py-2 text-[9px] font-semibold uppercase tracking-[0.14em] transition sm:text-[10px] sm:tracking-[0.18em] ${
                     rosterSort === "followers"
                       ? "bg-ah-blue text-white shadow-ah-glow-blue"
                       : "border border-white/14 bg-white/[0.02] text-ah-soft hover:text-white"
@@ -661,7 +665,7 @@ export default function Artist() {
                 </button>
                 <button
                   onClick={() => setRosterSort("name")}
-                  className={`rounded-sm px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.18em] transition ${
+                  className={`rounded-sm px-3 py-2 text-[9px] font-semibold uppercase tracking-[0.14em] transition sm:text-[10px] sm:tracking-[0.18em] ${
                     rosterSort === "name"
                       ? "bg-ah-red text-white shadow-ah-glow-red"
                       : "border border-white/14 bg-white/[0.02] text-ah-soft hover:text-white"
@@ -674,7 +678,7 @@ export default function Artist() {
                     setRosterSearch("");
                     setRosterSort("followers");
                   }}
-                  className="rounded-sm border border-white/14 bg-white/[0.02] px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-ah-soft transition hover:border-white/35 hover:text-white"
+                  className="rounded-sm border border-white/14 bg-white/[0.02] px-3 py-2 text-[9px] font-semibold uppercase tracking-[0.14em] text-ah-soft transition hover:border-white/35 hover:text-white sm:text-[10px] sm:tracking-[0.18em]"
                 >
                   Reset
                 </button>
@@ -732,7 +736,7 @@ export default function Artist() {
             setSelectedDiscographyAlbum(null);
             setDiscographyTracks([]);
           }}
-          className="mb-3 rounded-sm border border-white/14 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white transition hover:border-white/35"
+          className="mb-3 rounded-sm border border-white/14 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-white transition hover:border-white/35 sm:tracking-[0.2em]"
         >
           Back to Artists
         </button>
@@ -759,10 +763,10 @@ export default function Artist() {
         </div>
       </header>
 
-      <nav className="mb-8 flex flex-wrap gap-2">
+      <nav className="mb-8 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
         <button
           onClick={() => setActiveArtistTab("top-tracks")}
-          className={`rounded-sm px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] transition ${
+          className={`rounded-sm px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] transition sm:tracking-[0.2em] ${
             activeArtistTab === "top-tracks"
               ? "bg-ah-red text-white shadow-ah-glow-red"
               : "border border-white/14 bg-white/[0.02] text-ah-soft hover:text-white"
@@ -772,7 +776,7 @@ export default function Artist() {
         </button>
         <button
           onClick={() => setActiveArtistTab("discography")}
-          className={`rounded-sm px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] transition ${
+          className={`rounded-sm px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] transition sm:tracking-[0.2em] ${
             activeArtistTab === "discography"
               ? "bg-ah-blue text-white shadow-ah-glow-blue"
               : "border border-white/14 bg-white/[0.02] text-ah-soft hover:text-white"
@@ -815,7 +819,7 @@ export default function Artist() {
                       <button
                         className="w-full text-left"
                         onClick={() => {
-                          if (spotifyUrl) window.open(spotifyUrl, "_blank");
+                          if (spotifyUrl) openExternal(spotifyUrl);
                         }}
                       >
                         <div className="relative aspect-square overflow-hidden rounded-xl border border-white/10">
@@ -924,7 +928,7 @@ export default function Artist() {
                           </div>
                           {url && (
                             <button
-                              onClick={() => window.open(url, "_blank")}
+                              onClick={() => openExternal(url)}
                               className="rounded-sm border border-ah-blue/40 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-ah-blue transition hover:bg-ah-blue/10"
                             >
                               Open
