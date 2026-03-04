@@ -1,212 +1,212 @@
-"use client";
+'use client'
 
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import Image from "next/image";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { FaExternalLinkAlt, FaSearch } from "react-icons/fa";
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import Image from 'next/image'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { FaExternalLinkAlt, FaSearch } from 'react-icons/fa'
+import { openExternal } from '@/utils/openExternal'
 
 interface SpotifyArtist {
-  name: string;
-  external_urls?: { spotify?: string };
+  name: string
+  external_urls?: { spotify?: string }
 }
 
 interface SpotifyTrack {
-  id: string;
-  name: string;
-  preview_url: string | null;
-  artists: SpotifyArtist[];
+  id: string
+  name: string
+  preview_url: string | null
+  artists: SpotifyArtist[]
   album?: {
-    id: string;
-    name: string;
-    release_date: string;
-    images: { url: string }[];
-  };
-  external_urls?: { spotify?: string };
+    id: string
+    name: string
+    release_date: string
+    images: { url: string }[]
+  }
+  external_urls?: { spotify?: string }
 }
 
 interface TopTracksResponse {
-  tracks?: SpotifyTrack[];
-  error?: string;
-  detail?: string;
+  tracks?: SpotifyTrack[]
+  error?: string
+  detail?: string
 }
 
 interface PlaylistResponse {
   tracks?: {
-    items?: Array<{ track?: SpotifyTrack | null }>;
-  };
-  error?: string;
-  detail?: string;
+    items?: Array<{ track?: SpotifyTrack | null }>
+  }
+  error?: string
+  detail?: string
 }
 
-type Tab = "top-tracks" | "playlist";
+type Tab = 'top-tracks' | 'playlist'
 
 function safeYear(date: string) {
-  const parsed = new Date(date);
-  if (Number.isNaN(parsed.getTime())) return "Unknown";
-  return String(parsed.getFullYear());
+  const parsed = new Date(date)
+  if (Number.isNaN(parsed.getTime())) return 'Unknown'
+  return String(parsed.getFullYear())
 }
 
 function dedupeTracks(tracks: SpotifyTrack[]): SpotifyTrack[] {
-  const seen = new Set<string>();
+  const seen = new Set<string>()
   return tracks.filter((track) => {
-    if (!track?.id || seen.has(track.id)) return false;
-    seen.add(track.id);
-    return true;
-  });
+    if (!track?.id || seen.has(track.id)) return false
+    seen.add(track.id)
+    return true
+  })
 }
 
 function normalizeApiError(payload: unknown): string {
-  if (!payload || typeof payload !== "object") return "Unable to load Spotify data.";
-  const data = payload as { error?: string; detail?: string };
-  if (data.detail) return `${data.error || "Spotify API error"} (${data.detail})`;
-  return data.error || "Unable to load Spotify data.";
-}
-
-function openExternal(url: string) {
-  window.open(url, "_blank", "noopener,noreferrer");
+  if (!payload || typeof payload !== 'object') return 'Unable to load Spotify data.'
+  const data = payload as { error?: string; detail?: string }
+  if (data.detail) return `${data.error || 'Spotify API error'} (${data.detail})`
+  return data.error || 'Unable to load Spotify data.'
 }
 
 export default function Music() {
-  const reduceMotion = useReducedMotion();
-  const [activeTab, setActiveTab] = useState<Tab>("top-tracks");
-  const [topTracks, setTopTracks] = useState<SpotifyTrack[]>([]);
-  const [playlistTracks, setPlaylistTracks] = useState<SpotifyTrack[]>([]);
-  const [loadingTopTracks, setLoadingTopTracks] = useState(true);
-  const [loadingPlaylist, setLoadingPlaylist] = useState(true);
-  const [topTracksError, setTopTracksError] = useState<string | null>(null);
-  const [playlistError, setPlaylistError] = useState<string | null>(null);
-  const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
-  const [search, setSearch] = useState("");
-  const [visibleCount, setVisibleCount] = useState(12);
-  const [reloadKey, setReloadKey] = useState(0);
-  const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
-  const searchInputRef = useRef<HTMLInputElement>(null);
+  const reduceMotion = useReducedMotion()
+  const [activeTab, setActiveTab] = useState<Tab>('top-tracks')
+  const [topTracks, setTopTracks] = useState<SpotifyTrack[]>([])
+  const [playlistTracks, setPlaylistTracks] = useState<SpotifyTrack[]>([])
+  const [loadingTopTracks, setLoadingTopTracks] = useState(true)
+  const [loadingPlaylist, setLoadingPlaylist] = useState(true)
+  const [topTracksError, setTopTracksError] = useState<string | null>(null)
+  const [playlistError, setPlaylistError] = useState<string | null>(null)
+  const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null)
+  const [search, setSearch] = useState('')
+  const [visibleCount, setVisibleCount] = useState(12)
+  const [reloadKey, setReloadKey] = useState(0)
+  const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null)
+  const searchInputRef = useRef<HTMLInputElement>(null)
 
-  const artistId = "7iysPipkcsfGFVEgUMDzHQ";
-  const playlistId = "1NL9L9zkZjkxlAVV3Qcqfh";
+  const artistId = '7iysPipkcsfGFVEgUMDzHQ'
+  const playlistId = '1NL9L9zkZjkxlAVV3Qcqfh'
 
   useEffect(() => {
     const fetchTopTracks = async () => {
-      setLoadingTopTracks(true);
-      setTopTracksError(null);
+      setLoadingTopTracks(true)
+      setTopTracksError(null)
 
       try {
         const response = await fetch(`/api/spotify/artist-top-tracks?artistId=${artistId}`, {
-          cache: "no-store",
-        });
-        const payload = (await response.json()) as TopTracksResponse;
+          cache: 'no-store',
+        })
+        const payload = (await response.json()) as TopTracksResponse
 
         if (!response.ok) {
-          setTopTracks([]);
-          setTopTracksError(normalizeApiError(payload));
-          return;
+          setTopTracks([])
+          setTopTracksError(normalizeApiError(payload))
+          return
         }
 
-        setTopTracks(dedupeTracks(payload.tracks || []));
+        setTopTracks(dedupeTracks(payload.tracks || []))
       } catch (error) {
-        console.error("Error fetching top tracks:", error);
-        setTopTracks([]);
-        setTopTracksError("Unable to load top tracks right now.");
+        console.error('Error fetching top tracks:', error)
+        setTopTracks([])
+        setTopTracksError('Unable to load top tracks right now.')
       } finally {
-        setLoadingTopTracks(false);
+        setLoadingTopTracks(false)
       }
-    };
+    }
 
     const fetchPlaylistTracks = async () => {
-      setLoadingPlaylist(true);
-      setPlaylistError(null);
+      setLoadingPlaylist(true)
+      setPlaylistError(null)
 
       try {
         const response = await fetch(`/api/spotify/playlist?playlistId=${playlistId}`, {
-          cache: "no-store",
-        });
-        const payload = (await response.json()) as PlaylistResponse;
+          cache: 'no-store',
+        })
+        const payload = (await response.json()) as PlaylistResponse
 
         if (!response.ok) {
-          setPlaylistTracks([]);
-          setPlaylistError(normalizeApiError(payload));
-          return;
+          setPlaylistTracks([])
+          setPlaylistError(normalizeApiError(payload))
+          return
         }
 
         const extracted = (payload.tracks?.items || [])
           .map((item) => item.track)
-          .filter((track): track is SpotifyTrack => Boolean(track?.id));
+          .filter((track): track is SpotifyTrack => Boolean(track?.id))
 
-        setPlaylistTracks(dedupeTracks(extracted));
+        setPlaylistTracks(dedupeTracks(extracted))
       } catch (error) {
-        console.error("Error fetching playlist tracks:", error);
-        setPlaylistTracks([]);
-        setPlaylistError("Unable to load playlist tracks right now.");
+        console.error('Error fetching playlist tracks:', error)
+        setPlaylistTracks([])
+        setPlaylistError('Unable to load playlist tracks right now.')
       } finally {
-        setLoadingPlaylist(false);
+        setLoadingPlaylist(false)
       }
-    };
+    }
 
-    let mounted = true;
+    let mounted = true
     const load = async () => {
-      await Promise.all([fetchTopTracks(), fetchPlaylistTracks()]);
-      if (mounted) setLastSyncedAt(new Date().toISOString());
-    };
+      await Promise.all([fetchTopTracks(), fetchPlaylistTracks()])
+      if (mounted) setLastSyncedAt(new Date().toISOString())
+    }
 
-    void load();
+    void load()
     return () => {
-      mounted = false;
-    };
-  }, [artistId, playlistId, reloadKey]);
+      mounted = false
+    }
+  }, [artistId, playlistId, reloadKey])
 
   const tracks = useMemo(() => {
-    if (activeTab === "top-tracks") return topTracks;
-    return playlistTracks;
-  }, [activeTab, playlistTracks, topTracks]);
+    if (activeTab === 'top-tracks') return topTracks
+    return playlistTracks
+  }, [activeTab, playlistTracks, topTracks])
 
   const filteredTracks = useMemo(() => {
-    const term = search.trim().toLowerCase();
-    if (!term) return tracks;
+    const term = search.trim().toLowerCase()
+    if (!term) return tracks
 
     return tracks.filter((track) => {
-      const artistNames = track.artists.map((artist) => artist.name).join(" ").toLowerCase();
+      const artistNames = track.artists
+        .map((artist) => artist.name)
+        .join(' ')
+        .toLowerCase()
       return (
         track.name.toLowerCase().includes(term) ||
         artistNames.includes(term) ||
         track.album?.name?.toLowerCase().includes(term)
-      );
-    });
-  }, [tracks, search]);
+      )
+    })
+  }, [tracks, search])
 
-  const loading = activeTab === "top-tracks" ? loadingTopTracks : loadingPlaylist;
-  const activeError = activeTab === "top-tracks" ? topTracksError : playlistError;
+  const loading = activeTab === 'top-tracks' ? loadingTopTracks : loadingPlaylist
+  const activeError = activeTab === 'top-tracks' ? topTracksError : playlistError
   const visibleTracks = useMemo(
     () => filteredTracks.slice(0, visibleCount),
     [filteredTracks, visibleCount],
-  );
+  )
 
   useEffect(() => {
-    setVisibleCount(12);
-  }, [activeTab, search]);
+    setVisibleCount(12)
+  }, [activeTab, search])
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      const target = event.target as HTMLElement | null;
+      const target = event.target as HTMLElement | null
       const isTyping =
-        target?.tagName === "INPUT" ||
-        target?.tagName === "TEXTAREA" ||
-        target?.tagName === "SELECT" ||
-        target?.isContentEditable;
+        target?.tagName === 'INPUT' ||
+        target?.tagName === 'TEXTAREA' ||
+        target?.tagName === 'SELECT' ||
+        target?.isContentEditable
 
-      if (isTyping) return;
-      if (event.key === "/") {
-        event.preventDefault();
-        searchInputRef.current?.focus();
+      if (isTyping) return
+      if (event.key === '/') {
+        event.preventDefault()
+        searchInputRef.current?.focus()
       }
-      if (event.key.toLowerCase() === "r" && event.shiftKey) {
-        event.preventDefault();
-        setReloadKey((current) => current + 1);
+      if (event.key.toLowerCase() === 'r' && event.shiftKey) {
+        event.preventDefault()
+        setReloadKey((current) => current + 1)
       }
-    };
+    }
 
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [])
 
   return (
     <section>
@@ -252,16 +252,16 @@ export default function Music() {
       <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <nav className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
           {[
-            { key: "top-tracks", label: "Top Tracks" },
-            { key: "playlist", label: "Playlist" },
+            { key: 'top-tracks', label: 'Top Tracks' },
+            { key: 'playlist', label: 'Playlist' },
           ].map((tab) => (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key as Tab)}
               className={`rounded-sm px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] transition sm:tracking-[0.2em] ${
                 activeTab === tab.key
-                  ? "bg-ah-blue text-white shadow-ah-glow-blue"
-                  : "border border-white/14 bg-white/[0.02] text-ah-soft hover:text-white"
+                  ? 'bg-ah-blue text-white shadow-ah-glow-blue'
+                  : 'border border-white/14 bg-white/[0.02] text-ah-soft hover:text-white'
               }`}
             >
               {tab.label}
@@ -285,7 +285,7 @@ export default function Music() {
           disabled={loadingTopTracks || loadingPlaylist}
           className="w-full rounded-sm border border-white/14 bg-white/[0.02] px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-ah-soft transition hover:border-ah-blue/45 hover:text-white disabled:cursor-not-allowed disabled:opacity-60 md:w-auto md:tracking-[0.2em]"
         >
-          {loadingTopTracks || loadingPlaylist ? "Refreshing..." : "Refresh Feed"}
+          {loadingTopTracks || loadingPlaylist ? 'Refreshing...' : 'Refresh Feed'}
         </button>
       </div>
 
@@ -306,20 +306,20 @@ export default function Music() {
               <motion.div
                 className="h-12 w-12 rounded-full border-2 border-ah-blue border-t-transparent"
                 animate={{ rotate: 360 }}
-                transition={{ duration: 0.9, repeat: Infinity, ease: "linear" }}
+                transition={{ duration: 0.9, repeat: Infinity, ease: 'linear' }}
               />
             </div>
           ) : filteredTracks.length === 0 ? (
             <p className="rounded-2xl border border-white/12 bg-white/[0.02] px-4 py-8 text-center text-ah-soft">
               {activeError
-                ? "Spotify data is unavailable for this section right now."
-                : "No tracks found for your current search."}
+                ? 'Spotify data is unavailable for this section right now.'
+                : 'No tracks found for your current search.'}
             </p>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {visibleTracks.map((track, index) => {
-                const albumImage = track.album?.images?.[0]?.url;
-                const spotifyUrl = track.external_urls?.spotify;
+                const albumImage = track.album?.images?.[0]?.url
+                const spotifyUrl = track.external_urls?.spotify
 
                 return (
                   <motion.article
@@ -331,7 +331,7 @@ export default function Music() {
                   >
                     <button
                       onClick={() => {
-                        if (spotifyUrl) openExternal(spotifyUrl);
+                        if (spotifyUrl) openExternal(spotifyUrl)
                       }}
                       className="w-full text-left"
                     >
@@ -352,14 +352,14 @@ export default function Music() {
                         {track.name}
                       </h3>
                       <p className="mt-1 line-clamp-1 text-xs uppercase tracking-[0.16em] text-ah-soft">
-                        {track.artists.map((artist) => artist.name).join(", ")}
+                        {track.artists.map((artist) => artist.name).join(', ')}
                       </p>
                       {track.album?.name && (
                         <p className="mt-1 line-clamp-1 text-xs text-white/70">
                           {track.album.name}
                           {track.album.release_date
                             ? ` • ${safeYear(track.album.release_date)}`
-                            : ""}
+                            : ''}
                         </p>
                       )}
                     </button>
@@ -374,7 +374,7 @@ export default function Music() {
                           onPause={() => setCurrentlyPlaying(null)}
                           style={{
                             filter:
-                              currentlyPlaying === track.id ? "saturate(1.3)" : "saturate(0.9)",
+                              currentlyPlaying === track.id ? 'saturate(1.3)' : 'saturate(0.9)',
                           }}
                         />
                       ) : (
@@ -395,7 +395,7 @@ export default function Music() {
                       )}
                     </div>
                   </motion.article>
-                );
+                )
               })}
             </div>
           )}
@@ -415,5 +415,5 @@ export default function Music() {
         </div>
       )}
     </section>
-  );
+  )
 }

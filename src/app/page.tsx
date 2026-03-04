@@ -1,96 +1,96 @@
-"use client";
+'use client'
 
-import GoBackButton from "@/components/layout/GoBackButton";
-import NavigationOverlay from "@/components/layout/NavigationOverlay";
-import AHShell from "@/components/layout/AHShell";
-import Sidebar from "@/components/layout/Sidebar";
-import TopBarNavbar from "@/components/layout/TopBarNavbar";
-import { Route, useRouteStore } from "@/store/useRouteStore";
-import { pauseAllAudio } from "@/utils/pauseAllAudio";
-import { PerformanceMonitor } from "@react-three/drei";
-import { Canvas } from "@react-three/fiber";
-import { Bloom, EffectComposer, SMAA, Vignette } from "@react-three/postprocessing";
-import dynamic from "next/dynamic";
-import { Suspense, useEffect, useState } from "react";
-import { FaTimes } from "react-icons/fa";
-import * as THREE from "three";
+import GoBackButton from '@/components/layout/GoBackButton'
+import NavigationOverlay from '@/components/layout/NavigationOverlay'
+import AHShell from '@/components/layout/AHShell'
+import Sidebar from '@/components/layout/Sidebar'
+import TopBarNavbar from '@/components/layout/TopBarNavbar'
+import { Route, useRouteStore } from '@/store/useRouteStore'
+import { pauseAllAudio } from '@/utils/pauseAllAudio'
+import { PerformanceMonitor } from '@react-three/drei'
+import { Canvas } from '@react-three/fiber'
+import { Bloom, EffectComposer, SMAA, Vignette } from '@react-three/postprocessing'
+import dynamic from 'next/dynamic'
+import { Suspense, useEffect, useState } from 'react'
+import { FaTimes } from 'react-icons/fa'
+import * as THREE from 'three'
 
 const PageLoader = () => (
   <div className="flex min-h-[50vh] items-center justify-center">
     <div className="h-10 w-10 rounded-full border-2 border-ah-blue border-t-transparent animate-spin" />
   </div>
-);
+)
 
-const LandingAntiHeroes = dynamic(() => import("@/components/pages/LandingAntiHeroes"), {
+const LandingAntiHeroes = dynamic(() => import('@/components/pages/LandingAntiHeroes'), {
   loading: () => <PageLoader />,
-});
-const Music = dynamic(() => import("@/components/pages/Music"), {
+})
+const Music = dynamic(() => import('@/components/pages/Music'), {
   loading: () => <PageLoader />,
-});
-const Artist = dynamic(() => import("@/components/pages/Artist"), {
+})
+const Artist = dynamic(() => import('@/components/pages/Artist'), {
   loading: () => <PageLoader />,
-});
-const BeatsAvailable = dynamic(() => import("@/components/pages/BeatsAvailable"), {
+})
+const BeatsAvailable = dynamic(() => import('@/components/pages/BeatsAvailable'), {
   loading: () => <PageLoader />,
-});
-const Albums = dynamic(() => import("@/components/pages/Albums"), {
+})
+const Albums = dynamic(() => import('@/components/pages/Albums'), {
   loading: () => <PageLoader />,
-});
-const XaeneptunesWorld = dynamic(() => import("@/components/pages/XaeneptunesWorld"), {
+})
+const XaeneptunesWorld = dynamic(() => import('@/components/pages/XaeneptunesWorld'), {
   loading: () => <PageLoader />,
-});
-const Connect = dynamic(() => import("@/components/pages/Connect"), { ssr: false });
-const Scene = dynamic(() => import("@/components/scene/Scene"), { ssr: false });
+})
+const Connect = dynamic(() => import('@/components/pages/Connect'), { ssr: false })
+const Scene = dynamic(() => import('@/components/scene/Scene'), { ssr: false })
 
 export default function HomePage() {
-  const { activeRoute, setActiveRoute, hoveredRoute } = useRouteStore();
-  const route: Route = activeRoute;
+  const { activeRoute, setActiveRoute, hoveredRoute } = useRouteStore()
+  const route: Route = activeRoute
 
-  const [mobile, setMobile] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [environmentMode, setEnvironmentMode] = useState<"day" | "night">("night");
-  const [dpr, setDpr] = useState(1);
-  const [showConnectModal, setShowConnectModal] = useState(false);
-  const maxDpr = mobile ? 1.25 : 1.85;
-
-  useEffect(() => {
-    const resize = () => setMobile(window.innerWidth < 768);
-    resize();
-    window.addEventListener("resize", resize);
-    return () => window.removeEventListener("resize", resize);
-  }, []);
+  const [mobile, setMobile] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [environmentMode, setEnvironmentMode] = useState<'day' | 'night'>('night')
+  const [dpr, setDpr] = useState(1)
+  const [showConnectModal, setShowConnectModal] = useState(false)
+  const maxDpr = mobile ? 1.25 : 1.85
 
   useEffect(() => {
-    const deviceDpr = window.devicePixelRatio || 1;
-    setDpr(Math.min(deviceDpr, maxDpr));
-  }, [route, maxDpr]);
+    const resize = () => setMobile(window.innerWidth < 768)
+    resize()
+    window.addEventListener('resize', resize)
+    return () => window.removeEventListener('resize', resize)
+  }, [])
 
   useEffect(() => {
-    if (!showConnectModal) return undefined;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    const deviceDpr = window.devicePixelRatio || 1
+    setDpr(Math.min(deviceDpr, maxDpr))
+  }, [route, maxDpr])
+
+  useEffect(() => {
+    if (!showConnectModal) return undefined
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
 
     return () => {
-      document.body.style.overflow = previousOverflow;
-    };
-  }, [showConnectModal]);
+      document.body.style.overflow = previousOverflow
+    }
+  }, [showConnectModal])
 
   const changeRoute = (nextRoute: Route) => {
-    setSidebarOpen(false);
-    if (nextRoute === "connect") {
-      setShowConnectModal(true);
-      return;
+    setSidebarOpen(false)
+    if (nextRoute === 'connect') {
+      setShowConnectModal(true)
+      return
     }
-    if (nextRoute === route) return;
-    if (route === "beats-visualizer") pauseAllAudio();
-    setActiveRoute(nextRoute);
-  };
+    if (nextRoute === route) return
+    if (route === 'beats-visualizer') pauseAllAudio()
+    setActiveRoute(nextRoute)
+  }
 
   const renderHtmlContent = () => {
     switch (route) {
-      case "home":
-        return <LandingAntiHeroes />;
-      case "music":
+      case 'home':
+        return <LandingAntiHeroes />
+      case 'music':
         return (
           <AHShell
             title="Music"
@@ -98,8 +98,8 @@ export default function HomePage() {
           >
             <Music />
           </AHShell>
-        );
-      case "artist":
+        )
+      case 'artist':
         return (
           <AHShell
             title="Artist"
@@ -107,8 +107,8 @@ export default function HomePage() {
           >
             <Artist />
           </AHShell>
-        );
-      case "beats":
+        )
+      case 'beats':
         return (
           <AHShell
             title="Beats"
@@ -116,8 +116,8 @@ export default function HomePage() {
           >
             <BeatsAvailable />
           </AHShell>
-        );
-      case "albums":
+        )
+      case 'albums':
         return (
           <AHShell
             title="Albums"
@@ -125,8 +125,8 @@ export default function HomePage() {
           >
             <Albums />
           </AHShell>
-        );
-      case "xaeneptune":
+        )
+      case 'xaeneptune':
         return (
           <AHShell
             title="Xae Neptune"
@@ -134,14 +134,14 @@ export default function HomePage() {
           >
             <XaeneptunesWorld />
           </AHShell>
-        );
+        )
       default:
-        return null;
+        return null
     }
-  };
+  }
 
-  const isVisualizerRoute = route === "beats-visualizer";
-  const postEffectsEnabled = !mobile;
+  const isVisualizerRoute = route === 'beats-visualizer'
+  const postEffectsEnabled = !mobile
 
   return (
     <>
@@ -151,16 +151,16 @@ export default function HomePage() {
           onClose={() => setSidebarOpen(false)}
           activeRoute={route}
           setActiveRoute={(nextRoute: Route) => {
-            if (nextRoute === "connect") {
-              setShowConnectModal(true);
-              setSidebarOpen(false);
-              return;
+            if (nextRoute === 'connect') {
+              setShowConnectModal(true)
+              setSidebarOpen(false)
+              return
             }
-            if (route === "beats-visualizer" && nextRoute !== "beats-visualizer") {
-              pauseAllAudio();
+            if (route === 'beats-visualizer' && nextRoute !== 'beats-visualizer') {
+              pauseAllAudio()
             }
-            setActiveRoute(nextRoute);
-            setSidebarOpen(false);
+            setActiveRoute(nextRoute)
+            setSidebarOpen(false)
           }}
         />
       </div>
@@ -181,7 +181,7 @@ export default function HomePage() {
             performance={{ min: 0.5 }}
             gl={{
               alpha: true,
-              powerPreference: "high-performance",
+              powerPreference: 'high-performance',
               antialias: false,
               stencil: false,
               depth: true,
@@ -212,7 +212,7 @@ export default function HomePage() {
                 isMobile={mobile}
                 onSelectRoute={changeRoute}
                 activeRoute={route}
-                onBeatGoBack={() => changeRoute("beats")}
+                onBeatGoBack={() => changeRoute('beats')}
                 hoveredRoute={hoveredRoute}
                 environmentMode={environmentMode}
               />
@@ -228,24 +228,24 @@ export default function HomePage() {
         <div className="relative min-h-screen min-h-[100svh]">{renderHtmlContent()}</div>
       )}
 
-      {route !== "home" && route !== "beats-visualizer" && (
+      {route !== 'home' && route !== 'beats-visualizer' && (
         <div
           className="fixed z-[9998]"
           style={{
-            left: "calc(env(safe-area-inset-left,0px) + 12px)",
-            bottom: "calc(env(safe-area-inset-bottom,0px) + 12px)",
+            left: 'calc(env(safe-area-inset-left,0px) + 12px)',
+            bottom: 'calc(env(safe-area-inset-bottom,0px) + 12px)',
           }}
         >
-          <GoBackButton onClick={() => changeRoute("home")} />
+          <GoBackButton onClick={() => changeRoute('home')} />
         </div>
       )}
 
-      {route === "home" && (
+      {route === 'home' && (
         <NavigationOverlay
           handleRouteChange={changeRoute}
           environmentMode={environmentMode}
           toggleEnvironment={() =>
-            setEnvironmentMode((previous) => (previous === "night" ? "day" : "night"))
+            setEnvironmentMode((previous) => (previous === 'night' ? 'day' : 'night'))
           }
         />
       )}
@@ -255,10 +255,10 @@ export default function HomePage() {
           <Connect />
           <button
             onClick={() => setShowConnectModal(false)}
-            className="fixed right-5 z-[100001] rounded-full border border-white/20 bg-black/70 p-3 text-white backdrop-blur-md transition hover:border-white/45"
+            className="fixed z-[100001] rounded-full border border-white/20 bg-black/70 p-3 text-white backdrop-blur-md transition hover:border-white/45"
             style={{
-              top: "calc(env(safe-area-inset-top,0px) + 14px)",
-              right: "calc(env(safe-area-inset-right,0px) + 14px)",
+              top: 'calc(env(safe-area-inset-top,0px) + 14px)',
+              right: 'calc(env(safe-area-inset-right,0px) + 14px)',
             }}
             aria-label="Close connect modal"
           >
@@ -267,5 +267,5 @@ export default function HomePage() {
         </div>
       )}
     </>
-  );
+  )
 }

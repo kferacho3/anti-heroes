@@ -1,211 +1,202 @@
-"use client";
+'use client'
 
-import { hardcodedAlbums } from "@/data/artistsData";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { hardcodedAlbums } from '@/data/artistsData'
+import { openExternal } from '@/utils/openExternal'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import Image from 'next/image'
+import { useEffect, useMemo, useState } from 'react'
 
 interface SpotifyTrack {
-  id: string;
-  name: string;
-  preview_url: string | null;
-  artists: { name: string }[];
-  external_urls?: { spotify?: string };
+  id: string
+  name: string
+  preview_url: string | null
+  artists: { name: string }[]
+  external_urls?: { spotify?: string }
   album?: {
-    id: string;
-    name: string;
-    images: { url: string }[];
-    release_date: string;
-    external_urls?: { spotify?: string };
-  };
+    id: string
+    name: string
+    images: { url: string }[]
+    release_date: string
+    external_urls?: { spotify?: string }
+  }
 }
 
 interface SpotifyAlbum {
-  id: string;
-  name: string;
-  images: { url: string }[];
-  release_date: string;
-  external_urls?: { spotify?: string };
-  tracks?: SpotifyTrack[];
+  id: string
+  name: string
+  images: { url: string }[]
+  release_date: string
+  external_urls?: { spotify?: string }
+  tracks?: SpotifyTrack[]
 }
 
 interface ArtistAlbumsResponse {
-  items: SpotifyAlbum[];
-  error?: string;
-  detail?: string;
+  items: SpotifyAlbum[]
+  error?: string
+  detail?: string
 }
 
-type Tab = "associated" | "personal" | "executive";
+type Tab = 'associated' | 'personal' | 'executive'
 
-const personalAlbumIds = ["6PBCQ44h15c7VN35lAzu3M", "55Xr7mE7Zya6ccCViy7yyh"];
+const personalAlbumIds = ['6PBCQ44h15c7VN35lAzu3M', '55Xr7mE7Zya6ccCViy7yyh']
 const executiveAlbumIds = [
-  "0djUyeQEWuCWhz1VWRLkFe",
-  "257teVy7xAOfpN9OzY85Lo",
-  "0QBZSqSw8BumuSzFWqjXYR",
-  "343aezvXQOm8UTT9lNB64h",
-  "3yejH64Ofken9zTwLQ9c7X",
-];
+  '0djUyeQEWuCWhz1VWRLkFe',
+  '257teVy7xAOfpN9OzY85Lo',
+  '0QBZSqSw8BumuSzFWqjXYR',
+  '343aezvXQOm8UTT9lNB64h',
+  '3yejH64Ofken9zTwLQ9c7X',
+]
 
 function safeYear(date: string | undefined) {
-  if (!date) return "Unknown";
-  const d = new Date(date);
-  if (Number.isNaN(d.getTime())) return "Unknown";
-  return String(d.getFullYear());
-}
-
-function openExternal(url: string) {
-  window.open(url, "_blank", "noopener,noreferrer");
+  if (!date) return 'Unknown'
+  const d = new Date(date)
+  if (Number.isNaN(d.getTime())) return 'Unknown'
+  return String(d.getFullYear())
 }
 
 function getAlbumCoverUrl(album: SpotifyAlbum) {
-  const url = album.images?.[0]?.url || "";
-  if (!url.includes("open.spotify.com/album")) return url;
+  const url = album.images?.[0]?.url || ''
+  if (!url.includes('open.spotify.com/album')) return url
 
   const fallback: Record<string, string> = {
-    "257teVy7xAOfpN9OzY85Lo":
-      "https://i.scdn.co/image/ab67616d0000b273prerolls2cover",
-    "0djUyeQEWuCWhz1VWRLkFe":
-      "https://i.scdn.co/image/ab67616d0000b273wherethesidewalkendscover",
-  };
+    '257teVy7xAOfpN9OzY85Lo': 'https://i.scdn.co/image/ab67616d0000b273prerolls2cover',
+    '0djUyeQEWuCWhz1VWRLkFe': 'https://i.scdn.co/image/ab67616d0000b273wherethesidewalkendscover',
+  }
 
-  return fallback[album.id] || "/fallback-album.png";
+  return fallback[album.id] || '/fallback-album.png'
 }
 
 export default function Albums() {
-  const reduceMotion = useReducedMotion();
-  const [activeTab, setActiveTab] = useState<Tab>("associated");
-  const [discographyAlbums, setDiscographyAlbums] = useState<SpotifyAlbum[]>([]);
-  const [loadingDiscography, setLoadingDiscography] = useState(true);
-  const [discographyError, setDiscographyError] = useState<string | null>(null);
-  const [search, setSearch] = useState("");
-  const [sortMode, setSortMode] = useState<"latest" | "oldest" | "name">("latest");
-  const [selectedAlbum, setSelectedAlbum] = useState<SpotifyAlbum | null>(null);
-  const [albumTracks, setAlbumTracks] = useState<SpotifyTrack[]>([]);
-  const [loadingAlbumTracks, setLoadingAlbumTracks] = useState(false);
+  const reduceMotion = useReducedMotion()
+  const [activeTab, setActiveTab] = useState<Tab>('associated')
+  const [discographyAlbums, setDiscographyAlbums] = useState<SpotifyAlbum[]>([])
+  const [loadingDiscography, setLoadingDiscography] = useState(true)
+  const [discographyError, setDiscographyError] = useState<string | null>(null)
+  const [search, setSearch] = useState('')
+  const [sortMode, setSortMode] = useState<'latest' | 'oldest' | 'name'>('latest')
+  const [selectedAlbum, setSelectedAlbum] = useState<SpotifyAlbum | null>(null)
+  const [albumTracks, setAlbumTracks] = useState<SpotifyTrack[]>([])
+  const [loadingAlbumTracks, setLoadingAlbumTracks] = useState(false)
 
   useEffect(() => {
     const fetchDiscographyAlbums = async () => {
-      setLoadingDiscography(true);
-      setDiscographyError(null);
+      setLoadingDiscography(true)
+      setDiscographyError(null)
       try {
         const albumsRes = await fetch(
-          "/api/spotify/artist-albums?artistId=7iysPipkcsfGFVEgUMDzHQ&include_groups=album,single&limit=50",
-        );
-        const albumsData: ArtistAlbumsResponse = await albumsRes.json();
+          '/api/spotify/artist-albums?artistId=7iysPipkcsfGFVEgUMDzHQ&include_groups=album,single&limit=50',
+        )
+        const albumsData: ArtistAlbumsResponse = await albumsRes.json()
 
         if (!albumsRes.ok) {
-          const detail = albumsData.detail ? ` (${albumsData.detail})` : "";
-          console.error(`Error fetching artist albums: ${albumsData.error || "Unknown error"}`);
-          setDiscographyError(
-            `${albumsData.error || "Failed to fetch artist albums"}${detail}`,
-          );
-          setDiscographyAlbums([]);
-          return;
+          const detail = albumsData.detail ? ` (${albumsData.detail})` : ''
+          console.error(`Error fetching artist albums: ${albumsData.error || 'Unknown error'}`)
+          setDiscographyError(`${albumsData.error || 'Failed to fetch artist albums'}${detail}`)
+          setDiscographyAlbums([])
+          return
         }
 
-        const fetchedAlbums = albumsData.items || [];
-        const fetchedIds = new Set(fetchedAlbums.map((album) => album.id));
+        const fetchedAlbums = albumsData.items || []
+        const fetchedIds = new Set(fetchedAlbums.map((album) => album.id))
 
         const merged = fetchedAlbums.map((album) => {
-          if (!hardcodedAlbums[album.id]) return album;
-          return { ...album, tracks: hardcodedAlbums[album.id].tracks };
-        });
+          if (!hardcodedAlbums[album.id]) return album
+          return { ...album, tracks: hardcodedAlbums[album.id].tracks }
+        })
 
         const fallbackOnly = Object.values(hardcodedAlbums).filter(
           (album) => !fetchedIds.has(album.id),
-        );
+        )
 
         const updatedFallback = await Promise.all(
           fallbackOnly.map(async (album) => {
             try {
-              const fallbackRes = await fetch(`/api/spotify/album?albumId=${album.id}`);
-              if (!fallbackRes.ok) return album;
-              const realData = await fallbackRes.json();
-              return { ...realData, tracks: album.tracks };
+              const fallbackRes = await fetch(`/api/spotify/album?albumId=${album.id}`)
+              if (!fallbackRes.ok) return album
+              const realData = await fallbackRes.json()
+              return { ...realData, tracks: album.tracks }
             } catch {
-              return album;
+              return album
             }
           }),
-        );
+        )
 
-        const finalAlbums = [...merged, ...updatedFallback];
+        const finalAlbums = [...merged, ...updatedFallback]
         finalAlbums.sort((a, b) => {
-          const aTime = new Date(a.release_date || 0).getTime() || 0;
-          const bTime = new Date(b.release_date || 0).getTime() || 0;
-          return bTime - aTime;
-        });
+          const aTime = new Date(a.release_date || 0).getTime() || 0
+          const bTime = new Date(b.release_date || 0).getTime() || 0
+          return bTime - aTime
+        })
 
-        setDiscographyAlbums(finalAlbums);
+        setDiscographyAlbums(finalAlbums)
       } catch (error) {
-        console.error("Error fetching discography albums:", error);
-        setDiscographyAlbums([]);
-        setDiscographyError("Unable to load discography from Spotify.");
+        console.error('Error fetching discography albums:', error)
+        setDiscographyAlbums([])
+        setDiscographyError('Unable to load discography from Spotify.')
       } finally {
-        setLoadingDiscography(false);
+        setLoadingDiscography(false)
       }
-    };
+    }
 
-    fetchDiscographyAlbums();
-  }, []);
+    fetchDiscographyAlbums()
+  }, [])
 
   const filteredAlbums = useMemo(() => {
-    const normalizedSearch = search.trim().toLowerCase();
+    const normalizedSearch = search.trim().toLowerCase()
 
-    if (activeTab === "personal") {
+    if (activeTab === 'personal') {
       return discographyAlbums.filter(
         (album) =>
           personalAlbumIds.includes(album.id) &&
           album.name.toLowerCase().includes(normalizedSearch),
-      );
+      )
     }
 
-    if (activeTab === "executive") {
+    if (activeTab === 'executive') {
       return discographyAlbums.filter(
         (album) =>
           executiveAlbumIds.includes(album.id) &&
           album.name.toLowerCase().includes(normalizedSearch),
-      );
+      )
     }
 
-    return discographyAlbums.filter((album) =>
-      album.name.toLowerCase().includes(normalizedSearch),
-    );
-  }, [activeTab, discographyAlbums, search]);
+    return discographyAlbums.filter((album) => album.name.toLowerCase().includes(normalizedSearch))
+  }, [activeTab, discographyAlbums, search])
 
   const visibleAlbums = useMemo(() => {
-    const cloned = [...filteredAlbums];
-    if (sortMode === "name") {
-      return cloned.sort((a, b) => a.name.localeCompare(b.name));
+    const cloned = [...filteredAlbums]
+    if (sortMode === 'name') {
+      return cloned.sort((a, b) => a.name.localeCompare(b.name))
     }
 
     return cloned.sort((a, b) => {
-      const aTime = new Date(a.release_date || 0).getTime() || 0;
-      const bTime = new Date(b.release_date || 0).getTime() || 0;
-      return sortMode === "latest" ? bTime - aTime : aTime - bTime;
-    });
-  }, [filteredAlbums, sortMode]);
+      const aTime = new Date(a.release_date || 0).getTime() || 0
+      const bTime = new Date(b.release_date || 0).getTime() || 0
+      return sortMode === 'latest' ? bTime - aTime : aTime - bTime
+    })
+  }, [filteredAlbums, sortMode])
 
   const handleAlbumClick = async (album: SpotifyAlbum) => {
-    setSelectedAlbum(album);
+    setSelectedAlbum(album)
 
     if (album.tracks && album.tracks.length > 0) {
-      setAlbumTracks(album.tracks);
-      setLoadingAlbumTracks(false);
-      return;
+      setAlbumTracks(album.tracks)
+      setLoadingAlbumTracks(false)
+      return
     }
 
-    setLoadingAlbumTracks(true);
+    setLoadingAlbumTracks(true)
     try {
-      const res = await fetch(`/api/spotify/album?albumId=${album.id}`);
+      const res = await fetch(`/api/spotify/album?albumId=${album.id}`)
       if (!res.ok) {
-        console.error(`Error fetching tracks for album ${album.id}: ${await res.text()}`);
-        setAlbumTracks([]);
-        setLoadingAlbumTracks(false);
-        return;
+        console.error(`Error fetching tracks for album ${album.id}: ${await res.text()}`)
+        setAlbumTracks([])
+        setLoadingAlbumTracks(false)
+        return
       }
 
-      const data = await res.json();
-      const fetchedTracks = (data?.tracks?.items || []) as SpotifyTrack[];
+      const data = await res.json()
+      const fetchedTracks = (data?.tracks?.items || []) as SpotifyTrack[]
       const adapted = fetchedTracks.map((track) => ({
         ...track,
         album: {
@@ -215,16 +206,16 @@ export default function Albums() {
           release_date: data.release_date || album.release_date,
           external_urls: data.external_urls || album.external_urls,
         },
-      }));
+      }))
 
-      setAlbumTracks(adapted);
+      setAlbumTracks(adapted)
     } catch (error) {
-      console.error(`Error fetching tracks for album ${album.id}:`, error);
-      setAlbumTracks([]);
+      console.error(`Error fetching tracks for album ${album.id}:`, error)
+      setAlbumTracks([])
     } finally {
-      setLoadingAlbumTracks(false);
+      setLoadingAlbumTracks(false)
     }
-  };
+  }
 
   return (
     <section>
@@ -250,17 +241,17 @@ export default function Albums() {
         <div className="mb-8 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="grid w-full grid-cols-3 gap-2 md:w-auto md:flex md:flex-wrap">
             {[
-              { key: "associated", label: "All Albums" },
-              { key: "personal", label: "Personal" },
-              { key: "executive", label: "Executive" },
+              { key: 'associated', label: 'All Albums' },
+              { key: 'personal', label: 'Personal' },
+              { key: 'executive', label: 'Executive' },
             ].map((tab) => (
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key as Tab)}
                 className={`rounded-sm px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] transition sm:tracking-[0.2em] ${
                   activeTab === tab.key
-                    ? "bg-ah-red text-white shadow-ah-glow-red"
-                    : "border border-white/14 bg-white/[0.02] text-ah-soft hover:text-white"
+                    ? 'bg-ah-red text-white shadow-ah-glow-red'
+                    : 'border border-white/14 bg-white/[0.02] text-ah-soft hover:text-white'
                 }`}
               >
                 {tab.label}
@@ -284,8 +275,8 @@ export default function Albums() {
           </select>
           <button
             onClick={() => {
-              setSearch("");
-              setSortMode("latest");
+              setSearch('')
+              setSortMode('latest')
             }}
             className="w-full rounded-sm border border-white/14 bg-white/[0.02] px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-ah-soft transition hover:border-white/35 hover:text-white sm:tracking-[0.2em] md:w-auto"
           >
@@ -311,7 +302,7 @@ export default function Albums() {
           <motion.div
             className="h-12 w-12 rounded-full border-2 border-ah-red border-t-transparent"
             animate={{ rotate: 360 }}
-            transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
+            transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
           />
         </div>
       ) : (
@@ -341,14 +332,14 @@ export default function Albums() {
                 </h3>
                 <p className="mt-1 text-sm text-ah-soft">
                   {safeYear(selectedAlbum.release_date)} • {albumTracks.length} track
-                  {albumTracks.length === 1 ? "" : "s"}
+                  {albumTracks.length === 1 ? '' : 's'}
                 </p>
 
                 <div className="mt-5 flex flex-wrap gap-2">
                   <button
                     onClick={() => {
-                      setSelectedAlbum(null);
-                      setAlbumTracks([]);
+                      setSelectedAlbum(null)
+                      setAlbumTracks([])
                     }}
                     className="rounded-sm border border-white/14 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-white transition hover:border-white/35"
                   >
@@ -373,13 +364,13 @@ export default function Albums() {
                     <motion.div
                       className="h-10 w-10 rounded-full border-2 border-ah-blue border-t-transparent"
                       animate={{ rotate: 360 }}
-                      transition={{ duration: 0.9, repeat: Infinity, ease: "linear" }}
+                      transition={{ duration: 0.9, repeat: Infinity, ease: 'linear' }}
                     />
                   </div>
                 ) : albumTracks.length > 0 ? (
                   albumTracks.map((track, index) => {
                     const trackUrl =
-                      track.external_urls?.spotify || track.album?.external_urls?.spotify;
+                      track.external_urls?.spotify || track.album?.external_urls?.spotify
 
                     return (
                       <article
@@ -387,9 +378,7 @@ export default function Albums() {
                         className="ah-card content-auto rounded-2xl px-4 py-3"
                       >
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                          <div className="w-5 text-center text-xs text-ah-soft">
-                            {index + 1}
-                          </div>
+                          <div className="w-5 text-center text-xs text-ah-soft">{index + 1}</div>
                           <div className="relative h-10 w-10 overflow-hidden rounded border border-white/12">
                             <Image
                               src={getAlbumCoverUrl(selectedAlbum)}
@@ -404,7 +393,7 @@ export default function Albums() {
                               {track.name}
                             </p>
                             <p className="truncate text-xs uppercase tracking-[0.14em] text-ah-soft">
-                              {track.artists.map((artist) => artist.name).join(", ")}
+                              {track.artists.map((artist) => artist.name).join(', ')}
                             </p>
                           </div>
                           <div className="flex flex-wrap items-center gap-2 sm:justify-end">
@@ -427,7 +416,7 @@ export default function Albums() {
                           </div>
                         </div>
                       </article>
-                    );
+                    )
                   })
                 ) : (
                   <p className="rounded-2xl border border-white/10 bg-white/[0.02] px-4 py-8 text-center text-ah-soft">
@@ -472,5 +461,5 @@ export default function Albums() {
         </AnimatePresence>
       )}
     </section>
-  );
+  )
 }

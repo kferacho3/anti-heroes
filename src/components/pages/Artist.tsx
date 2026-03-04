@@ -1,183 +1,182 @@
-"use client";
+'use client'
 
-import { hardcodedAlbums } from "@/data/artistsData";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import Image from "next/image";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { hardcodedAlbums } from '@/data/artistsData'
+import { openExternal } from '@/utils/openExternal'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import Image from 'next/image'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 interface SpotifyArtist {
-  id: string;
-  name: string;
-  images?: { url: string }[];
-  followers?: { total: number };
-  genres?: string[];
-  external_urls?: { spotify?: string };
+  id: string
+  name: string
+  images?: { url: string }[]
+  followers?: { total: number }
+  genres?: string[]
+  external_urls?: { spotify?: string }
 }
 
 interface SpotifyTrack {
-  id: string;
-  name: string;
-  preview_url?: string | null;
+  id: string
+  name: string
+  preview_url?: string | null
   external_urls?: {
-    spotify?: string;
-    soundcloud?: string;
-  };
+    spotify?: string
+    soundcloud?: string
+  }
   album: {
-    id: string;
-    name: string;
-    images?: { url: string }[];
-    release_date: string;
-    external_urls?: { spotify?: string };
-  };
-  artists: { id?: string; name: string }[];
+    id: string
+    name: string
+    images?: { url: string }[]
+    release_date: string
+    external_urls?: { spotify?: string }
+  }
+  artists: { id?: string; name: string }[]
 }
 
 interface SpotifyAlbum {
-  id: string;
-  name: string;
-  images?: { url: string }[];
-  release_date: string;
-  external_urls?: { spotify?: string };
-  tracks?: SpotifyTrack[];
+  id: string
+  name: string
+  images?: { url: string }[]
+  release_date: string
+  external_urls?: { spotify?: string }
+  tracks?: SpotifyTrack[]
 }
 
 interface SpotifyAlbumResponse {
-  id: string;
-  name: string;
-  images?: { url: string }[];
-  release_date: string;
-  external_urls?: { spotify?: string };
+  id: string
+  name: string
+  images?: { url: string }[]
+  release_date: string
+  external_urls?: { spotify?: string }
   tracks?: {
-    items?: SpotifyTrack[];
-  };
+    items?: SpotifyTrack[]
+  }
 }
 
 interface TopTracksResponse {
-  tracks: SpotifyTrack[];
+  tracks: SpotifyTrack[]
 }
 
 interface DiscographyGroup {
-  album: SpotifyAlbum;
-  tracks: SpotifyTrack[];
+  album: SpotifyAlbum
+  tracks: SpotifyTrack[]
 }
 
-type ArtistTab = "top-tracks" | "discography";
+type ArtistTab = 'top-tracks' | 'discography'
 
 const xoJuneAlbum: SpotifyAlbum & { tracks: SpotifyTrack[] } = {
-  id: "xo-june-bedroom-tapes-vol1",
-  name: "Bedroom Tapes, Vol 1.",
-  release_date: "2024",
+  id: 'xo-june-bedroom-tapes-vol1',
+  name: 'Bedroom Tapes, Vol 1.',
+  release_date: '2024',
   images: [
     {
-      url: "https://i1.sndcdn.com/artworks-HO9ZhEvqdwTcFVk2-R8IuQQ-t1080x1080.jpg",
+      url: 'https://i1.sndcdn.com/artworks-HO9ZhEvqdwTcFVk2-R8IuQQ-t1080x1080.jpg',
     },
   ],
-  external_urls: { spotify: "https://soundcloud.com/xojune/real-foyf" },
+  external_urls: { spotify: 'https://soundcloud.com/xojune/real-foyf' },
   tracks: [
     {
-      id: "xo-june-real-foyf",
-      name: "Real (FOYF) Prod. XaeNeptune",
+      id: 'xo-june-real-foyf',
+      name: 'Real (FOYF) Prod. XaeNeptune',
       preview_url: null,
       external_urls: {
-        spotify: "https://soundcloud.com/xojune/real-foyf",
-        soundcloud: "https://soundcloud.com/xojune/real-foyf",
+        spotify: 'https://soundcloud.com/xojune/real-foyf',
+        soundcloud: 'https://soundcloud.com/xojune/real-foyf',
       },
       album: {
-        id: "xo-june-bedroom-tapes-vol1",
-        name: "Bedroom Tapes, Vol 1.",
+        id: 'xo-june-bedroom-tapes-vol1',
+        name: 'Bedroom Tapes, Vol 1.',
         images: [
           {
-            url: "https://i1.sndcdn.com/artworks-HO9ZhEvqdwTcFVk2-R8IuQQ-t1080x1080.jpg",
+            url: 'https://i1.sndcdn.com/artworks-HO9ZhEvqdwTcFVk2-R8IuQQ-t1080x1080.jpg',
           },
         ],
-        release_date: "2024",
-        external_urls: { spotify: "https://soundcloud.com/xojune/real-foyf" },
+        release_date: '2024',
+        external_urls: { spotify: 'https://soundcloud.com/xojune/real-foyf' },
       },
-      artists: [{ name: "XO June" }],
+      artists: [{ name: 'XO June' }],
     },
   ],
-};
+}
 
 function getArtistImageUrl(artist: SpotifyArtist | null): string {
-  if (!artist || !artist.name) return "https://via.placeholder.com/300?text=No+Image";
+  if (!artist || !artist.name) return 'https://via.placeholder.com/300?text=No+Image'
 
   if (artist.images && artist.images.length > 0 && artist.images[0].url) {
-    return artist.images[0].url;
+    return artist.images[0].url
   }
 
-  const lowerName = artist.name.toLowerCase();
-  if (lowerName === "iann tyler") {
-    return "https://i1.sndcdn.com/avatars-8HyvIOZxOAq1iNja-dBVAMA-t500x500.jpg";
+  const lowerName = artist.name.toLowerCase()
+  if (lowerName === 'iann tyler') {
+    return 'https://i1.sndcdn.com/avatars-8HyvIOZxOAq1iNja-dBVAMA-t500x500.jpg'
   }
-  if (lowerName === "kyistt") {
-    return "https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/5a/12/bc/5a12bc69-7832-d7c2-83d8-7fb3412c4f41/pr_source.png/190x190cc.webp";
+  if (lowerName === 'kyistt') {
+    return 'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/5a/12/bc/5a12bc69-7832-d7c2-83d8-7fb3412c4f41/pr_source.png/190x190cc.webp'
   }
-  if (lowerName === "statik") {
-    return "https://xaeneptune.s3.us-east-2.amazonaws.com/images/Artist/xaeneptune-no-profile.webp";
+  if (lowerName === 'statik') {
+    return 'https://xaeneptune.s3.us-east-2.amazonaws.com/images/Artist/xaeneptune-no-profile.webp'
   }
 
-  return "https://via.placeholder.com/300?text=No+Image";
+  return 'https://via.placeholder.com/300?text=No+Image'
 }
 
 async function fetchSpotifyAlbum(albumId: string): Promise<SpotifyAlbumResponse | null> {
   try {
-    const response = await fetch(`/api/spotify/album?albumId=${albumId}`);
-    if (!response.ok) return null;
-    return (await response.json()) as SpotifyAlbumResponse;
+    const response = await fetch(`/api/spotify/album?albumId=${albumId}`)
+    if (!response.ok) return null
+    return (await response.json()) as SpotifyAlbumResponse
   } catch {
-    return null;
+    return null
   }
 }
 
 function longestCommonSubstring(s1: string, s2: string): number {
-  const matrix = Array.from({ length: s1.length + 1 }, () =>
-    Array(s2.length + 1).fill(0),
-  );
-  let max = 0;
+  const matrix = Array.from({ length: s1.length + 1 }, () => Array(s2.length + 1).fill(0))
+  let max = 0
   for (let i = 1; i <= s1.length; i++) {
     for (let j = 1; j <= s2.length; j++) {
       if (s1[i - 1] === s2[j - 1]) {
-        matrix[i][j] = matrix[i - 1][j - 1] + 1;
-        if (matrix[i][j] > max) max = matrix[i][j];
+        matrix[i][j] = matrix[i - 1][j - 1] + 1
+        if (matrix[i][j] > max) max = matrix[i][j]
       }
     }
   }
-  return max;
+  return max
 }
 
 function isSimilar(name1: string, name2: string): boolean {
-  const first = name1.replace(/\s/g, "").toLowerCase();
-  const second = name2.replace(/\s/g, "").toLowerCase();
-  return longestCommonSubstring(first, second) >= 5;
+  const first = name1.replace(/\s/g, '').toLowerCase()
+  const second = name2.replace(/\s/g, '').toLowerCase()
+  return longestCommonSubstring(first, second) >= 5
 }
 
 function isSpotifyArtist(value: unknown): value is SpotifyArtist {
-  if (!value || typeof value !== "object") return false;
-  const candidate = value as Partial<SpotifyArtist>;
+  if (!value || typeof value !== 'object') return false
+  const candidate = value as Partial<SpotifyArtist>
   return (
-    typeof candidate.id === "string" &&
+    typeof candidate.id === 'string' &&
     candidate.id.trim().length > 0 &&
-    typeof candidate.name === "string" &&
+    typeof candidate.name === 'string' &&
     candidate.name.trim().length > 0
-  );
+  )
 }
 
 function uniqueArtistsById(artists: SpotifyArtist[]): SpotifyArtist[] {
-  const seen = new Set<string>();
+  const seen = new Set<string>()
   return artists.filter((artist) => {
-    if (seen.has(artist.id)) return false;
-    seen.add(artist.id);
-    return true;
-  });
+    if (seen.has(artist.id)) return false
+    seen.add(artist.id)
+    return true
+  })
 }
 
 function getAhmadFallbackTopTracks(): SpotifyTrack[] {
-  const jordanyear = hardcodedAlbums["6PBCQ44h15c7VN35lAzu3M"];
-  const social = hardcodedAlbums["55Xr7mE7Zya6ccCViy7yyh"];
-  const track1 = jordanyear?.tracks.find((track) => track.id === "jt1");
-  const track2 = social?.tracks.find((track) => track.id === "sn5");
+  const jordanyear = hardcodedAlbums['6PBCQ44h15c7VN35lAzu3M']
+  const social = hardcodedAlbums['55Xr7mE7Zya6ccCViy7yyh']
+  const track1 = jordanyear?.tracks.find((track) => track.id === 'jt1')
+  const track2 = social?.tracks.find((track) => track.id === 'sn5')
 
-  if (!track1 || !track2) return [];
+  if (!track1 || !track2) return []
 
   const track1WithAlbum: SpotifyTrack = {
     ...track1,
@@ -188,7 +187,7 @@ function getAhmadFallbackTopTracks(): SpotifyTrack[] {
       release_date: jordanyear.release_date,
       external_urls: jordanyear.external_urls,
     },
-  };
+  }
 
   const track2WithAlbum: SpotifyTrack = {
     ...track2,
@@ -199,28 +198,26 @@ function getAhmadFallbackTopTracks(): SpotifyTrack[] {
       release_date: social.release_date,
       external_urls: social.external_urls,
     },
-  };
+  }
 
-  return [track1WithAlbum, track2WithAlbum];
+  return [track1WithAlbum, track2WithAlbum]
 }
 
 async function extractTracksForArtist(artist: SpotifyArtist): Promise<DiscographyGroup[]> {
-  let extractedTracks: SpotifyTrack[] = [];
-  const artistName = artist.name;
+  let extractedTracks: SpotifyTrack[] = []
+  const artistName = artist.name
 
   for (const albumId in hardcodedAlbums) {
-    const album = hardcodedAlbums[albumId];
-    const albumTracks = album.tracks || [];
+    const album = hardcodedAlbums[albumId]
+    const albumTracks = album.tracks || []
 
     const filtered = albumTracks.filter((track) => {
-      const hasArtist = track.artists.some((trackArtist) =>
-        isSimilar(trackArtist.name, artistName),
-      );
+      const hasArtist = track.artists.some((trackArtist) => isSimilar(trackArtist.name, artistName))
       const hasXae = track.artists.some(
-        (trackArtist) => trackArtist.name.toLowerCase() === "xae neptune",
-      );
-      return hasArtist && hasXae;
-    });
+        (trackArtist) => trackArtist.name.toLowerCase() === 'xae neptune',
+      )
+      return hasArtist && hasXae
+    })
 
     const adaptedTracks: SpotifyTrack[] = filtered.map((track) => ({
       ...track,
@@ -231,12 +228,12 @@ async function extractTracksForArtist(artist: SpotifyArtist): Promise<Discograph
         release_date: album.release_date,
         external_urls: album.external_urls,
       },
-    }));
+    }))
 
-    extractedTracks = [...extractedTracks, ...adaptedTracks];
+    extractedTracks = [...extractedTracks, ...adaptedTracks]
   }
 
-  if (artist.name.toLowerCase() === "xo june") {
+  if (artist.name.toLowerCase() === 'xo june') {
     extractedTracks = [
       ...extractedTracks,
       ...xoJuneAlbum.tracks.map((track) => ({
@@ -249,279 +246,272 @@ async function extractTracksForArtist(artist: SpotifyArtist): Promise<Discograph
           external_urls: xoJuneAlbum.external_urls,
         },
       })),
-    ];
+    ]
   }
 
-  if (artist.name.toLowerCase() === "ahmad") {
-    extractedTracks = getAhmadFallbackTopTracks();
+  if (artist.name.toLowerCase() === 'ahmad') {
+    extractedTracks = getAhmadFallbackTopTracks()
   }
 
-  const uniqueMap = new Map<string, SpotifyTrack>();
+  const uniqueMap = new Map<string, SpotifyTrack>()
   extractedTracks.forEach((track) => {
-    if (!uniqueMap.has(track.id)) uniqueMap.set(track.id, track);
-  });
+    if (!uniqueMap.has(track.id)) uniqueMap.set(track.id, track)
+  })
 
-  const grouped = new Map<string, DiscographyGroup>();
+  const grouped = new Map<string, DiscographyGroup>()
   Array.from(uniqueMap.values()).forEach((track) => {
-    const albumId = track.album.id;
+    const albumId = track.album.id
     if (grouped.has(albumId)) {
-      grouped.get(albumId)!.tracks.push(track);
+      grouped.get(albumId)!.tracks.push(track)
     } else {
-      grouped.set(albumId, { album: track.album, tracks: [track] });
+      grouped.set(albumId, { album: track.album, tracks: [track] })
     }
-  });
+  })
 
   for (const [albumId, group] of grouped.entries()) {
-    const spotifyAlbum = await fetchSpotifyAlbum(albumId);
-    if (!spotifyAlbum) continue;
+    const spotifyAlbum = await fetchSpotifyAlbum(albumId)
+    if (!spotifyAlbum) continue
     group.album = {
       ...group.album,
       ...spotifyAlbum,
       tracks: group.album.tracks,
-    };
+    }
   }
 
-  return Array.from(grouped.values());
+  return Array.from(grouped.values())
 }
 
 function safeYear(date: string | undefined): string {
-  if (!date) return "Unknown";
-  const parsed = new Date(date);
-  if (Number.isNaN(parsed.getTime())) return "Unknown";
-  return String(parsed.getFullYear());
-}
-
-function openExternal(url: string) {
-  window.open(url, "_blank", "noopener,noreferrer");
+  if (!date) return 'Unknown'
+  const parsed = new Date(date)
+  if (Number.isNaN(parsed.getTime())) return 'Unknown'
+  return String(parsed.getFullYear())
 }
 
 export default function Artist() {
-  const reduceMotion = useReducedMotion();
-  const [mainArtist, setMainArtist] = useState<SpotifyArtist | null>(null);
-  const [associatedArtists, setAssociatedArtists] = useState<SpotifyArtist[]>([]);
-  const [loadingMain, setLoadingMain] = useState(true);
-  const [loadingAssociated, setLoadingAssociated] = useState(true);
-  const [mainArtistError, setMainArtistError] = useState<string | null>(null);
-  const [associatedArtistsError, setAssociatedArtistsError] = useState<string | null>(null);
+  const reduceMotion = useReducedMotion()
+  const [mainArtist, setMainArtist] = useState<SpotifyArtist | null>(null)
+  const [associatedArtists, setAssociatedArtists] = useState<SpotifyArtist[]>([])
+  const [loadingMain, setLoadingMain] = useState(true)
+  const [loadingAssociated, setLoadingAssociated] = useState(true)
+  const [mainArtistError, setMainArtistError] = useState<string | null>(null)
+  const [associatedArtistsError, setAssociatedArtistsError] = useState<string | null>(null)
 
-  const [selectedArtist, setSelectedArtist] = useState<SpotifyArtist | null>(null);
-  const [activeArtistTab, setActiveArtistTab] = useState<ArtistTab>("top-tracks");
+  const [selectedArtist, setSelectedArtist] = useState<SpotifyArtist | null>(null)
+  const [activeArtistTab, setActiveArtistTab] = useState<ArtistTab>('top-tracks')
 
-  const [artistTopTracks, setArtistTopTracks] = useState<SpotifyTrack[]>([]);
-  const [loadingTopTracks, setLoadingTopTracks] = useState(false);
-  const [topTracksError, setTopTracksError] = useState<string | null>(null);
-  const [artistDiscography, setArtistDiscography] = useState<DiscographyGroup[]>([]);
-  const [loadingDiscography, setLoadingDiscography] = useState(false);
-  const [discographyError, setDiscographyError] = useState<string | null>(null);
+  const [artistTopTracks, setArtistTopTracks] = useState<SpotifyTrack[]>([])
+  const [loadingTopTracks, setLoadingTopTracks] = useState(false)
+  const [topTracksError, setTopTracksError] = useState<string | null>(null)
+  const [artistDiscography, setArtistDiscography] = useState<DiscographyGroup[]>([])
+  const [loadingDiscography, setLoadingDiscography] = useState(false)
+  const [discographyError, setDiscographyError] = useState<string | null>(null)
 
   const [selectedDiscographyAlbum, setSelectedDiscographyAlbum] = useState<SpotifyAlbum | null>(
     null,
-  );
-  const [discographyTracks, setDiscographyTracks] = useState<SpotifyTrack[]>([]);
-  const [loadingAlbumTracks, setLoadingAlbumTracks] = useState(false);
-  const [rosterSearch, setRosterSearch] = useState("");
-  const [rosterSort, setRosterSort] = useState<"followers" | "name">("followers");
-  const rosterSearchRef = useRef<HTMLInputElement>(null);
+  )
+  const [discographyTracks, setDiscographyTracks] = useState<SpotifyTrack[]>([])
+  const [loadingAlbumTracks, setLoadingAlbumTracks] = useState(false)
+  const [rosterSearch, setRosterSearch] = useState('')
+  const [rosterSort, setRosterSort] = useState<'followers' | 'name'>('followers')
+  const rosterSearchRef = useRef<HTMLInputElement>(null)
 
-  const mainArtistId = "7iysPipkcsfGFVEgUMDzHQ";
+  const mainArtistId = '7iysPipkcsfGFVEgUMDzHQ'
 
   const associatedArtistIds = useMemo(
     () =>
       Array.from(
         new Set([
-          "4ihlULofncvxd3Cz7ewTNV",
-          "3uwUJ78bwdDBLo3O04xlnL",
-          "4nRgpdGBG8DPYMHikqUp3w",
-          "6mFKPMFGbulPhOnj3UvzAF",
-          "0z3M3HSEsrgi5YmwY5e9fB",
-          "2pZnyv4zLqnSDktBqXQlZz",
-          "0zRLHcRfGiz3GCHk852mIL",
-          "6cPZNDrHphEZ3ok4t8K7ZT",
-          "5bNFzNn84AoUqClYZJKan5",
-          "1IwJ9sVzmn5hBSe02HsLnM",
-          "5pVOuKzA3hhsdScwg2k4o",
-          "3k8lBDenIm90lWaSpAYQeH",
-          "4O0urd9sL16UmRnmdHienf",
-          "05eq9g0p6jze8k6Wva5BUz",
-          "2pZnyv4zLqnSDktBqXQlZz",
-          "0z3M3HSEsrgi5YmwY5e9fB",
-          "4wtNgDt8QcZCPfx64NiBGi",
-          "6E9lvijZw6hhoNiEaZ765i",
+          '4ihlULofncvxd3Cz7ewTNV',
+          '3uwUJ78bwdDBLo3O04xlnL',
+          '4nRgpdGBG8DPYMHikqUp3w',
+          '6mFKPMFGbulPhOnj3UvzAF',
+          '0z3M3HSEsrgi5YmwY5e9fB',
+          '2pZnyv4zLqnSDktBqXQlZz',
+          '0zRLHcRfGiz3GCHk852mIL',
+          '6cPZNDrHphEZ3ok4t8K7ZT',
+          '5bNFzNn84AoUqClYZJKan5',
+          '1IwJ9sVzmn5hBSe02HsLnM',
+          '5pVOuKzA3hhsdScwg2k4o',
+          '3k8lBDenIm90lWaSpAYQeH',
+          '4O0urd9sL16UmRnmdHienf',
+          '05eq9g0p6jze8k6Wva5BUz',
+          '2pZnyv4zLqnSDktBqXQlZz',
+          '0z3M3HSEsrgi5YmwY5e9fB',
+          '4wtNgDt8QcZCPfx64NiBGi',
+          '6E9lvijZw6hhoNiEaZ765i',
         ]),
       ),
     [],
-  );
+  )
 
   const xoJuneArtist = useMemo<SpotifyArtist>(
     () => ({
-      id: "xo-june",
-      name: "XO June",
+      id: 'xo-june',
+      name: 'XO June',
       images: [
         {
-          url: "https://i1.sndcdn.com/avatars-WTj6LWMHQK0o1lDw-Vz5D1A-t500x500.jpg",
+          url: 'https://i1.sndcdn.com/avatars-WTj6LWMHQK0o1lDw-Vz5D1A-t500x500.jpg',
         },
       ],
       followers: { total: 0 },
       genres: [],
-      external_urls: { spotify: "https://soundcloud.com/xojune" },
+      external_urls: { spotify: 'https://soundcloud.com/xojune' },
     }),
     [],
-  );
+  )
 
   const visibleAssociatedArtists = useMemo(() => {
-    const term = rosterSearch.trim().toLowerCase();
-    const filtered = associatedArtists.filter((artist) =>
-      artist.name.toLowerCase().includes(term),
-    );
+    const term = rosterSearch.trim().toLowerCase()
+    const filtered = associatedArtists.filter((artist) => artist.name.toLowerCase().includes(term))
 
     return filtered.sort((left, right) => {
-      if (rosterSort === "name") return left.name.localeCompare(right.name);
-      return (right.followers?.total || 0) - (left.followers?.total || 0);
-    });
-  }, [associatedArtists, rosterSearch, rosterSort]);
+      if (rosterSort === 'name') return left.name.localeCompare(right.name)
+      return (right.followers?.total || 0) - (left.followers?.total || 0)
+    })
+  }, [associatedArtists, rosterSearch, rosterSort])
 
   const associatedFollowerTotal = useMemo(
-    () =>
-      associatedArtists.reduce(
-        (total, artist) => total + (artist.followers?.total || 0),
-        0,
-      ),
+    () => associatedArtists.reduce((total, artist) => total + (artist.followers?.total || 0), 0),
     [associatedArtists],
-  );
+  )
 
   useEffect(() => {
     const fetchMainArtist = async () => {
       try {
-        setMainArtistError(null);
-        const response = await fetch(`/api/spotify/artist?artistId=${mainArtistId}`);
-        const data = (await response.json()) as unknown;
+        setMainArtistError(null)
+        const response = await fetch(`/api/spotify/artist?artistId=${mainArtistId}`)
+        const data = (await response.json()) as unknown
         if (!response.ok) {
-          const errorPayload = data as { error?: string };
-          throw new Error(errorPayload.error || "Failed to fetch main artist");
+          const errorPayload = data as { error?: string }
+          throw new Error(errorPayload.error || 'Failed to fetch main artist')
         }
-        setMainArtist(isSpotifyArtist(data) ? data : null);
+        setMainArtist(isSpotifyArtist(data) ? data : null)
       } catch (error) {
-        console.error("Error fetching main artist:", error);
-        setMainArtist(null);
-        setMainArtistError((error as Error).message || "Unable to load main artist.");
+        console.error('Error fetching main artist:', error)
+        setMainArtist(null)
+        setMainArtistError((error as Error).message || 'Unable to load main artist.')
       } finally {
-        setLoadingMain(false);
+        setLoadingMain(false)
       }
-    };
+    }
 
-    fetchMainArtist();
-  }, [mainArtistId]);
+    fetchMainArtist()
+  }, [mainArtistId])
 
   useEffect(() => {
     const fetchAssociatedArtists = async () => {
       try {
-        setAssociatedArtistsError(null);
+        setAssociatedArtistsError(null)
         const responses = await Promise.allSettled(
           associatedArtistIds.map(async (id) => {
-            const response = await fetch(`/api/spotify/artist?artistId=${id}`);
-            if (!response.ok) return null;
-            const data = (await response.json()) as unknown;
-            return isSpotifyArtist(data) ? data : null;
+            const response = await fetch(`/api/spotify/artist?artistId=${id}`)
+            if (!response.ok) return null
+            const data = (await response.json()) as unknown
+            return isSpotifyArtist(data) ? data : null
           }),
-        );
+        )
 
         const validArtists = responses
-          .filter((result): result is PromiseFulfilledResult<SpotifyArtist | null> => result.status === "fulfilled")
+          .filter(
+            (result): result is PromiseFulfilledResult<SpotifyArtist | null> =>
+              result.status === 'fulfilled',
+          )
           .map((result) => result.value)
-          .filter((artist): artist is SpotifyArtist => Boolean(artist));
+          .filter((artist): artist is SpotifyArtist => Boolean(artist))
 
-        setAssociatedArtists(uniqueArtistsById([...validArtists, xoJuneArtist]));
+        setAssociatedArtists(uniqueArtistsById([...validArtists, xoJuneArtist]))
       } catch (error) {
-        console.error("Error fetching associated artists:", error);
-        setAssociatedArtists([xoJuneArtist]);
-        setAssociatedArtistsError((error as Error).message || "Unable to load artist roster.");
+        console.error('Error fetching associated artists:', error)
+        setAssociatedArtists([xoJuneArtist])
+        setAssociatedArtistsError((error as Error).message || 'Unable to load artist roster.')
       } finally {
-        setLoadingAssociated(false);
+        setLoadingAssociated(false)
       }
-    };
+    }
 
-    fetchAssociatedArtists();
-  }, [associatedArtistIds, xoJuneArtist]);
+    fetchAssociatedArtists()
+  }, [associatedArtistIds, xoJuneArtist])
 
   useEffect(() => {
-    if (!selectedArtist) return;
+    if (!selectedArtist) return
 
     const fetchSelectedArtistData = async () => {
-      setLoadingTopTracks(true);
-      setLoadingDiscography(true);
-      setTopTracksError(null);
-      setDiscographyError(null);
-      setSelectedDiscographyAlbum(null);
-      setDiscographyTracks([]);
+      setLoadingTopTracks(true)
+      setLoadingDiscography(true)
+      setTopTracksError(null)
+      setDiscographyError(null)
+      setSelectedDiscographyAlbum(null)
+      setDiscographyTracks([])
 
       try {
-        if (selectedArtist.name.toLowerCase() === "ahmad") {
-          setArtistTopTracks(getAhmadFallbackTopTracks());
+        if (selectedArtist.name.toLowerCase() === 'ahmad') {
+          setArtistTopTracks(getAhmadFallbackTopTracks())
         } else {
           const response = await fetch(
             `/api/spotify/artist-top-tracks?artistId=${selectedArtist.id}`,
-          );
+          )
           if (!response.ok) {
-            const payload = (await response.json()) as { error?: string };
-            throw new Error(payload.error || "Failed to fetch top tracks");
+            const payload = (await response.json()) as { error?: string }
+            throw new Error(payload.error || 'Failed to fetch top tracks')
           }
-          const data: TopTracksResponse = await response.json();
-          setArtistTopTracks((data.tracks || []).slice(0, 10));
+          const data: TopTracksResponse = await response.json()
+          setArtistTopTracks((data.tracks || []).slice(0, 10))
         }
       } catch (error) {
-        console.error("Error fetching artist top tracks:", error);
-        setArtistTopTracks([]);
-        setTopTracksError((error as Error).message || "Unable to load top tracks.");
+        console.error('Error fetching artist top tracks:', error)
+        setArtistTopTracks([])
+        setTopTracksError((error as Error).message || 'Unable to load top tracks.')
       } finally {
-        setLoadingTopTracks(false);
+        setLoadingTopTracks(false)
       }
 
       try {
-        const groups = await extractTracksForArtist(selectedArtist);
-        setArtistDiscography(groups);
+        const groups = await extractTracksForArtist(selectedArtist)
+        setArtistDiscography(groups)
       } catch (error) {
-        console.error("Error building artist discography:", error);
-        setArtistDiscography([]);
-        setDiscographyError((error as Error).message || "Unable to load discography.");
+        console.error('Error building artist discography:', error)
+        setArtistDiscography([])
+        setDiscographyError((error as Error).message || 'Unable to load discography.')
       } finally {
-        setLoadingDiscography(false);
+        setLoadingDiscography(false)
       }
-    };
+    }
 
-    fetchSelectedArtistData();
-  }, [selectedArtist]);
+    fetchSelectedArtistData()
+  }, [selectedArtist])
 
   useEffect(() => {
-    if (selectedArtist) return undefined;
+    if (selectedArtist) return undefined
 
     const onKeyDown = (event: KeyboardEvent) => {
-      const target = event.target as HTMLElement | null;
+      const target = event.target as HTMLElement | null
       const isTyping =
-        target?.tagName === "INPUT" ||
-        target?.tagName === "TEXTAREA" ||
-        target?.tagName === "SELECT" ||
-        target?.isContentEditable;
+        target?.tagName === 'INPUT' ||
+        target?.tagName === 'TEXTAREA' ||
+        target?.tagName === 'SELECT' ||
+        target?.isContentEditable
 
-      if (!isTyping && event.key === "/") {
-        event.preventDefault();
-        rosterSearchRef.current?.focus();
+      if (!isTyping && event.key === '/') {
+        event.preventDefault()
+        rosterSearchRef.current?.focus()
       }
 
-      if (event.key === "Escape" && rosterSearch) {
-        setRosterSearch("");
+      if (event.key === 'Escape' && rosterSearch) {
+        setRosterSearch('')
       }
-    };
+    }
 
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [rosterSearch, selectedArtist]);
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [rosterSearch, selectedArtist])
 
   const openDiscographyAlbum = async (album: SpotifyAlbum) => {
-    setSelectedDiscographyAlbum(album);
-    setLoadingAlbumTracks(true);
+    setSelectedDiscographyAlbum(album)
+    setLoadingAlbumTracks(true)
 
     try {
-      const spotifyAlbum = await fetchSpotifyAlbum(album.id);
+      const spotifyAlbum = await fetchSpotifyAlbum(album.id)
       const albumWithBestData: SpotifyAlbum = {
         id: spotifyAlbum?.id ?? album.id,
         name: spotifyAlbum?.name ?? album.name,
@@ -529,12 +519,12 @@ export default function Artist() {
         release_date: spotifyAlbum?.release_date ?? album.release_date,
         external_urls: spotifyAlbum?.external_urls ?? album.external_urls,
         tracks: album.tracks,
-      };
+      }
 
-      const fallbackTracks = album.tracks || [];
-      const spotifyTracks = spotifyAlbum?.tracks?.items;
+      const fallbackTracks = album.tracks || []
+      const spotifyTracks = spotifyAlbum?.tracks?.items
 
-      const tracksToUse = fallbackTracks.length > 0 ? fallbackTracks : spotifyTracks || [];
+      const tracksToUse = fallbackTracks.length > 0 ? fallbackTracks : spotifyTracks || []
       const adaptedTracks: SpotifyTrack[] = tracksToUse.map((track) => ({
         ...track,
         album: {
@@ -544,17 +534,17 @@ export default function Artist() {
           release_date: albumWithBestData.release_date || album.release_date,
           external_urls: albumWithBestData.external_urls || album.external_urls,
         },
-      }));
+      }))
 
-      setDiscographyTracks(adaptedTracks);
-      setSelectedDiscographyAlbum(albumWithBestData);
+      setDiscographyTracks(adaptedTracks)
+      setSelectedDiscographyAlbum(albumWithBestData)
     } catch (error) {
-      console.error("Error opening discography album:", error);
-      setDiscographyTracks([]);
+      console.error('Error opening discography album:', error)
+      setDiscographyTracks([])
     } finally {
-      setLoadingAlbumTracks(false);
+      setLoadingAlbumTracks(false)
     }
-  };
+  }
 
   if (loadingMain) {
     return (
@@ -562,10 +552,10 @@ export default function Artist() {
         <motion.div
           className="h-12 w-12 rounded-full border-2 border-ah-red border-t-transparent"
           animate={{ rotate: 360 }}
-          transition={{ duration: 0.9, repeat: Infinity, ease: "linear" }}
+          transition={{ duration: 0.9, repeat: Infinity, ease: 'linear' }}
         />
       </div>
-    );
+    )
   }
 
   if (!selectedArtist) {
@@ -620,11 +610,11 @@ export default function Artist() {
                 {mainArtist.name}
               </h3>
               <p className="text-xs uppercase tracking-[0.16em] text-ah-soft">
-                {mainArtist.followers?.total?.toLocaleString() || "0"} Followers
+                {mainArtist.followers?.total?.toLocaleString() || '0'} Followers
               </p>
               {mainArtist.genres && mainArtist.genres.length > 0 && (
                 <p className="mt-2 text-xs text-white/75">
-                  {mainArtist.genres.slice(0, 3).join(" • ")}
+                  {mainArtist.genres.slice(0, 3).join(' • ')}
                 </p>
               )}
             </div>
@@ -636,7 +626,7 @@ export default function Artist() {
             <motion.div
               className="h-10 w-10 rounded-full border-2 border-ah-blue border-t-transparent"
               animate={{ rotate: 360 }}
-              transition={{ duration: 0.85, repeat: Infinity, ease: "linear" }}
+              transition={{ duration: 0.85, repeat: Infinity, ease: 'linear' }}
             />
           </div>
         ) : (
@@ -654,29 +644,29 @@ export default function Artist() {
                   Results: {visibleAssociatedArtists.length}
                 </span>
                 <button
-                  onClick={() => setRosterSort("followers")}
+                  onClick={() => setRosterSort('followers')}
                   className={`rounded-sm px-3 py-2 text-[9px] font-semibold uppercase tracking-[0.14em] transition sm:text-[10px] sm:tracking-[0.18em] ${
-                    rosterSort === "followers"
-                      ? "bg-ah-blue text-white shadow-ah-glow-blue"
-                      : "border border-white/14 bg-white/[0.02] text-ah-soft hover:text-white"
+                    rosterSort === 'followers'
+                      ? 'bg-ah-blue text-white shadow-ah-glow-blue'
+                      : 'border border-white/14 bg-white/[0.02] text-ah-soft hover:text-white'
                   }`}
                 >
                   Sort by Followers
                 </button>
                 <button
-                  onClick={() => setRosterSort("name")}
+                  onClick={() => setRosterSort('name')}
                   className={`rounded-sm px-3 py-2 text-[9px] font-semibold uppercase tracking-[0.14em] transition sm:text-[10px] sm:tracking-[0.18em] ${
-                    rosterSort === "name"
-                      ? "bg-ah-red text-white shadow-ah-glow-red"
-                      : "border border-white/14 bg-white/[0.02] text-ah-soft hover:text-white"
+                    rosterSort === 'name'
+                      ? 'bg-ah-red text-white shadow-ah-glow-red'
+                      : 'border border-white/14 bg-white/[0.02] text-ah-soft hover:text-white'
                   }`}
                 >
                   Sort A-Z
                 </button>
                 <button
                   onClick={() => {
-                    setRosterSearch("");
-                    setRosterSort("followers");
+                    setRosterSearch('')
+                    setRosterSort('followers')
                   }}
                   className="rounded-sm border border-white/14 bg-white/[0.02] px-3 py-2 text-[9px] font-semibold uppercase tracking-[0.14em] text-ah-soft transition hover:border-white/35 hover:text-white sm:text-[10px] sm:tracking-[0.18em]"
                 >
@@ -695,15 +685,15 @@ export default function Artist() {
                   <button
                     key={artist.id}
                     onClick={() => {
-                      setSelectedArtist(artist);
-                      setActiveArtistTab("top-tracks");
+                      setSelectedArtist(artist)
+                      setActiveArtistTab('top-tracks')
                     }}
                     className="group ah-card content-auto rounded-2xl p-4 text-left transition hover:-translate-y-1 hover:border-ah-red/45"
                   >
                     <div className="relative aspect-square overflow-hidden rounded-xl border border-white/10">
                       <Image
                         src={getArtistImageUrl(artist)}
-                        alt={artist.name || "Artist profile"}
+                        alt={artist.name || 'Artist profile'}
                         fill
                         className="object-cover transition duration-500 group-hover:scale-105"
                         sizes="(max-width: 768px) 50vw, (max-width: 1280px) 33vw, 25vw"
@@ -713,7 +703,7 @@ export default function Artist() {
                       {artist.name}
                     </h3>
                     <p className="mt-1 text-xs uppercase tracking-[0.16em] text-ah-soft">
-                      {artist.followers?.total?.toLocaleString() || "0"} Followers
+                      {artist.followers?.total?.toLocaleString() || '0'} Followers
                     </p>
                   </button>
                 ))}
@@ -722,7 +712,7 @@ export default function Artist() {
           </>
         )}
       </section>
-    );
+    )
   }
 
   return (
@@ -730,11 +720,11 @@ export default function Artist() {
       <header className="mb-8">
         <button
           onClick={() => {
-            setSelectedArtist(null);
-            setArtistTopTracks([]);
-            setArtistDiscography([]);
-            setSelectedDiscographyAlbum(null);
-            setDiscographyTracks([]);
+            setSelectedArtist(null)
+            setArtistTopTracks([])
+            setArtistDiscography([])
+            setSelectedDiscographyAlbum(null)
+            setDiscographyTracks([])
           }}
           className="mb-3 rounded-sm border border-white/14 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-white transition hover:border-white/35 sm:tracking-[0.2em]"
         >
@@ -757,7 +747,7 @@ export default function Artist() {
               {selectedArtist.name}
             </h2>
             <p className="mt-1 text-xs uppercase tracking-[0.16em] text-ah-soft">
-              {selectedArtist.followers?.total?.toLocaleString() || "0"} Followers
+              {selectedArtist.followers?.total?.toLocaleString() || '0'} Followers
             </p>
           </div>
         </div>
@@ -765,21 +755,21 @@ export default function Artist() {
 
       <nav className="mb-8 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
         <button
-          onClick={() => setActiveArtistTab("top-tracks")}
+          onClick={() => setActiveArtistTab('top-tracks')}
           className={`rounded-sm px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] transition sm:tracking-[0.2em] ${
-            activeArtistTab === "top-tracks"
-              ? "bg-ah-red text-white shadow-ah-glow-red"
-              : "border border-white/14 bg-white/[0.02] text-ah-soft hover:text-white"
+            activeArtistTab === 'top-tracks'
+              ? 'bg-ah-red text-white shadow-ah-glow-red'
+              : 'border border-white/14 bg-white/[0.02] text-ah-soft hover:text-white'
           }`}
         >
           Top Tracks
         </button>
         <button
-          onClick={() => setActiveArtistTab("discography")}
+          onClick={() => setActiveArtistTab('discography')}
           className={`rounded-sm px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] transition sm:tracking-[0.2em] ${
-            activeArtistTab === "discography"
-              ? "bg-ah-blue text-white shadow-ah-glow-blue"
-              : "border border-white/14 bg-white/[0.02] text-ah-soft hover:text-white"
+            activeArtistTab === 'discography'
+              ? 'bg-ah-blue text-white shadow-ah-glow-blue'
+              : 'border border-white/14 bg-white/[0.02] text-ah-soft hover:text-white'
           }`}
         >
           Discography
@@ -794,32 +784,35 @@ export default function Artist() {
           exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -14 }}
           transition={{ duration: reduceMotion ? 0.2 : 0.3 }}
         >
-          {activeArtistTab === "top-tracks" ? (
+          {activeArtistTab === 'top-tracks' ? (
             loadingTopTracks ? (
               <div className="flex h-64 items-center justify-center">
                 <motion.div
                   className="h-11 w-11 rounded-full border-2 border-ah-red border-t-transparent"
                   animate={{ rotate: 360 }}
-                  transition={{ duration: 0.85, repeat: Infinity, ease: "linear" }}
+                  transition={{ duration: 0.85, repeat: Infinity, ease: 'linear' }}
                 />
               </div>
             ) : artistTopTracks.length === 0 ? (
               <p className="rounded-2xl border border-white/12 bg-white/[0.02] px-4 py-8 text-center text-ah-soft">
-                {topTracksError || "No top tracks found for this artist."}
+                {topTracksError || 'No top tracks found for this artist.'}
               </p>
             ) : (
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 {artistTopTracks.map((track, index) => {
                   const spotifyUrl =
-                    track.external_urls?.spotify || track.album?.external_urls?.spotify;
-                  const albumImage = track.album.images?.[0]?.url;
+                    track.external_urls?.spotify || track.album?.external_urls?.spotify
+                  const albumImage = track.album.images?.[0]?.url
 
                   return (
-                    <article key={`${track.id}-${index}`} className="group ah-card content-auto rounded-2xl p-4">
+                    <article
+                      key={`${track.id}-${index}`}
+                      className="group ah-card content-auto rounded-2xl p-4"
+                    >
                       <button
                         className="w-full text-left"
                         onClick={() => {
-                          if (spotifyUrl) openExternal(spotifyUrl);
+                          if (spotifyUrl) openExternal(spotifyUrl)
                         }}
                       >
                         <div className="relative aspect-square overflow-hidden rounded-xl border border-white/10">
@@ -839,7 +832,7 @@ export default function Artist() {
                           {track.name}
                         </h3>
                         <p className="mt-1 line-clamp-1 text-xs uppercase tracking-[0.16em] text-ah-soft">
-                          {track.artists.map((artist) => artist.name).join(", ")}
+                          {track.artists.map((artist) => artist.name).join(', ')}
                         </p>
                         <p className="mt-1 line-clamp-1 text-xs text-white/75">
                           {track.album.name} • {safeYear(track.album.release_date)}
@@ -854,7 +847,7 @@ export default function Artist() {
                         />
                       )}
                     </article>
-                  );
+                  )
                 })}
               </div>
             )
@@ -863,7 +856,7 @@ export default function Artist() {
               <motion.div
                 className="h-11 w-11 rounded-full border-2 border-ah-blue border-t-transparent"
                 animate={{ rotate: 360 }}
-                transition={{ duration: 0.85, repeat: Infinity, ease: "linear" }}
+                transition={{ duration: 0.85, repeat: Infinity, ease: 'linear' }}
               />
             </div>
           ) : selectedDiscographyAlbum ? (
@@ -871,8 +864,8 @@ export default function Artist() {
               <aside className="ah-card h-fit rounded-2xl p-5 lg:sticky lg:top-24">
                 <button
                   onClick={() => {
-                    setSelectedDiscographyAlbum(null);
-                    setDiscographyTracks([]);
+                    setSelectedDiscographyAlbum(null)
+                    setDiscographyTracks([])
                   }}
                   className="mb-4 rounded-sm border border-white/14 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-white transition hover:border-white/35"
                 >
@@ -897,8 +890,9 @@ export default function Artist() {
                   {selectedDiscographyAlbum.name}
                 </h3>
                 <p className="mt-1 text-xs uppercase tracking-[0.16em] text-ah-soft">
-                  {safeYear(selectedDiscographyAlbum.release_date)} • {discographyTracks.length} track
-                  {discographyTracks.length === 1 ? "" : "s"}
+                  {safeYear(selectedDiscographyAlbum.release_date)} • {discographyTracks.length}{' '}
+                  track
+                  {discographyTracks.length === 1 ? '' : 's'}
                 </p>
               </aside>
 
@@ -908,22 +902,26 @@ export default function Artist() {
                     <motion.div
                       className="h-9 w-9 rounded-full border-2 border-ah-blue border-t-transparent"
                       animate={{ rotate: 360 }}
-                      transition={{ duration: 0.85, repeat: Infinity, ease: "linear" }}
+                      transition={{ duration: 0.85, repeat: Infinity, ease: 'linear' }}
                     />
                   </div>
                 ) : discographyTracks.length > 0 ? (
                   discographyTracks.map((track, index) => {
-                    const url =
-                      track.external_urls?.spotify || track.album.external_urls?.spotify;
+                    const url = track.external_urls?.spotify || track.album.external_urls?.spotify
 
                     return (
-                      <article key={`${track.id}-${index}`} className="ah-card content-auto rounded-2xl px-4 py-3">
+                      <article
+                        key={`${track.id}-${index}`}
+                        className="ah-card content-auto rounded-2xl px-4 py-3"
+                      >
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                           <div className="w-5 text-center text-xs text-ah-soft">{index + 1}</div>
                           <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-semibold text-white">{track.name}</p>
+                            <p className="truncate text-sm font-semibold text-white">
+                              {track.name}
+                            </p>
                             <p className="truncate text-xs uppercase tracking-[0.14em] text-ah-soft">
-                              {track.artists.map((artist) => artist.name).join(", ")}
+                              {track.artists.map((artist) => artist.name).join(', ')}
                             </p>
                           </div>
                           {url && (
@@ -936,7 +934,7 @@ export default function Artist() {
                           )}
                         </div>
                       </article>
-                    );
+                    )
                   })
                 ) : (
                   <p className="rounded-2xl border border-white/12 bg-white/[0.02] px-4 py-8 text-center text-ah-soft">
@@ -947,7 +945,7 @@ export default function Artist() {
             </div>
           ) : artistDiscography.length === 0 ? (
             <p className="rounded-2xl border border-white/12 bg-white/[0.02] px-4 py-8 text-center text-ah-soft">
-              {discographyError || "No discography found for this artist."}
+              {discographyError || 'No discography found for this artist.'}
             </p>
           ) : (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
@@ -975,7 +973,7 @@ export default function Artist() {
                   </h3>
                   <p className="mt-1 text-xs uppercase tracking-[0.16em] text-ah-soft">
                     {safeYear(group.album.release_date)} • {group.tracks.length} track
-                    {group.tracks.length === 1 ? "" : "s"}
+                    {group.tracks.length === 1 ? '' : 's'}
                   </p>
                 </button>
               ))}
@@ -984,5 +982,5 @@ export default function Artist() {
         </motion.div>
       </AnimatePresence>
     </section>
-  );
+  )
 }
