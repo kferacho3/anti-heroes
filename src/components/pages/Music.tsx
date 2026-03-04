@@ -62,6 +62,10 @@ function normalizeApiError(payload: unknown): string {
   return data.error || "Unable to load Spotify data.";
 }
 
+function openExternal(url: string) {
+  window.open(url, "_blank", "noopener,noreferrer");
+}
+
 export default function Music() {
   const reduceMotion = useReducedMotion();
   const [activeTab, setActiveTab] = useState<Tab>("top-tracks");
@@ -246,7 +250,7 @@ export default function Music() {
       )}
 
       <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <nav className="flex flex-wrap gap-2">
+        <nav className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
           {[
             { key: "top-tracks", label: "Top Tracks" },
             { key: "playlist", label: "Playlist" },
@@ -254,7 +258,7 @@ export default function Music() {
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key as Tab)}
-              className={`rounded-sm px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] transition ${
+              className={`rounded-sm px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] transition sm:tracking-[0.2em] ${
                 activeTab === tab.key
                   ? "bg-ah-blue text-white shadow-ah-glow-blue"
                   : "border border-white/14 bg-white/[0.02] text-ah-soft hover:text-white"
@@ -279,7 +283,7 @@ export default function Music() {
         <button
           onClick={() => setReloadKey((current) => current + 1)}
           disabled={loadingTopTracks || loadingPlaylist}
-          className="rounded-sm border border-white/14 bg-white/[0.02] px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-ah-soft transition hover:border-ah-blue/45 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+          className="w-full rounded-sm border border-white/14 bg-white/[0.02] px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-ah-soft transition hover:border-ah-blue/45 hover:text-white disabled:cursor-not-allowed disabled:opacity-60 md:w-auto md:tracking-[0.2em]"
         >
           {loadingTopTracks || loadingPlaylist ? "Refreshing..." : "Refresh Feed"}
         </button>
@@ -327,7 +331,7 @@ export default function Music() {
                   >
                     <button
                       onClick={() => {
-                        if (spotifyUrl) window.open(spotifyUrl, "_blank");
+                        if (spotifyUrl) openExternal(spotifyUrl);
                       }}
                       className="w-full text-left"
                     >

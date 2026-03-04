@@ -122,18 +122,18 @@ export default function LandingAntiHeroes() {
   );
 
   return (
-    <section className="relative min-h-screen overflow-hidden bg-ah-black text-ah-white">
+    <section className="relative min-h-screen min-h-[100svh] overflow-hidden bg-ah-black text-ah-white">
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute inset-0 bg-[radial-gradient(900px_circle_at_12%_14%,rgba(30,111,255,.2),transparent_54%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(900px_circle_at_85%_12%,rgba(208,25,42,.22),transparent_52%)]" />
         <div className="absolute inset-0 bg-gradient-to-b from-black/0 to-black/70" />
       </div>
 
-      <div className="relative z-10 mx-auto w-full max-w-7xl px-6 pb-20 pt-24 md:px-12 md:pt-28">
-        <div className="grid items-center gap-10 md:grid-cols-2 md:gap-16">
+      <div className="relative z-10 mx-auto w-full max-w-7xl px-4 pb-36 pt-24 sm:px-6 md:px-12 md:pb-24 md:pt-28">
+        <div className="grid items-center gap-8 md:grid-cols-2 md:gap-16">
           <div>
             <motion.p
-              className="mb-4 text-xs uppercase tracking-[0.28em] text-ah-soft"
+              className="mb-4 text-[10px] uppercase tracking-[0.2em] text-ah-soft sm:text-xs sm:tracking-[0.28em]"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
             >
@@ -141,7 +141,7 @@ export default function LandingAntiHeroes() {
             </motion.p>
 
             <motion.h1
-              className="font-[var(--font-display)] text-5xl font-black uppercase leading-[0.92] tracking-ah-tight sm:text-6xl md:text-8xl"
+              className="font-[var(--font-display)] text-4xl font-black uppercase leading-[0.92] tracking-ah-tight sm:text-6xl md:text-8xl"
               initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 16 }}
               animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
               transition={{ duration: reduceMotion ? 0.2 : 0.6 }}
@@ -165,41 +165,41 @@ export default function LandingAntiHeroes() {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.24 }}
             >
-              <span className="rounded-full border border-ah-blue/45 bg-ah-blue/12 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-ah-blue">
+              <span className="rounded-full border border-ah-blue/45 bg-ah-blue/12 px-3 py-1 text-[10px] uppercase tracking-[0.15em] text-ah-blue sm:tracking-[0.2em]">
                 Live Spotify Sync
               </span>
-              <span className="rounded-full border border-white/14 bg-white/[0.02] px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-ah-soft">
+              <span className="rounded-full border border-white/14 bg-white/[0.02] px-3 py-1 text-[10px] uppercase tracking-[0.15em] text-ah-soft sm:tracking-[0.2em]">
                 Latest Drops: {latestDrops.length}
               </span>
             </motion.div>
 
             <motion.div
-              className="mt-8 flex flex-wrap gap-3"
+              className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap"
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.28 }}
             >
               <button
                 onClick={() => setActiveRoute("beats")}
-                className="rounded-sm bg-ah-red px-6 py-3 text-xs font-semibold uppercase tracking-[0.22em] text-white transition hover:shadow-ah-glow-red"
+                className="w-full rounded-sm bg-ah-red px-6 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-white transition hover:shadow-ah-glow-red sm:w-auto sm:tracking-[0.22em]"
               >
                 Explore Beats
               </button>
               <button
                 onClick={() => setActiveRoute("music")}
-                className="rounded-sm border border-ah-blue px-6 py-3 text-xs font-semibold uppercase tracking-[0.22em] text-ah-blue transition hover:bg-ah-blue hover:text-white hover:shadow-ah-glow-blue"
+                className="w-full rounded-sm border border-ah-blue px-6 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-ah-blue transition hover:bg-ah-blue hover:text-white hover:shadow-ah-glow-blue sm:w-auto sm:tracking-[0.22em]"
               >
                 Stream Music
               </button>
               <button
                 onClick={() => setActiveRoute("artist")}
-                className="rounded-sm border border-white/20 px-6 py-3 text-xs font-semibold uppercase tracking-[0.22em] text-white transition hover:border-white/40"
+                className="w-full rounded-sm border border-white/20 px-6 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-white transition hover:border-white/40 sm:w-auto sm:tracking-[0.22em]"
               >
                 Meet The Artists
               </button>
             </motion.div>
 
-            <div className="mt-8 inline-flex items-center gap-3 border border-ah-red/35 bg-ah-red/10 px-4 py-3 text-[10px] uppercase tracking-[0.22em] text-white/90">
+            <div className="mt-8 inline-flex flex-wrap items-center gap-2 border border-ah-red/35 bg-ah-red/10 px-4 py-3 text-[10px] uppercase tracking-[0.18em] text-white/90 sm:tracking-[0.22em]">
               Independent
               <span className="inline-block h-1 w-1 rounded-full bg-ah-soft" />
               Unfiltered
@@ -209,7 +209,7 @@ export default function LandingAntiHeroes() {
           </div>
 
           <motion.div
-            className="relative mx-auto h-[300px] w-[300px] sm:h-[410px] sm:w-[410px] md:mx-0 md:ml-auto md:h-[540px] md:w-[540px]"
+            className="relative mx-auto aspect-square w-full max-w-[320px] sm:max-w-[430px] md:mx-0 md:ml-auto md:max-w-[540px]"
             initial={{ opacity: 0, scale: 0.94 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8 }}
@@ -220,12 +220,12 @@ export default function LandingAntiHeroes() {
                 alt="Audio visualizer artwork"
                 fill
                 priority
-                sizes="(max-width: 768px) 300px, (max-width: 1024px) 410px, 540px"
+                sizes="(max-width: 640px) 92vw, (max-width: 1024px) 430px, 540px"
                 className="object-cover scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-br from-ah-blue/20 via-black/35 to-ah-red/30" />
               <div className="absolute inset-0 bg-[radial-gradient(700px_circle_at_18%_14%,rgba(255,255,255,.2),transparent_58%)]" />
-              <div className="absolute inset-0 p-10 sm:p-12 md:p-16">
+              <div className="absolute inset-0 p-8 sm:p-12 md:p-16">
                 <div className="relative h-full w-full">
                   <Image
                     src="/AntiHeroLogo.png"
@@ -261,7 +261,7 @@ export default function LandingAntiHeroes() {
         </div>
 
         <motion.section
-          className="mt-16 md:mt-20"
+          className="mt-14 md:mt-20"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -269,11 +269,11 @@ export default function LandingAntiHeroes() {
         >
           <div className="mb-9 grid gap-4 md:grid-cols-3">
             {platformHighlights.map((highlight) => (
-              <article key={highlight.id} className="ah-card rounded-2xl p-4">
-                <p className="text-[10px] uppercase tracking-[0.2em] text-ah-soft">
+              <article key={highlight.id} className="ah-card rounded-2xl p-5">
+                <p className="text-[10px] uppercase tracking-[0.16em] text-ah-soft sm:tracking-[0.2em]">
                   {highlight.id}
                 </p>
-                <h3 className="mt-2 font-[var(--font-display)] text-2xl uppercase tracking-wide text-white">
+                <h3 className="mt-2 font-[var(--font-display)] text-xl uppercase tracking-wide text-white sm:text-2xl">
                   {highlight.title}
                 </h3>
                 <p className="mt-2 text-sm text-ah-soft">{highlight.body}</p>
@@ -281,7 +281,7 @@ export default function LandingAntiHeroes() {
             ))}
           </div>
 
-          <div className="mb-6 flex items-end justify-between gap-4">
+          <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <h2 className="font-[var(--font-display)] text-2xl font-black uppercase tracking-ah-tight md:text-3xl">
               Latest Drops
             </h2>
@@ -289,7 +289,7 @@ export default function LandingAntiHeroes() {
               href={XAENEPTUNE_PLAYLIST_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[11px] uppercase tracking-[0.22em] text-ah-soft transition hover:text-ah-white"
+              className="text-[10px] uppercase tracking-[0.18em] text-ah-soft transition hover:text-ah-white sm:text-[11px] sm:tracking-[0.22em]"
             >
               View More - Full Playlist
             </a>
@@ -321,7 +321,7 @@ export default function LandingAntiHeroes() {
                 return (
                 <article
                   key={`${track.id}-${index}`}
-                  className="group ah-card rounded-2xl p-4 transition hover:-translate-y-1 hover:border-ah-red/45"
+                  className="group ah-card rounded-2xl p-4 transition md:hover:-translate-y-1 md:hover:border-ah-red/45"
                 >
                   <div className="relative mb-4 aspect-square overflow-hidden rounded-xl border border-white/10 bg-black/40">
                     {albumArt ? (
@@ -340,20 +340,20 @@ export default function LandingAntiHeroes() {
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/15 to-transparent" />
                   </div>
 
-                  <h3 className="line-clamp-2 font-[var(--font-display)] text-lg tracking-wide">
+                  <h3 className="line-clamp-2 break-words font-[var(--font-display)] text-lg tracking-wide">
                     {track.name}
                   </h3>
-                  <p className="mt-1 text-xs uppercase tracking-[0.18em] text-ah-soft">
+                  <p className="mt-1 text-xs uppercase tracking-[0.14em] text-ah-soft sm:tracking-[0.18em]">
                     {artists}
                   </p>
-                  <p className="mt-1 text-xs uppercase tracking-[0.18em] text-ah-soft">
+                  <p className="mt-1 text-xs uppercase tracking-[0.14em] text-ah-soft sm:tracking-[0.18em]">
                     {releaseYear} • {track.album?.name || "Playlist Single"}
                   </p>
 
-                  <div className="mt-4 flex gap-2">
+                  <div className="mt-4 flex flex-wrap gap-2">
                     <button
                       onClick={() => setActiveRoute("music")}
-                      className="flex-1 rounded-sm border border-white/15 bg-white/5 px-3 py-2 text-[10px] uppercase tracking-[0.18em] text-white transition hover:border-ah-blue/70 hover:bg-ah-blue/10"
+                      className="flex-1 rounded-sm border border-white/15 bg-white/5 px-3 py-2 text-[10px] uppercase tracking-[0.14em] text-white transition hover:border-ah-blue/70 hover:bg-ah-blue/10 sm:tracking-[0.18em]"
                     >
                       Open Music
                     </button>
@@ -362,7 +362,7 @@ export default function LandingAntiHeroes() {
                         href={spotifyUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="rounded-sm border border-ah-blue/45 px-3 py-2 text-[10px] uppercase tracking-[0.18em] text-ah-blue transition hover:bg-ah-blue/15 hover:text-white"
+                        className="rounded-sm border border-ah-blue/45 px-3 py-2 text-[10px] uppercase tracking-[0.14em] text-ah-blue transition hover:bg-ah-blue/15 hover:text-white sm:tracking-[0.18em]"
                       >
                         Spotify
                       </a>

@@ -43,15 +43,15 @@ export default function TopBarNavbar({ onHamburgerClick }: TopBarNavbarProps) {
 
   return (
     <motion.header
-      className="safe-top px-2 md:px-5"
+      className="safe-top px-2 sm:px-3 md:px-5"
       initial="hidden"
       animate="show"
       variants={navAnim}
     >
-      <div className="mx-auto flex w-full max-w-7xl items-center justify-between rounded-2xl border border-white/12 bg-black/65 px-3 py-2.5 backdrop-blur-xl md:px-4 md:py-3">
+      <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-2 rounded-2xl border border-white/12 bg-black/65 px-3 py-2.5 backdrop-blur-xl md:px-4 md:py-3">
         <button
           onClick={() => setActiveRoute("home")}
-          className="flex items-center gap-2 text-left"
+          className="flex min-w-0 items-center gap-2 text-left"
           aria-label="Go to home"
         >
           <Image
@@ -61,11 +61,11 @@ export default function TopBarNavbar({ onHamburgerClick }: TopBarNavbarProps) {
             height={28}
             priority
           />
-          <div className="min-w-0">
-            <p className="truncate font-[var(--font-display)] text-base uppercase tracking-wider text-white sm:text-xl">
+          <div className="min-w-0 max-w-[45vw] sm:max-w-none">
+            <p className="truncate font-[var(--font-display)] text-[0.95rem] uppercase tracking-[0.08em] text-white sm:text-xl sm:tracking-wider">
               Anti-Heroes
             </p>
-            <p className="hidden text-[10px] uppercase tracking-[0.18em] text-ah-soft sm:block">
+            <p className="hidden text-[10px] uppercase tracking-[0.18em] text-ah-soft md:block">
               Independent Music Platform
             </p>
           </div>
@@ -135,7 +135,7 @@ export default function TopBarNavbar({ onHamburgerClick }: TopBarNavbarProps) {
 
         <button
           onClick={onHamburgerClick}
-          className="rounded-md border border-white/16 p-2 text-white transition hover:border-white/40 md:ml-3"
+          className="rounded-md border border-white/16 p-2.5 text-white transition hover:border-white/40 md:ml-3"
           aria-label="Open menu"
         >
           <FaBars size={18} />

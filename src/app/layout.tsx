@@ -1,6 +1,6 @@
 // src/app/layout.tsx
 import { VisualizerProvider } from "@/context/VisualizerContext";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Bebas_Neue, Manrope } from "next/font/google";
 import { ReactNode } from "react";
 import "../../styles/globals.css";
@@ -19,6 +19,12 @@ const body = Manrope({
 export const metadata: Metadata = {
   title: "ANTI-HEROES",
   description: "Anti-Heroes official platform",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({

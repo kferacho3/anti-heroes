@@ -113,7 +113,7 @@ ${formData.message}`.trim();
   return (
     <AnimatePresence>
       <motion.div
-        className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/85 p-3 backdrop-blur-xl md:p-5"
+        className="fixed inset-0 z-[10000] flex items-start justify-center overflow-y-auto bg-black/85 p-3 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] pt-[calc(env(safe-area-inset-top,0px)+0.75rem)] backdrop-blur-xl md:items-center md:p-5"
         initial={reduceMotion ? { opacity: 0 } : { opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -123,7 +123,7 @@ ${formData.message}`.trim();
           animate={reduceMotion ? { opacity: 1 } : { y: 0, opacity: 1 }}
           exit={reduceMotion ? { opacity: 0 } : { y: 24, opacity: 0 }}
           transition={reduceMotion ? { duration: 0.18 } : { type: "spring", stiffness: 250, damping: 24 }}
-          className="ah-card relative h-[92vh] max-h-[860px] w-full max-w-3xl overflow-y-auto overscroll-contain rounded-3xl p-4 sm:p-5 md:p-8"
+          className="ah-card relative my-auto max-h-[calc(100dvh-1.5rem)] w-full max-w-3xl overflow-y-auto overscroll-contain rounded-3xl p-4 sm:max-h-[860px] sm:p-5 md:p-8"
         >
           <header className="mb-6">
             <p className="text-xs uppercase tracking-[0.24em] text-ah-soft">Direct Contact</p>
@@ -176,7 +176,7 @@ ${formData.message}`.trim();
                         `${type.label} Request`,
                     }))
                   }
-                  className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-left text-[11px] uppercase tracking-[0.14em] transition ${
+                  className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-left text-[10px] uppercase tracking-[0.12em] transition sm:text-[11px] sm:tracking-[0.14em] ${
                     formData.inquiryType === type.value
                       ? "border-ah-red/45 bg-ah-red/10 text-white"
                       : "border-white/12 bg-white/[0.02] text-ah-soft hover:border-ah-blue/40 hover:text-white"
@@ -283,7 +283,7 @@ ${formData.message}`.trim();
               </button>
             </div>
 
-            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-white/10 pt-4 text-[11px] uppercase tracking-[0.16em] text-ah-soft">
+            <div className="flex flex-col items-start gap-2 border-t border-white/10 pt-4 text-[11px] uppercase tracking-[0.16em] text-ah-soft sm:flex-row sm:items-center sm:justify-between">
               <a
                 href="mailto:contact@antiheroes.co"
                 className="transition hover:text-white"

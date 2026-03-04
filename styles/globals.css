@@ -39,6 +39,11 @@ body {
   min-height: 100%;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 body {
   margin: 0;
   background: var(--ah-black);
@@ -46,6 +51,7 @@ body {
   font-family: var(--font-body), "Manrope", system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent;
 }
 
 html,
@@ -101,7 +107,14 @@ body {
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01)),
     rgba(26, 26, 31, 0.68);
+  -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
+}
+
+@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .ah-card {
+    background: rgba(22, 22, 28, 0.94);
+  }
 }
 
 .ah-pill {
@@ -110,14 +123,14 @@ body {
   color: var(--ah-white);
 }
 
-@media (max-width: 768px) {
-  button,
-  select,
-  input,
-  textarea {
-    touch-action: manipulation;
-  }
+button,
+select,
+input,
+textarea {
+  touch-action: manipulation;
+}
 
+@media (max-width: 768px) {
   input,
   select,
   textarea {
@@ -127,6 +140,8 @@ body {
 
 /* Keep visualizer controls styled without touching global canvas behavior */
 select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
   appearance: none;
   background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f5f5f5' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
   background-repeat: no-repeat;

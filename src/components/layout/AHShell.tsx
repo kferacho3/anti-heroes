@@ -11,7 +11,7 @@ interface AHShellProps {
 
 export default function AHShell({ children, title, subtitle }: AHShellProps) {
   return (
-    <div className="relative min-h-screen overflow-hidden bg-ah-black text-ah-white ah-grain">
+    <div className="relative min-h-screen min-h-[100svh] overflow-hidden bg-ah-black text-ah-white ah-grain">
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute inset-0 bg-[radial-gradient(1100px_circle_at_12%_10%,rgba(30,111,255,.18),transparent_58%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(900px_circle_at_88%_16%,rgba(208,25,42,.15),transparent_56%)]" />
@@ -46,7 +46,7 @@ export default function AHShell({ children, title, subtitle }: AHShellProps) {
           </header>
         )}
 
-        <main className="mx-auto w-full max-w-7xl px-4 pb-28 pt-6 md:px-12 md:pb-20 md:pt-10">
+        <main className="mx-auto w-full max-w-7xl px-4 pb-32 pt-6 md:px-12 md:pb-24 md:pt-10">
           {children}
         </main>
 
