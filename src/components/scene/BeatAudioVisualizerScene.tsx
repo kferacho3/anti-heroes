@@ -8,6 +8,7 @@ import { visualizerDecorationAssets } from "@/data/visualAssets";
 import { pauseAllAudio } from "@/utils/pauseAllAudio";
 import { Html } from "@react-three/drei";
 import dynamic from "next/dynamic";
+import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import { HiOutlineEye, HiOutlineEyeSlash } from "react-icons/hi2";
 /* ─────────────────────── 1. Imports ─────────────────────────────── */
@@ -43,15 +44,20 @@ export interface BeatAudioVisualizerSceneProps {
   onShuffle: () => void;
 }
 
-/* ---------- random cover helper ---------- */
-const randomCover = () =>
-  `https://xaeneptune.s3.us-east-2.amazonaws.com/beats/Beat+Album+Covers/xaeneptuneBeats${
-    Math.floor(Math.random() * 100) + 1
+/* ---------- deterministic cover helper ---------- */
+const coverForAudioUrl = (id: string) => {
+  let hash = 0;
+  for (let i = 0; i < id.length; i += 1) hash = (hash + id.charCodeAt(i)) % 100;
+  return `https://xaeneptune.s3.us-east-2.amazonaws.com/beats/Beat+Album+Covers/xaeneptuneBeats${
+    hash + 1
   }.png`;
+};
 const randomBannerArt = () =>
   visualizerDecorationAssets[
     Math.floor(Math.random() * visualizerDecorationAssets.length)
   ];
+const findBeatForAudioUrl = (url: string) =>
+  beatsData.find((beat) => beat.audioFile === url);
 
 /* ---------------------------------------------------------------- */
 export default function BeatAudioVisualizerScene({
@@ -74,7 +80,7 @@ export default function BeatAudioVisualizerScene({
   /* now-playing info */
   const [title, setTitle] = useState<string>("Unknown Title");
   const [artist, setArtist] = useState<string>("Xaeneptune");
-  const [cover, setCover] = useState<string>(randomCover());
+  const [cover, setCover] = useState<string>(() => coverForAudioUrl(audioUrl));
   const [bannerArt, setBannerArt] = useState<string>(randomBannerArt());
 
   /* ---------- Visualizer-One controls ---------- */
@@ -105,10 +111,11 @@ export default function BeatAudioVisualizerScene({
     setPaused(false);
     setAudioUrl(propAudioUrl);
     setVisKey((k) => k + 1);
+    const beat = findBeatForAudioUrl(propAudioUrl);
     const file = propAudioUrl.split("/").pop() ?? "unknown";
-    setTitle(prettify(decodeURIComponent(file)));
-    setArtist("Xaeneptune");
-    setCover(randomCover());
+    setTitle(beat?.beatName || prettify(decodeURIComponent(file)));
+    setArtist(beat?.beatProducer || "Xaeneptune");
+    setCover(coverForAudioUrl(propAudioUrl));
     setBannerArt(randomBannerArt());
     return pauseAllAudio;
   }, [propAudioUrl]);
@@ -122,10 +129,11 @@ export default function BeatAudioVisualizerScene({
     setPaused(false);
     setAudioUrl(url);
     setVisKey((k) => k + 1);
+    const beat = findBeatForAudioUrl(url);
     const filename = url.split("/").pop() || "";
-    setTitle(prettify(filename));
-    setArtist("Xaeneptune");
-    setCover(randomCover());
+    setTitle(beat?.beatName || prettify(filename));
+    setArtist(beat?.beatProducer || "Xaeneptune");
+    setCover(coverForAudioUrl(url));
     setBannerArt(randomBannerArt());
   }
 
@@ -213,21 +221,26 @@ export default function BeatAudioVisualizerScene({
           <div className="absolute bottom-4 left-4 right-4 flex flex-col gap-2 select-none" style={{ pointerEvents: "auto" }}>
             {/* ──────────── Now-playing card ──────────── */}
             {!uiHidden && (
-              <div className="flex items-center w-full gap-2 px-3 py-2 bg-black/70 backdrop-blur-lg rounded-xl border border-teal-500/30 shadow-lg shadow-teal-500/20 font-mono">
-                <img
+              <div className="ah-transmission-panel flex w-full items-center gap-2 px-3 py-2 font-mono">
+                <Image
                   src={cover}
                   alt="Album cover"
-                  className="h-10 w-10 rounded-lg object-cover shadow-md shadow-black/40"
+                  width={40}
+                  height={40}
+                  className="h-10 w-10 rounded-md object-cover shadow-md shadow-black/40"
                 />
                 <div className="flex flex-col flex-1 min-w-0">
-                  <span className="text-xs font-extrabold text-teal-300 tracking-wider leading-tight truncate">
+                  <span className="text-[9px] uppercase tracking-[0.16em] text-ah-ember">
+                    Vinyl Stage
+                  </span>
+                  <span className="text-xs font-extrabold text-ah-electric tracking-wider leading-tight truncate">
                     {decodeURIComponent(title)
                       .replace(/(\+|%20)/g, " ")
                       .replace(/%/g, "")
                       .replace(/\s{2,}/g, " ")
                       .trim()}
                   </span>
-                  <span className="text-xs text-teal-200 truncate">
+                  <span className="text-xs text-ah-magenta truncate">
                     {decodeURIComponent(artist)
                       .replace(/(\+|%20)/g, " ")
                       .replace(/%/g, "")
@@ -241,7 +254,7 @@ export default function BeatAudioVisualizerScene({
             {!uiHidden && (
               <div className="flex flex-col gap-2 font-mono">
                 {/* row 1 – action buttons */}
-                <div className="flex items-center justify-center gap-3 px-3 py-1 rounded-lg min-h-[32px] max-w-fit mx-auto bg-black/70 backdrop-blur-lg border border-teal-500/25 shadow-md shadow-teal-500/15">
+                <div className="mx-auto flex min-h-[32px] max-w-fit items-center justify-center gap-3 rounded-md border border-ah-electric/25 bg-black/70 px-3 py-1 shadow-md shadow-ah-electric/15 backdrop-blur-lg">
                   
                   {/* Settings button - only on mobile, positioned to the left */}
                   <div className="flex items-center gap-1">
@@ -254,26 +267,26 @@ export default function BeatAudioVisualizerScene({
                       pointMode={pointMode} setPointMode={setPointMode}
                     />
                     {/* Vertical separator line */}
-                    <div className="h-4 w-px bg-teal-500/30"></div>
+                    <div className="h-4 w-px bg-ah-electric/30"></div>
                   </div>
 
                   <button
                     onClick={handleGoBack}
-                    className="btn-main flex items-center gap-1 text-teal-300 hover:text-teal-200 transition-colors duration-200 p-2 rounded-md hover:bg-teal-500/20 active:scale-95"
-                    title="Go Back">
+                    className="btn-main flex items-center gap-1 rounded-md p-2 text-ah-electric transition-colors duration-200 hover:bg-ah-electric/20 hover:text-white active:scale-95"
+                    title="Back to Beat Vault">
                     <FaMusic className="w-4 h-4" />
                   </button>
 
                   <button
                     onClick={shuffleBeat}
-                    className="btn-main flex items-center gap-1 text-teal-300 hover:text-teal-200 transition-colors duration-200 p-2 rounded-md hover:bg-teal-500/20 active:scale-95"
-                    title="Shuffle">
+                    className="btn-main flex items-center gap-1 rounded-md p-2 text-ah-electric transition-colors duration-200 hover:bg-ah-electric/20 hover:text-white active:scale-95"
+                    title="Crate Shuffle">
                     <FaRandom className="w-4 h-4" />
                   </button>
 
                   <button
                     onClick={() => setPaused((p) => !p)}
-                    className="btn-main flex items-center gap-1 text-teal-300 hover:text-teal-200 transition-colors duration-200 p-2 rounded-md hover:bg-teal-500/20 active:scale-95"
+                    className="btn-main flex items-center gap-1 rounded-md p-2 text-ah-electric transition-colors duration-200 hover:bg-ah-electric/20 hover:text-white active:scale-95"
                     title={paused ? "Resume" : "Pause"}>
                     {paused ? (
                       <FaPlay className="w-4 h-4" />
@@ -283,7 +296,7 @@ export default function BeatAudioVisualizerScene({
                   </button>
 
                   <label
-                    className="btn-main flex items-center gap-1 cursor-pointer text-teal-300 hover:text-teal-200 transition-colors duration-200 p-2 rounded-md hover:bg-teal-500/20 active:scale-95"
+                    className="btn-main flex cursor-pointer items-center gap-1 rounded-md p-2 text-ah-electric transition-colors duration-200 hover:bg-ah-electric/20 hover:text-white active:scale-95"
                     title="Upload">
                     <FaUpload className="w-4 h-4" />
                     <input
@@ -300,7 +313,7 @@ export default function BeatAudioVisualizerScene({
             {/* ──────────── hide / show toggle ──────────── */}
             <button
               onClick={() => setUiHidden((h) => !h)}
-              className="p-2 rounded-full bg-black/70 backdrop-blur-lg border border-teal-500/25 text-teal-200 hover:bg-teal-600 hover:text-white hover:scale-105 transition-all shadow-md shadow-teal-500/15 self-center">
+              className="self-center rounded-full border border-ah-electric/25 bg-black/70 p-2 text-ah-electric shadow-md shadow-ah-electric/15 backdrop-blur-lg transition-all hover:scale-105 hover:bg-ah-electric hover:text-black">
               {uiHidden ? (
                 <HiOutlineEye className="w-4 h-4" />
               ) : (
@@ -316,20 +329,22 @@ export default function BeatAudioVisualizerScene({
               <>
                 {/* Main Banner */}
                 <div className="absolute top-20 left-1/2 -translate-x-1/2 w-full max-w-5xl px-4 z-[99998]">
-                  <div className={`relative overflow-hidden rounded-lg border border-teal-500/35 font-mono shadow-lg shadow-teal-500/20 transition-all duration-800 ease-out ${bannerCollapsed ? 'banner-collapsing' : 'banner-expanding'}`}>
-                    <img
+                  <div className={`ah-transmission-panel relative overflow-hidden font-mono transition-all duration-800 ease-out ${bannerCollapsed ? 'banner-collapsing' : 'banner-expanding'}`}>
+                    <Image
                       src={bannerArt}
                       alt="Visualizer decorative banner"
-                      className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-35"
+                      fill
+                      sizes="(max-width: 1024px) 100vw, 960px"
+                      className="pointer-events-none absolute inset-0 object-cover opacity-28"
                     />
-                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/90 via-black/70 to-teal-950/70" />
-                    <div className="pointer-events-none absolute inset-y-0 left-0 w-48 bg-gradient-to-r from-teal-400/20 to-transparent" />
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/92 via-black/72 to-ah-magenta/20" />
+                    <div className="pointer-events-none absolute inset-y-0 left-0 w-48 bg-gradient-to-r from-ah-electric/20 to-transparent" />
 
                     <div className="relative z-10 flex items-center justify-between gap-4 px-4 py-2 backdrop-blur-lg">
                       {/* Collapse Toggle Button - Far Left */}
                       <button
                         onClick={() => setBannerCollapsed(!bannerCollapsed)}
-                        className="flex items-center justify-center w-6 h-6 rounded-full text-teal-300 hover:text-teal-200 transition-all duration-300 hover:bg-teal-500/20 active:scale-95 flex-shrink-0 hover:shadow-lg hover:shadow-teal-500/30"
+                        className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-ah-electric transition-all duration-300 hover:bg-ah-electric/20 hover:text-white hover:shadow-lg hover:shadow-ah-electric/30 active:scale-95"
                         title={bannerCollapsed ? "Expand Banner" : "Collapse Banner"}>
                         <span className={`text-xs transition-transform duration-500 ${bannerCollapsed ? 'rotate-180' : ''}`}>
                           ▲
@@ -339,16 +354,21 @@ export default function BeatAudioVisualizerScene({
                       {!bannerCollapsed && (
                         <>
                           <div className="flex items-center gap-3 flex-1 min-w-0">
-                            <img
+                            <Image
                               src={cover}
                               alt="Album cover"
-                              className="h-8 w-8 rounded object-cover shadow-md shadow-black/40 flex-shrink-0"
+                              width={32}
+                              height={32}
+                              className="h-8 w-8 flex-shrink-0 rounded object-cover shadow-md shadow-black/40"
                             />
                             <div className="flex flex-col min-w-0 flex-1">
+                              <span className="mb-0.5 text-[9px] uppercase tracking-[0.18em] text-ah-ember">
+                                Vinyl Stage / Needle Locked
+                              </span>
                               {/* Animated Song Title */}
                               <div className="relative overflow-hidden h-4">
                                 <span
-                                  className="text-sm font-extrabold text-teal-300 tracking-wider leading-tight whitespace-nowrap text-scroll block"
+                                  className="block whitespace-nowrap text-sm font-extrabold leading-tight tracking-wider text-ah-electric text-scroll"
                                   style={{
                                     animationDuration: '15s',
                                     animationIterationCount: 'infinite',
@@ -361,7 +381,7 @@ export default function BeatAudioVisualizerScene({
                                     .trim()}
                                 </span>
                               </div>
-                              <span className="text-xs text-teal-200 truncate">
+                              <span className="truncate text-xs text-ah-magenta">
                                 {decodeURIComponent(artist)
                                   .replace(/(\+|%20)/g, " ")
                                   .replace(/%/g, "")
@@ -374,23 +394,23 @@ export default function BeatAudioVisualizerScene({
                           <div className="flex items-center gap-2 flex-shrink-0">
                             <button
                               onClick={handleGoBack}
-                              className="flex items-center gap-1 px-2 py-1 rounded text-xs text-teal-300 hover:text-teal-200 transition-colors duration-200 hover:bg-teal-500/20 active:scale-95"
-                              title="Go Back">
+                              className="flex items-center gap-1 rounded px-2 py-1 text-xs text-ah-electric transition-colors duration-200 hover:bg-ah-electric/20 hover:text-white active:scale-95"
+                              title="Back to Beat Vault">
                               <FaMusic className="w-3 h-3" />
-                              <span>Beats</span>
+                              <span>Beat Vault</span>
                             </button>
 
                             <button
                               onClick={shuffleBeat}
-                              className="flex items-center gap-1 px-2 py-1 rounded text-xs text-teal-300 hover:text-teal-200 transition-colors duration-200 hover:bg-teal-500/20 active:scale-95"
-                              title="Shuffle">
+                              className="flex items-center gap-1 rounded px-2 py-1 text-xs text-ah-electric transition-colors duration-200 hover:bg-ah-electric/20 hover:text-white active:scale-95"
+                              title="Crate Shuffle">
                               <FaRandom className="w-3 h-3" />
                               <span>Shuffle</span>
                             </button>
 
                             <button
                               onClick={() => setPaused((p) => !p)}
-                              className="flex items-center gap-1 px-2 py-1 rounded text-xs text-teal-300 hover:text-teal-200 transition-colors duration-200 hover:bg-teal-500/20 active:scale-95"
+                              className="flex items-center gap-1 rounded px-2 py-1 text-xs text-ah-electric transition-colors duration-200 hover:bg-ah-electric/20 hover:text-white active:scale-95"
                               title={paused ? "Resume" : "Pause"}>
                               {paused ? (
                                 <FaPlay className="w-3 h-3" />
@@ -401,7 +421,7 @@ export default function BeatAudioVisualizerScene({
                             </button>
 
                             <label
-                              className="flex items-center gap-1 px-2 py-1 rounded text-xs cursor-pointer text-teal-300 hover:text-teal-200 transition-colors duration-200 hover:bg-teal-500/20 active:scale-95"
+                              className="flex cursor-pointer items-center gap-1 rounded px-2 py-1 text-xs text-ah-electric transition-colors duration-200 hover:bg-ah-electric/20 hover:text-white active:scale-95"
                               title="Upload">
                               <FaUpload className="w-3 h-3" />
                               <span>Upload</span>
@@ -424,7 +444,7 @@ export default function BeatAudioVisualizerScene({
                   <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[99999]">
                     <button
                       onClick={() => setBannerCollapsed(!bannerCollapsed)}
-                      className="flex items-center justify-center w-8 h-8 rounded-full bg-black/80 backdrop-blur-lg border border-teal-500/40 text-teal-300 hover:text-teal-200 transition-all duration-300 hover:bg-teal-500/20 active:scale-95 hover:shadow-lg hover:shadow-teal-500/30"
+                      className="flex h-8 w-8 items-center justify-center rounded-full border border-ah-electric/40 bg-black/80 text-ah-electric backdrop-blur-lg transition-all duration-300 hover:bg-ah-electric/20 hover:text-white hover:shadow-lg hover:shadow-ah-electric/30 active:scale-95"
                       title="Expand Banner">
                       <span className="text-sm transition-transform duration-500 rotate-180">
                         ▲
@@ -450,7 +470,7 @@ export default function BeatAudioVisualizerScene({
               {/* Hide/Show Toggle */}
               <button
                 onClick={() => setUiHidden((h) => !h)}
-                className="p-1.5 rounded-full bg-black/70 backdrop-blur-lg border border-teal-500/25 text-teal-200 hover:bg-teal-600 hover:text-white hover:scale-105 transition-all shadow-md shadow-teal-500/15">
+                className="rounded-full border border-ah-electric/25 bg-black/70 p-1.5 text-ah-electric shadow-md shadow-ah-electric/15 backdrop-blur-lg transition-all hover:scale-105 hover:bg-ah-electric hover:text-black">
                 {uiHidden ? (
                   <HiOutlineEye className="w-5 h-5" />
                 ) : (

@@ -1,10 +1,11 @@
 'use client'
 
-import GoBackButton from '@/components/layout/GoBackButton'
 import NavigationOverlay from '@/components/layout/NavigationOverlay'
 import AHShell from '@/components/layout/AHShell'
 import Sidebar from '@/components/layout/Sidebar'
 import TopBarNavbar from '@/components/layout/TopBarNavbar'
+import { useVisualizer } from '@/context/VisualizerContext'
+import { useImmersiveStore } from '@/store/useImmersiveStore'
 import { Route, useRouteStore } from '@/store/useRouteStore'
 import { pauseAllAudio } from '@/utils/pauseAllAudio'
 import { PerformanceMonitor } from '@react-three/drei'
@@ -41,9 +42,14 @@ const XaeneptunesWorld = dynamic(() => import('@/components/pages/XaeneptunesWor
 })
 const Connect = dynamic(() => import('@/components/pages/Connect'), { ssr: false })
 const Scene = dynamic(() => import('@/components/scene/Scene'), { ssr: false })
+const ImmersiveStage = dynamic(() => import('@/components/immersive/ImmersiveStage'), {
+  ssr: false,
+})
 
 export default function HomePage() {
-  const { activeRoute, setActiveRoute, hoveredRoute } = useRouteStore()
+  const { activeRoute, setActiveRoute, setVisualizerMode, hoveredRoute } = useRouteStore()
+  const { setIsBeatVisualizer } = useVisualizer()
+  const pulseRoute = useImmersiveStore((state) => state.pulseRoute)
   const route: Route = activeRoute
 
   const [mobile, setMobile] = useState(false)
@@ -75,6 +81,11 @@ export default function HomePage() {
     }
   }, [showConnectModal])
 
+  useEffect(() => {
+    if (route === 'beats-visualizer') return
+    window.scrollTo(0, 0)
+  }, [route])
+
   const changeRoute = (nextRoute: Route) => {
     setSidebarOpen(false)
     if (nextRoute === 'connect') {
@@ -83,6 +94,15 @@ export default function HomePage() {
     }
     if (nextRoute === route) return
     if (route === 'beats-visualizer') pauseAllAudio()
+    if (nextRoute === 'beats') {
+      setVisualizerMode(false)
+      setIsBeatVisualizer(false)
+    }
+    if (nextRoute === 'beats-visualizer') {
+      setVisualizerMode(true)
+      setIsBeatVisualizer(true)
+    }
+    pulseRoute()
     setActiveRoute(nextRoute)
   }
 
@@ -93,8 +113,8 @@ export default function HomePage() {
       case 'music':
         return (
           <AHShell
-            title="Music"
-            subtitle="Live Spotify tracks and playlists with a cleaner Anti-Heroes presentation."
+            title="Spotify Signal Feed"
+            subtitle="Server-side Spotify proof: top tracks, playlist cuts, releases, and collaborator signals translated into a premium discovery layer."
           >
             <Music />
           </AHShell>
@@ -102,8 +122,8 @@ export default function HomePage() {
       case 'artist':
         return (
           <AHShell
-            title="Artist"
-            subtitle="Collaborators, featured tracks, and curated discography links."
+            title="Artist Constellation"
+            subtitle="A map of associated artists, top tracks, fallback records, and potential mutual-exposure context across the Anti-Heroes network."
           >
             <Artist />
           </AHShell>
@@ -111,8 +131,8 @@ export default function HomePage() {
       case 'beats':
         return (
           <AHShell
-            title="Beats"
-            subtitle="Preview, filter, and launch any beat in the 3D visualizer when ready."
+            title="Beat Vault"
+            subtitle="The crate browser for Xae Neptune beats: filter, preview, inspect metadata, open the Vinyl Stage, or inquire when the record feels undeniable."
           >
             <BeatsAvailable />
           </AHShell>
@@ -120,8 +140,8 @@ export default function HomePage() {
       case 'albums':
         return (
           <AHShell
-            title="Albums"
-            subtitle="All catalog releases, personal projects, and executive produced records."
+            title="Release Archive"
+            subtitle="Sleeves, singles, collaborations, and executive-produced projects with Spotify-linked context and preserved fallback records."
           >
             <Albums />
           </AHShell>
@@ -129,8 +149,8 @@ export default function HomePage() {
       case 'xaeneptune':
         return (
           <AHShell
-            title="Xae Neptune"
-            subtitle="Producer, composer, and creative technologist profile."
+            title="Producer Dossier"
+            subtitle="Xae Neptune as producer, composer, visual director, and transmission source behind the catalogue, releases, and collaboration ecosystem."
           >
             <XaeneptunesWorld />
           </AHShell>
@@ -159,6 +179,15 @@ export default function HomePage() {
             if (route === 'beats-visualizer' && nextRoute !== 'beats-visualizer') {
               pauseAllAudio()
             }
+            if (nextRoute === 'beats') {
+              setVisualizerMode(false)
+              setIsBeatVisualizer(false)
+            }
+            if (nextRoute === 'beats-visualizer') {
+              setVisualizerMode(true)
+              setIsBeatVisualizer(true)
+            }
+            pulseRoute()
             setActiveRoute(nextRoute)
             setSidebarOpen(false)
           }}
@@ -225,19 +254,10 @@ export default function HomePage() {
           </Canvas>
         </div>
       ) : (
-        <div className="relative min-h-screen min-h-[100svh]">{renderHtmlContent()}</div>
-      )}
-
-      {route !== 'home' && route !== 'beats-visualizer' && (
-        <div
-          className="fixed z-[9998]"
-          style={{
-            left: 'calc(env(safe-area-inset-left,0px) + 12px)',
-            bottom: 'calc(env(safe-area-inset-bottom,0px) + 12px)',
-          }}
-        >
-          <GoBackButton onClick={() => changeRoute('home')} />
-        </div>
+        <>
+          <ImmersiveStage />
+          <div className="relative z-10 min-h-screen min-h-[100svh]">{renderHtmlContent()}</div>
+        </>
       )}
 
       {route === 'home' && (

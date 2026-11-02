@@ -1,6 +1,7 @@
 'use client'
 
 import { hardcodedAlbums } from '@/data/artistsData'
+import { useImmersiveStore } from '@/store/useImmersiveStore'
 import { openExternal } from '@/utils/openExternal'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import Image from 'next/image'
@@ -315,6 +316,8 @@ export default function Artist() {
   const [rosterSearch, setRosterSearch] = useState('')
   const [rosterSort, setRosterSort] = useState<'followers' | 'name'>('followers')
   const rosterSearchRef = useRef<HTMLInputElement>(null)
+  const setHoveredEntity = useImmersiveStore((state) => state.setHoveredEntity)
+  const clearHoveredEntity = useImmersiveStore((state) => state.clearHoveredEntity)
 
   const mainArtistId = '7iysPipkcsfGFVEgUMDzHQ'
 
@@ -361,6 +364,37 @@ export default function Artist() {
     [],
   )
 
+  const fallbackRosterArtists = useMemo<SpotifyArtist[]>(
+    () => [
+      xoJuneArtist,
+      {
+        id: 'ahmad',
+        name: 'Ahmad',
+        images: [
+          {
+            url: 'https://xaeneptune.s3.us-east-2.amazonaws.com/images/Artist/xaeneptune-no-profile.webp',
+          },
+        ],
+        followers: { total: 0 },
+        genres: ['collaborator'],
+        external_urls: { spotify: 'https://open.spotify.com/artist/7iysPipkcsfGFVEgUMDzHQ' },
+      },
+      {
+        id: 'iann-tyler',
+        name: 'iann tyler',
+        images: [
+          {
+            url: 'https://i1.sndcdn.com/avatars-8HyvIOZxOAq1iNja-dBVAMA-t500x500.jpg',
+          },
+        ],
+        followers: { total: 0 },
+        genres: ['collaborator'],
+        external_urls: { spotify: 'https://open.spotify.com/artist/7iysPipkcsfGFVEgUMDzHQ' },
+      },
+    ],
+    [xoJuneArtist],
+  )
+
   const visibleAssociatedArtists = useMemo(() => {
     const term = rosterSearch.trim().toLowerCase()
     const filtered = associatedArtists.filter((artist) => artist.name.toLowerCase().includes(term))
@@ -390,7 +424,7 @@ export default function Artist() {
       } catch (error) {
         console.error('Error fetching main artist:', error)
         setMainArtist(null)
-        setMainArtistError((error as Error).message || 'Unable to load main artist.')
+        setMainArtistError('Live Spotify artist sync is unavailable. Showing curated roster.')
       } finally {
         setLoadingMain(false)
       }
@@ -401,6 +435,7 @@ export default function Artist() {
 
   useEffect(() => {
     const fetchAssociatedArtists = async () => {
+      setAssociatedArtists(fallbackRosterArtists)
       try {
         setAssociatedArtistsError(null)
         const responses = await Promise.allSettled(
@@ -420,18 +455,18 @@ export default function Artist() {
           .map((result) => result.value)
           .filter((artist): artist is SpotifyArtist => Boolean(artist))
 
-        setAssociatedArtists(uniqueArtistsById([...validArtists, xoJuneArtist]))
+        setAssociatedArtists(uniqueArtistsById([...validArtists, ...fallbackRosterArtists]))
       } catch (error) {
         console.error('Error fetching associated artists:', error)
-        setAssociatedArtists([xoJuneArtist])
-        setAssociatedArtistsError((error as Error).message || 'Unable to load artist roster.')
+        setAssociatedArtists(fallbackRosterArtists)
+        setAssociatedArtistsError('Live Spotify roster sync is unavailable. Showing curated roster.')
       } finally {
         setLoadingAssociated(false)
       }
     }
 
     fetchAssociatedArtists()
-  }, [associatedArtistIds, xoJuneArtist])
+  }, [associatedArtistIds, fallbackRosterArtists])
 
   useEffect(() => {
     if (!selectedArtist) return
@@ -447,6 +482,10 @@ export default function Artist() {
       try {
         if (selectedArtist.name.toLowerCase() === 'ahmad') {
           setArtistTopTracks(getAhmadFallbackTopTracks())
+        } else if (selectedArtist.name.toLowerCase() === 'xo june') {
+          setArtistTopTracks(xoJuneAlbum.tracks)
+        } else if (selectedArtist.id === 'iann-tyler') {
+          setArtistTopTracks([])
         } else {
           const response = await fetch(
             `/api/spotify/artist-top-tracks?artistId=${selectedArtist.id}`,
@@ -562,12 +601,14 @@ export default function Artist() {
     return (
       <section>
         <header className="mb-9">
-          <p className="text-xs uppercase tracking-[0.24em] text-ah-soft">Roster</p>
+          <p className="text-xs uppercase tracking-[0.24em] text-ah-magenta">Artist Constellation</p>
           <h2 className="mt-3 font-[var(--font-display)] text-4xl uppercase tracking-ah-tight md:text-5xl">
-            Artist Network
+            Associated Artists & Signals
           </h2>
           <p className="mt-2 max-w-2xl text-sm text-ah-soft md:text-base">
-            Select an artist to view top tracks and collaboration discography.
+            A constellation of people connected to Anti-Heroes through releases,
+            featured tracks, fallback records, and profile context for reviewers,
+            scouts, curators, and artists.
           </p>
           <div className="mt-4 flex flex-wrap items-center gap-2">
             <span className="rounded-full border border-white/14 bg-white/[0.03] px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-ah-soft">
@@ -582,21 +623,21 @@ export default function Artist() {
         {(mainArtistError || associatedArtistsError) && (
           <div className="mb-6 space-y-2">
             {mainArtistError && (
-              <p className="rounded-xl border border-ah-red/35 bg-ah-red/10 px-4 py-3 text-sm text-ah-soft">
-                Main artist sync issue: {mainArtistError}
+              <p className="rounded-md border border-ah-ember/25 bg-ah-ember/10 px-4 py-3 text-sm text-ah-soft">
+                Data status: {mainArtistError}
               </p>
             )}
             {associatedArtistsError && (
-              <p className="rounded-xl border border-ah-red/35 bg-ah-red/10 px-4 py-3 text-sm text-ah-soft">
-                Roster sync issue: {associatedArtistsError}
+              <p className="rounded-md border border-ah-ember/25 bg-ah-ember/10 px-4 py-3 text-sm text-ah-soft">
+                Data status: {associatedArtistsError}
               </p>
             )}
           </div>
         )}
 
         {mainArtist && (
-          <article className="ah-card mb-8 flex flex-col items-start gap-4 rounded-2xl p-5 md:flex-row md:items-center">
-            <div className="relative h-20 w-20 overflow-hidden rounded-full border border-white/20">
+          <article className="ah-transmission-panel mb-8 flex flex-col items-start gap-4 p-5 md:flex-row md:items-center">
+            <div className="relative h-20 w-20 overflow-hidden rounded-full border border-ah-magenta/35 shadow-ah-glow-magenta">
               <Image
                 src={getArtistImageUrl(mainArtist)}
                 alt={mainArtist.name}
@@ -621,7 +662,7 @@ export default function Artist() {
           </article>
         )}
 
-        {loadingAssociated ? (
+        {loadingAssociated && associatedArtists.length === 0 ? (
           <div className="flex h-56 items-center justify-center">
             <motion.div
               className="h-10 w-10 rounded-full border-2 border-ah-blue border-t-transparent"
@@ -637,7 +678,7 @@ export default function Artist() {
                 value={rosterSearch}
                 onChange={(event) => setRosterSearch(event.target.value)}
                 placeholder="Search artists"
-                className="w-full rounded-xl border border-white/14 bg-black/45 px-3 py-2 text-sm text-white placeholder:text-ah-soft/70 focus:border-ah-blue/45 focus:outline-none md:max-w-xs"
+                className="w-full rounded-md border border-white/14 bg-black/45 px-3 py-2 text-sm text-white placeholder:text-ah-soft/70 focus:border-ah-magenta/45 focus:outline-none md:max-w-xs"
               />
               <div className="flex flex-wrap items-center gap-2">
                 <span className="rounded-sm border border-white/14 bg-white/[0.02] px-3 py-2 text-[10px] uppercase tracking-[0.18em] text-ah-soft">
@@ -647,7 +688,7 @@ export default function Artist() {
                   onClick={() => setRosterSort('followers')}
                   className={`rounded-sm px-3 py-2 text-[9px] font-semibold uppercase tracking-[0.14em] transition sm:text-[10px] sm:tracking-[0.18em] ${
                     rosterSort === 'followers'
-                      ? 'bg-ah-blue text-white shadow-ah-glow-blue'
+                      ? 'bg-ah-electric text-black shadow-ah-glow-cyan'
                       : 'border border-white/14 bg-white/[0.02] text-ah-soft hover:text-white'
                   }`}
                 >
@@ -657,7 +698,7 @@ export default function Artist() {
                   onClick={() => setRosterSort('name')}
                   className={`rounded-sm px-3 py-2 text-[9px] font-semibold uppercase tracking-[0.14em] transition sm:text-[10px] sm:tracking-[0.18em] ${
                     rosterSort === 'name'
-                      ? 'bg-ah-red text-white shadow-ah-glow-red'
+                      ? 'bg-ah-magenta text-black shadow-ah-glow-magenta'
                       : 'border border-white/14 bg-white/[0.02] text-ah-soft hover:text-white'
                   }`}
                 >
@@ -676,7 +717,7 @@ export default function Artist() {
             </div>
 
             {visibleAssociatedArtists.length === 0 ? (
-              <p className="rounded-2xl border border-white/12 bg-white/[0.02] px-4 py-8 text-center text-ah-soft">
+              <p className="rounded-md border border-white/12 bg-white/[0.02] px-4 py-8 text-center text-ah-soft">
                 No artists match your search.
               </p>
             ) : (
@@ -684,13 +725,23 @@ export default function Artist() {
                 {visibleAssociatedArtists.map((artist) => (
                   <button
                     key={artist.id}
+                    onMouseEnter={() =>
+                      setHoveredEntity({
+                        type: 'artist',
+                        id: artist.id,
+                        title: artist.name,
+                        image: getArtistImageUrl(artist),
+                        color: '#8A3FFC',
+                      })
+                    }
+                    onMouseLeave={clearHoveredEntity}
                     onClick={() => {
                       setSelectedArtist(artist)
                       setActiveArtistTab('top-tracks')
                     }}
-                    className="group ah-card content-auto rounded-2xl p-4 text-left transition hover:-translate-y-1 hover:border-ah-red/45"
+                    className="group ah-sleeve-card content-auto p-4 text-left transition hover:-translate-y-1 hover:border-ah-magenta/45"
                   >
-                    <div className="relative aspect-square overflow-hidden rounded-xl border border-white/10">
+                    <div className="ah-scan-frame relative aspect-square overflow-hidden rounded-md border border-white/10">
                       <Image
                         src={getArtistImageUrl(artist)}
                         alt={artist.name || 'Artist profile'}
@@ -703,8 +754,13 @@ export default function Artist() {
                       {artist.name}
                     </h3>
                     <p className="mt-1 text-xs uppercase tracking-[0.16em] text-ah-soft">
-                      {artist.followers?.total?.toLocaleString() || '0'} Followers
+                      {artist.followers?.total?.toLocaleString() || '0'} Signal Followers
                     </p>
+                    {artist.genres && artist.genres.length > 0 && (
+                      <p className="mt-2 line-clamp-1 text-xs text-white/62">
+                        {artist.genres.slice(0, 2).join(' / ')}
+                      </p>
+                    )}
                   </button>
                 ))}
               </div>
@@ -742,7 +798,7 @@ export default function Artist() {
             />
           </div>
           <div>
-            <p className="text-xs uppercase tracking-[0.24em] text-ah-soft">Selected Artist</p>
+            <p className="text-xs uppercase tracking-[0.24em] text-ah-magenta">Selected Signal</p>
             <h2 className="mt-2 font-[var(--font-display)] text-4xl uppercase tracking-ah-tight md:text-5xl">
               {selectedArtist.name}
             </h2>
@@ -794,7 +850,7 @@ export default function Artist() {
                 />
               </div>
             ) : artistTopTracks.length === 0 ? (
-              <p className="rounded-2xl border border-white/12 bg-white/[0.02] px-4 py-8 text-center text-ah-soft">
+              <p className="rounded-md border border-white/12 bg-white/[0.02] px-4 py-8 text-center text-ah-soft">
                 {topTracksError || 'No top tracks found for this artist.'}
               </p>
             ) : (
@@ -807,7 +863,7 @@ export default function Artist() {
                   return (
                     <article
                       key={`${track.id}-${index}`}
-                      className="group ah-card content-auto rounded-2xl p-4"
+                      className="group ah-sleeve-card content-auto p-4"
                     >
                       <button
                         className="w-full text-left"
@@ -815,7 +871,7 @@ export default function Artist() {
                           if (spotifyUrl) openExternal(spotifyUrl)
                         }}
                       >
-                        <div className="relative aspect-square overflow-hidden rounded-xl border border-white/10">
+                        <div className="relative aspect-square overflow-hidden rounded-md border border-white/10">
                           {albumImage ? (
                             <Image
                               src={albumImage}
@@ -861,7 +917,7 @@ export default function Artist() {
             </div>
           ) : selectedDiscographyAlbum ? (
             <div className="grid gap-8 lg:grid-cols-[320px_1fr]">
-              <aside className="ah-card h-fit rounded-2xl p-5 lg:sticky lg:top-24">
+              <aside className="ah-transmission-panel h-fit p-5 lg:sticky lg:top-24">
                 <button
                   onClick={() => {
                     setSelectedDiscographyAlbum(null)
@@ -872,7 +928,7 @@ export default function Artist() {
                   Back to Albums
                 </button>
 
-                <div className="relative aspect-square overflow-hidden rounded-xl border border-white/10">
+                <div className="relative aspect-square overflow-hidden rounded-md border border-white/10">
                   {selectedDiscographyAlbum.images?.[0]?.url ? (
                     <Image
                       src={selectedDiscographyAlbum.images[0].url}
@@ -912,7 +968,7 @@ export default function Artist() {
                     return (
                       <article
                         key={`${track.id}-${index}`}
-                        className="ah-card content-auto rounded-2xl px-4 py-3"
+                        className="ah-sleeve-card content-auto px-4 py-3"
                       >
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                           <div className="w-5 text-center text-xs text-ah-soft">{index + 1}</div>
@@ -937,14 +993,14 @@ export default function Artist() {
                     )
                   })
                 ) : (
-                  <p className="rounded-2xl border border-white/12 bg-white/[0.02] px-4 py-8 text-center text-ah-soft">
+                  <p className="rounded-md border border-white/12 bg-white/[0.02] px-4 py-8 text-center text-ah-soft">
                     No tracks found for this release.
                   </p>
                 )}
               </div>
             </div>
           ) : artistDiscography.length === 0 ? (
-            <p className="rounded-2xl border border-white/12 bg-white/[0.02] px-4 py-8 text-center text-ah-soft">
+            <p className="rounded-md border border-white/12 bg-white/[0.02] px-4 py-8 text-center text-ah-soft">
               {discographyError || 'No discography found for this artist.'}
             </p>
           ) : (
@@ -953,9 +1009,9 @@ export default function Artist() {
                 <button
                   key={group.album.id}
                   onClick={() => openDiscographyAlbum(group.album)}
-                  className="group ah-card content-auto rounded-2xl p-3 text-left transition hover:-translate-y-1 hover:border-ah-blue/50"
+                  className="group ah-sleeve-card content-auto p-3 text-left transition hover:-translate-y-1 hover:border-ah-electric/50"
                 >
-                  <div className="relative aspect-square overflow-hidden rounded-xl border border-white/10">
+                  <div className="relative aspect-square overflow-hidden rounded-md border border-white/10">
                     {group.album.images?.[0]?.url ? (
                       <Image
                         src={group.album.images[0].url}

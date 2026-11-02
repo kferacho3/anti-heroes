@@ -1,6 +1,8 @@
 "use client";
 
 import { xaeneptunePlanetAssets, xaeneptuneSecurityAsset } from "@/data/visualAssets";
+import { useImmersiveStore } from "@/store/useImmersiveStore";
+import { useRouteStore } from "@/store/useRouteStore";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
@@ -12,6 +14,8 @@ export default function XaeneptunesWorld() {
   const [activePlanetIndex, setActivePlanetIndex] = useState(() =>
     Math.floor(Math.random() * xaeneptunePlanetAssets.length),
   );
+  const setActiveRoute = useRouteStore((state) => state.setActiveRoute);
+  const pulseRoute = useImmersiveStore((state) => state.pulseRoute);
   const activePlanet = xaeneptunePlanetAssets[activePlanetIndex];
   const planetRail = useMemo(
     () => [...xaeneptunePlanetAssets, ...xaeneptunePlanetAssets],
@@ -31,28 +35,47 @@ export default function XaeneptunesWorld() {
     <section>
       <header className="mb-10 flex flex-col items-start gap-5 md:flex-row md:items-center md:justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.24em] text-ah-soft">Profile</p>
+          <p className="text-xs uppercase tracking-[0.24em] text-ah-electric">Producer Dossier</p>
           <h2 className="mt-3 font-[var(--font-display)] text-4xl uppercase tracking-ah-tight md:text-5xl">
-            Xae Neptune&apos;s World
+            Xae Neptune
           </h2>
           <p className="mt-2 max-w-2xl text-sm text-ah-soft md:text-base">
-            Producer, composer, and creative technologist shaping a catalog built on
-            experimentation and consistency.
+            Producer, composer, and transmission source behind Anti-Heroes,
+            shaping a beat catalogue built for authored sound, visual identity,
+            collaboration, licensing, and independent ownership.
           </p>
           <div className="mt-4 flex flex-wrap items-center gap-2">
             <span className="rounded-full border border-white/14 bg-white/[0.03] px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-ah-soft">
-              Planets: {xaeneptunePlanetAssets.length}
+              Artwork Set: {xaeneptunePlanetAssets.length}
             </span>
             <span className="rounded-full border border-white/14 bg-white/[0.03] px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-ah-soft">
               Featured: SECURITY
             </span>
             <span className="rounded-full border border-white/14 bg-white/[0.03] px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-ah-soft">
-              Orbit: {autoRotate ? "Auto" : "Manual"}
+              Rotation: {autoRotate ? "Auto" : "Manual"}
             </span>
           </div>
         </div>
 
         <div className="flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center md:w-auto">
+          <button
+            onClick={() => {
+              pulseRoute();
+              setActiveRoute("beats");
+            }}
+            className="w-full rounded-sm bg-ah-red px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-white transition hover:shadow-ah-glow-red sm:w-auto sm:tracking-[0.2em]"
+          >
+            Open Beat Vault
+          </button>
+          <button
+            onClick={() => {
+              pulseRoute();
+              setActiveRoute("music");
+            }}
+            className="w-full rounded-sm border border-ah-blue/40 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-ah-blue transition hover:bg-ah-blue/15 hover:text-white sm:w-auto sm:tracking-[0.2em]"
+          >
+            Spotify Signal
+          </button>
           <button
             onClick={() =>
               setActivePlanetIndex(
@@ -61,13 +84,13 @@ export default function XaeneptunesWorld() {
             }
             className="w-full rounded-sm border border-white/14 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-white transition hover:border-ah-red/60 hover:text-ah-red sm:w-auto sm:tracking-[0.2em]"
           >
-            Shuffle Planet
+            Rotate Artwork
           </button>
           <button
             onClick={() => setAutoRotate((current) => !current)}
             className="w-full rounded-sm border border-white/14 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-white transition hover:border-ah-blue/45 hover:text-ah-blue sm:w-auto sm:tracking-[0.2em]"
           >
-            {autoRotate ? "Pause Orbit" : "Resume Orbit"}
+            {autoRotate ? "Pause Rotation" : "Resume Rotation"}
           </button>
           <a
             href={xaeneptuneSecurityAsset}
@@ -89,9 +112,9 @@ export default function XaeneptunesWorld() {
         </div>
       </header>
 
-      <div className="mb-8 overflow-hidden rounded-2xl border border-white/10 bg-black/35">
+      <div className="mb-8 overflow-hidden rounded-md border border-white/10 bg-black/35">
         <div className="relative px-4 py-3">
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(700px_circle_at_0%_0%,rgba(30,111,255,.18),transparent_60%)]" />
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(700px_circle_at_0%_0%,rgba(49,247,255,.18),transparent_60%)]" />
           <motion.div
             className="flex w-max gap-3"
             animate={reduceMotion ? undefined : { x: ["0%", "-50%"] }}
@@ -104,7 +127,7 @@ export default function XaeneptunesWorld() {
               >
                 <Image
                   src={planet}
-                  alt="Xaeneptune planet decoration"
+                  alt="Xaeneptune artwork decoration"
                   fill
                   sizes="48px"
                   className="object-contain p-1"
@@ -116,22 +139,22 @@ export default function XaeneptunesWorld() {
       </div>
 
       <div className="mb-12 grid gap-6 xl:grid-cols-[1.45fr_.95fr]">
-        <article className="relative overflow-hidden rounded-3xl border border-white/12 bg-black/45 p-6 md:p-8">
+        <article className="ah-transmission-panel relative p-6 md:p-8">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(1100px_circle_at_8%_8%,rgba(30,111,255,.2),transparent_58%)]" />
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(900px_circle_at_92%_22%,rgba(208,25,42,.18),transparent_56%)]" />
 
           <div className="relative z-10">
-            <p className="text-xs uppercase tracking-[0.18em] text-ah-soft">Planet Atlas</p>
+            <p className="text-xs uppercase tracking-[0.18em] text-ah-electric">Visual Identity Archive</p>
             <h3 className="mt-2 font-[var(--font-display)] text-3xl uppercase tracking-ah-tight text-white md:text-4xl">
-              Xaeneptune Orbit
+              Artwork, Pressure & Direction
             </h3>
             <p className="mt-2 max-w-2xl text-sm text-white/75">
-              Curated orbit studies from the Xaeneptune world set. Select any
-              planet to spotlight its identity.
+              Curated visual studies from the Xaeneptune identity set. Select
+              any piece to review its direction.
             </p>
 
             <div className="mt-6 grid gap-5 lg:grid-cols-[1fr_230px]">
-              <div className="relative aspect-[16/10] overflow-hidden rounded-2xl border border-white/15 bg-black/65">
+              <div className="relative aspect-[16/10] overflow-hidden rounded-md border border-white/15 bg-black/65">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={activePlanet}
@@ -143,7 +166,7 @@ export default function XaeneptunesWorld() {
                   >
                     <Image
                       src={activePlanet}
-                      alt={`Xaeneptune planet ${activePlanetIndex + 1}`}
+                      alt={`Xaeneptune artwork ${activePlanetIndex + 1}`}
                       fill
                       priority
                       sizes="(max-width: 1024px) 100vw, 720px"
@@ -159,16 +182,16 @@ export default function XaeneptunesWorld() {
                   <button
                     key={planet}
                     onClick={() => setActivePlanetIndex(index)}
-                    className={`relative aspect-square overflow-hidden rounded-xl border transition ${
+                    className={`relative aspect-square overflow-hidden rounded-md border transition ${
                       index === activePlanetIndex
                         ? "border-ah-blue bg-ah-blue/10"
                         : "border-white/15 bg-black/45 hover:border-ah-red/45"
                     }`}
-                    title={`Planet ${index + 1}`}
+                    title={`Artwork ${index + 1}`}
                   >
                     <Image
                       src={planet}
-                      alt={`Planet ${index + 1}`}
+                      alt={`Artwork ${index + 1}`}
                       fill
                       sizes="80px"
                       className="object-contain p-1"
@@ -180,8 +203,8 @@ export default function XaeneptunesWorld() {
           </div>
         </article>
 
-        <article className="ah-card rounded-3xl p-5">
-          <p className="text-xs uppercase tracking-[0.18em] text-ah-soft">Featured Project</p>
+        <article className="ah-sleeve-card p-5">
+          <p className="text-xs uppercase tracking-[0.18em] text-ah-soft">Featured Sleeve</p>
           <h3 className="mt-2 font-[var(--font-display)] text-3xl uppercase tracking-wide text-white">
             SECURITY
           </h3>
@@ -189,7 +212,7 @@ export default function XaeneptunesWorld() {
             A visual and sonic chapter built around pressure, vulnerability,
             and self-definition.
           </p>
-          <div className="relative mt-4 aspect-[3/4] overflow-hidden rounded-2xl border border-white/12">
+          <div className="relative mt-4 aspect-[3/4] overflow-hidden rounded-md border border-white/12">
             <Image
               src={xaeneptuneSecurityAsset}
               alt="Xaeneptune SECURITY artwork"
@@ -212,7 +235,7 @@ export default function XaeneptunesWorld() {
 
       <div className="mb-12 space-y-4">
         {sections.map((section) => (
-          <article key={section.id} className="ah-card rounded-2xl p-5">
+          <article key={section.id} className="ah-sleeve-card p-5">
             <h3 className="font-[var(--font-display)] text-2xl uppercase tracking-wide text-white">
               {section.title}
             </h3>
@@ -228,7 +251,7 @@ export default function XaeneptunesWorld() {
             href={item.href}
             target="_blank"
             rel="noopener noreferrer"
-            className="ah-card flex items-center justify-between rounded-2xl px-4 py-4 transition hover:border-ah-blue/45 hover:bg-ah-blue/10"
+            className="ah-sleeve-card flex items-center justify-between px-4 py-4 transition hover:border-ah-electric/45 hover:bg-ah-electric/10"
           >
             <div>
               <p className="font-[var(--font-display)] text-xl uppercase tracking-wide text-white">
@@ -247,23 +270,23 @@ export default function XaeneptunesWorld() {
 const sections = [
   {
     id: "craft",
-    title: "Learning the Craft",
-    body: "YouTube tutorials remain foundational for style development. Daily learning and adaptation are key to building a durable sound.",
+    title: "Beat Vault Source",
+    body: "The catalogue represents sound, identity, and repeatable creative direction for artists who need records to feel authored, not assembled.",
   },
   {
     id: "context",
-    title: "Background & Context",
+    title: "Proof Path",
     body: "Producing since 2021, Xae Neptune has released 20+ songs, executive-produced multiple projects, and built a catalog of 100+ beats.",
   },
   {
     id: "project",
-    title: "Current Project",
-    body: "The debut solo EP SECURITY explores imposter syndrome, creative pressure, and self-definition with a raw and intentional approach.",
+    title: "Promotion Path",
+    body: "Beats become records, records become proof, and strong work can create a professional path toward shared visibility.",
   },
   {
     id: "mission",
     title: "Mission",
-    body: "Keep creation meaningful, keep execution consistent, and build a sustainable life through music and independent ownership.",
+    body: "Keep creation meaningful, keep execution consistent, and build a sustainable ecosystem through music and independent ownership.",
   },
 ] as const;
 

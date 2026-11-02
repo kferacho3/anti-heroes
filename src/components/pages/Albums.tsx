@@ -1,6 +1,7 @@
 'use client'
 
 import { hardcodedAlbums } from '@/data/artistsData'
+import { useImmersiveStore } from '@/store/useImmersiveStore'
 import { openExternal } from '@/utils/openExternal'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import Image from 'next/image'
@@ -77,6 +78,8 @@ export default function Albums() {
   const [selectedAlbum, setSelectedAlbum] = useState<SpotifyAlbum | null>(null)
   const [albumTracks, setAlbumTracks] = useState<SpotifyTrack[]>([])
   const [loadingAlbumTracks, setLoadingAlbumTracks] = useState(false)
+  const setHoveredEntity = useImmersiveStore((state) => state.setHoveredEntity)
+  const clearHoveredEntity = useImmersiveStore((state) => state.clearHoveredEntity)
 
   useEffect(() => {
     const fetchDiscographyAlbums = async () => {
@@ -220,12 +223,13 @@ export default function Albums() {
   return (
     <section>
       <header className="mb-8">
-        <p className="text-xs uppercase tracking-[0.24em] text-ah-soft">Discography</p>
+        <p className="text-xs uppercase tracking-[0.24em] text-ah-lavender">Release Archive</p>
         <h2 className="mt-3 font-[var(--font-display)] text-4xl uppercase tracking-ah-tight md:text-5xl">
-          Albums
+          Sleeves, Singles & Projects
         </h2>
         <p className="mt-2 max-w-2xl text-sm text-ah-soft md:text-base">
-          Personal releases, associated projects, and executive-produced records.
+          Xae Neptune releases, associated projects, and executive-produced records,
+          synced through Spotify with curated fallback sleeves preserved.
         </p>
         <div className="mt-4 flex flex-wrap items-center gap-2">
           <span className="rounded-full border border-white/14 bg-white/[0.03] px-3 py-1 text-[10px] uppercase tracking-[0.17em] text-ah-soft">
@@ -262,12 +266,12 @@ export default function Albums() {
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search releases"
-            className="w-full rounded-xl border border-white/14 bg-black/45 px-3 py-2 text-sm text-white placeholder:text-ah-soft/70 focus:border-ah-blue/45 focus:outline-none md:max-w-xs"
+            className="w-full rounded-md border border-white/14 bg-black/45 px-3 py-2 text-sm text-white placeholder:text-ah-soft/70 focus:border-ah-lavender/45 focus:outline-none md:max-w-xs"
           />
           <select
             value={sortMode}
             onChange={(event) => setSortMode(event.target.value as typeof sortMode)}
-            className="w-full rounded-xl border border-white/14 bg-black/45 px-3 py-2 text-sm text-white focus:border-ah-blue/45 focus:outline-none md:max-w-[180px]"
+            className="w-full rounded-md border border-white/14 bg-black/45 px-3 py-2 text-sm text-white focus:border-ah-lavender/45 focus:outline-none md:max-w-[180px]"
           >
             <option value="latest">Latest First</option>
             <option value="oldest">Oldest First</option>
@@ -286,13 +290,11 @@ export default function Albums() {
       )}
 
       {!selectedAlbum && (
-        <p className="mb-6 text-[11px] uppercase tracking-[0.18em] text-ah-soft">
-          Filter by category, search by title, then sort by release order.
-        </p>
+        <div className="mb-6 h-px bg-gradient-to-r from-ah-lavender/45 via-white/10 to-transparent" />
       )}
 
       {!selectedAlbum && discographyError && (
-        <p className="mb-6 rounded-xl border border-ah-red/35 bg-ah-red/10 px-4 py-3 text-sm text-ah-soft">
+        <p className="mb-6 rounded-md border border-ah-red/35 bg-ah-red/10 px-4 py-3 text-sm text-ah-soft">
           Spotify sync issue: {discographyError}
         </p>
       )}
@@ -315,8 +317,8 @@ export default function Albums() {
               exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -20 }}
               className="grid gap-8 lg:grid-cols-[340px_1fr]"
             >
-              <aside className="ah-card h-fit rounded-2xl p-5 lg:sticky lg:top-24">
-                <div className="relative aspect-square overflow-hidden rounded-xl border border-white/10">
+              <aside className="ah-transmission-panel h-fit p-5 lg:sticky lg:top-24">
+                <div className="ah-scan-frame relative aspect-square overflow-hidden rounded-md border border-white/10">
                   <Image
                     src={getAlbumCoverUrl(selectedAlbum)}
                     alt={`${selectedAlbum.name} cover`}
@@ -375,7 +377,7 @@ export default function Albums() {
                     return (
                       <article
                         key={`${track.id}-${index}`}
-                        className="ah-card content-auto rounded-2xl px-4 py-3"
+                        className="ah-sleeve-card content-auto px-4 py-3"
                       >
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                           <div className="w-5 text-center text-xs text-ah-soft">{index + 1}</div>
@@ -419,7 +421,7 @@ export default function Albums() {
                     )
                   })
                 ) : (
-                  <p className="rounded-2xl border border-white/10 bg-white/[0.02] px-4 py-8 text-center text-ah-soft">
+                  <p className="rounded-md border border-white/10 bg-white/[0.02] px-4 py-8 text-center text-ah-soft">
                     No tracks available for this release.
                   </p>
                 )}
@@ -436,10 +438,20 @@ export default function Albums() {
               {visibleAlbums.map((album) => (
                 <button
                   key={album.id}
+                  onMouseEnter={() =>
+                    setHoveredEntity({
+                      type: 'album',
+                      id: album.id,
+                      title: album.name,
+                      image: getAlbumCoverUrl(album),
+                      color: '#C084FC',
+                    })
+                  }
+                  onMouseLeave={clearHoveredEntity}
                   onClick={() => handleAlbumClick(album)}
-                  className="group ah-card content-auto rounded-2xl p-3 text-left transition hover:-translate-y-1 hover:border-ah-red/40"
+                  className="group ah-sleeve-card content-auto p-3 text-left transition hover:-translate-y-1 hover:border-ah-lavender/45"
                 >
-                  <div className="relative aspect-square overflow-hidden rounded-xl border border-white/10">
+                  <div className="ah-scan-frame relative aspect-square overflow-hidden rounded-md border border-white/10">
                     <Image
                       src={getAlbumCoverUrl(album)}
                       alt={`${album.name} cover`}

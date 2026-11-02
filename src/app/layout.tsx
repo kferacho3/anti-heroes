@@ -17,8 +17,9 @@ const body = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: "ANTI-HEROES",
-  description: "Anti-Heroes official platform",
+  title: "ANTI-HEROES: VINYL TRANSMISSION SYSTEM",
+  description:
+    "A premium beat catalogue, Spotify signal feed, and collaboration portal for Xae Neptune and Anti-Heroes.",
 };
 
 export const viewport: Viewport = {

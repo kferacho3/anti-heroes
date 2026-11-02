@@ -1,10 +1,10 @@
 "use client";
 
 import { BeatData, beatsData } from "@/data/beatData";
-import { visualizerDecorationAssets } from "@/data/visualAssets";
+import { useImmersiveStore } from "@/store/useImmersiveStore";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import Image from "next/image";
-import React, { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import {
   FaChevronLeft,
   FaChevronRight,
@@ -49,6 +49,29 @@ const cleanBeatName = (beatName: string) => {
     .trim();
 };
 
+const deriveBeatVibes = (beat: BeatData) => {
+  const vibes: string[] = [];
+  const name = beat.beatName.toLowerCase();
+  const key = beat.beatKey.toLowerCase();
+
+  if (beat.beatPerMin !== null) {
+    if (beat.beatPerMin >= 150) vibes.push("uptempo");
+    else if (beat.beatPerMin >= 120) vibes.push("bounce");
+    else vibes.push("slow-burn");
+  }
+
+  if (key.includes("minor")) vibes.push("dark");
+  if (key.includes("major")) vibes.push("bright");
+  if (name.includes("red") || name.includes("sin") || name.includes("grimy")) vibes.push("pressure");
+
+  return Array.from(new Set(vibes)).slice(0, 3);
+};
+
+const handlePreviewPlaybackFailure = (error: unknown) => {
+  if ((error as Error)?.name === "NotAllowedError") return;
+  console.warn("Preview playback failed:", error);
+};
+
 const BeatsList: React.FC<BeatsListProps> = ({
   onBeatSelect,
   isBeatVisualizer,
@@ -67,6 +90,9 @@ const BeatsList: React.FC<BeatsListProps> = ({
   const [viewMode, setViewMode] = useState<"list" | "grid" | "card">("list");
   const [isMobile, setIsMobile] = useState(false);
   const reduceMotion = useReducedMotion();
+  const setHoveredEntity = useImmersiveStore((state) => state.setHoveredEntity);
+  const clearHoveredEntity = useImmersiveStore((state) => state.clearHoveredEntity);
+  const setPreviewState = useImmersiveStore((state) => state.setPreviewState);
 
   /* ───────────── Inquiry Modal State ───────────── */
   const [inquiryBeat, setInquiryBeat] = useState<BeatData & { cover: string } | null>(null);
@@ -114,14 +140,15 @@ const BeatsList: React.FC<BeatsListProps> = ({
     }
   }, [currentPage]);
 
-  const stopPreview = () => {
+  const stopPreview = useCallback(() => {
     previewAudioRef.current?.pause();
     if (previewTimeoutRef.current) clearTimeout(previewTimeoutRef.current);
     previewAudioRef.current = null;
     previewTimeoutRef.current = null;
     setPreviewBeat(null);
     setIsPreviewPlaying(false);
-  };
+    setPreviewState(false, 0);
+  }, [setPreviewState]);
 
   const resetFilters = () => {
     setFilterBeatName("");
@@ -145,12 +172,11 @@ const BeatsList: React.FC<BeatsListProps> = ({
   const startPreview = (beat: BeatData & { cover: string }) => {
     stopPreview();
     const audio = new Audio(beat.audioFile);
-    void audio.play().catch((error) => {
-      console.error("Preview playback failed:", error);
-    });
+    void audio.play().catch(handlePreviewPlaybackFailure);
     previewAudioRef.current = audio;
     setPreviewBeat({ name: beat.beatName, cover: beat.cover, beat });
     setIsPreviewPlaying(true);
+    setPreviewState(true, beat.beatPerMin ? Math.min(1, beat.beatPerMin / 190) : 0.68);
     previewTimeoutRef.current = setTimeout(stopPreview, 30_000);
   };
 
@@ -158,11 +184,10 @@ const BeatsList: React.FC<BeatsListProps> = ({
   const handleBeatSelect = (beat: BeatData & { cover: string }) => {
     if (isMobile && !showVisualizerAnyway) {
       const audio = new Audio(beat.audioFile);
-      void audio.play().catch((error) => {
-        console.error("Mobile preview playback failed:", error);
-      });
+      void audio.play().catch(handlePreviewPlaybackFailure);
       setMobileModalBeat({ beat, audio });
     } else {
+      stopPreview();
       onBeatSelect(beat.audioFile);
     }
   };
@@ -171,7 +196,7 @@ const BeatsList: React.FC<BeatsListProps> = ({
   const handleInquiry = (beat: BeatData & { cover: string }) => {
     setInquiryBeat(beat);
     const cleanName = cleanBeatName(beat.beatName);
-    setInquiryMessage(`Hi, I'm interested in purchasing the beat "${cleanName}". Please provide more information about licensing options and pricing.`);
+    setInquiryMessage(`Hi, I'm interested in licensing or collaborating around the beat "${cleanName}". Please send next steps, usage options, and pricing details.`);
   };
 
   // Send inquiry via mailto
@@ -221,7 +246,7 @@ ${inquiryMessage}
         mobileModalBeat.audio.pause();
       }
     };
-  }, [mobileModalBeat]);
+  }, [mobileModalBeat, stopPreview]);
 
   /* ───────────── dataset w/ covers ───────────── */
   const beatsWithCovers = useMemo(
@@ -232,15 +257,6 @@ ${inquiryMessage}
       })),
     []
   ) as Array<BeatData & { cover: string }>;
-  const decorationBaseRail = useMemo(
-    () => Array.from({ length: 4 }, () => visualizerDecorationAssets).flat(),
-    [],
-  );
-  const decorationRail = useMemo(
-    () => [...decorationBaseRail, ...decorationBaseRail],
-    [decorationBaseRail],
-  );
-
   /* ───────────── filtering ───────────── */
   const filteredBeats = useMemo(() => {
     const f = beatsWithCovers.filter((beat) => {
@@ -302,34 +318,49 @@ ${inquiryMessage}
         );
 
   /* ───────────── render helpers ───────────── */
+  const actionButtonClass =
+    "inline-flex min-h-9 items-center justify-center gap-2 rounded-md border px-2.5 py-2 text-[10px] font-semibold uppercase tracking-[0.12em] transition sm:px-3";
+
   const BeatRow = (beat: BeatData & { cover: string }, index: number) => (
     <motion.tr
       key={beat.audioFile}
       initial={reduceMotion ? { opacity: 0 } : { opacity: 0, x: -20 }}
       animate={reduceMotion ? { opacity: 1 } : { opacity: 1, x: 0 }}
       transition={{ delay: reduceMotion ? 0 : Math.min(index, 16) * 0.015 }}
-      className="group content-auto cursor-pointer border-b border-gray-800 hover:bg-gradient-to-r hover:from-purple-900/10 hover:to-emerald-900/10 transition-all duration-300"
+      className="group content-auto cursor-pointer border-b border-white/10 transition-all duration-300 hover:bg-white/[0.045]"
+      onMouseEnter={() =>
+        setHoveredEntity({
+          type: "beat",
+          id: beat.audioFile,
+          title: beat.beatName,
+          image: beat.cover,
+          audioUrl: beat.audioFile,
+          color: "#D0192A",
+        })
+      }
+      onMouseLeave={clearHoveredEntity}
       onClick={() => handleBeatSelect(beat)}
     >
       <td className="py-4 pl-4 md:pl-6">
         <motion.div
           whileHover={{ scale: 1.1 }}
-          className="relative w-12 h-12 md:w-14 md:h-14"
+          className="relative h-12 w-12 md:h-14 md:w-14"
         >
+          <div className="ah-vinyl-disc absolute -right-2 top-1/2 h-9 w-9 -translate-y-1/2 opacity-70 transition group-hover:rotate-45 group-hover:opacity-100" />
           <Image
             src={beat.cover}
             alt={`${cleanBeatName(beat.beatName)} cover art`}
             fill
-            className="rounded-lg object-cover shadow-lg group-hover:shadow-purple-500/20"
+            className="relative rounded-md object-cover shadow-lg group-hover:shadow-ah-glow-magenta"
           />
           <motion.div
-            className="absolute inset-0 bg-gradient-to-t from-purple-600/0 to-emerald-600/0 group-hover:from-purple-600/20 group-hover:to-emerald-600/20 rounded-lg transition-all duration-300"
+            className="absolute inset-0 rounded-lg bg-gradient-to-t from-ah-red/0 to-ah-teal/0 transition-all duration-300 group-hover:from-ah-red/20 group-hover:to-ah-teal/20"
           />
         </motion.div>
       </td>
       <td className="py-4 px-4">
         <div className="flex flex-col">
-          <span className="font-semibold text-white group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-purple-300 group-hover:to-emerald-300 transition-all duration-300">
+          <span className="font-semibold text-white transition-all duration-300 group-hover:text-ah-ember">
             {beat.beatName}
           </span>
           <span className="text-xs text-gray-500 md:hidden">{beat.beatProducer}</span>
@@ -339,8 +370,8 @@ ${inquiryMessage}
         {beat.beatProducer}
       </td>
       <td className="py-4 px-4 hidden lg:table-cell">
-        <span className="px-2 py-1 bg-purple-900/20 text-purple-300 rounded-full text-xs">
-          {beat.beatKey}
+        <span className="rounded-sm border border-ah-blue/20 bg-ah-blue/10 px-2 py-1 text-xs text-ah-blue">
+          {beat.beatKey || "Unknown key"}
         </span>
       </td>
       <td className="py-4 px-4 hidden lg:table-cell text-gray-400">
@@ -360,13 +391,14 @@ ${inquiryMessage}
               e.stopPropagation();
               togglePreview(beat);
             }}
-            className="p-2 rounded-lg bg-purple-600/20 hover:bg-purple-600/30 text-purple-400 transition-all duration-200"
+            className={`${actionButtonClass} border-ah-electric/25 bg-ah-electric/10 text-ah-electric hover:bg-ah-electric hover:text-black`}
           >
             {previewBeat?.beat.audioFile === beat.audioFile && isPreviewPlaying ? (
               <FaPause />
             ) : (
               <FaPlay />
             )}
+            <span className="hidden xl:inline">Preview</span>
           </motion.button>
           <motion.button
             whileHover={{ scale: 1.1 }}
@@ -377,9 +409,10 @@ ${inquiryMessage}
               e.stopPropagation();
               handleBeatSelect(beat);
             }}
-            className="p-2 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 transition-all duration-200"
+            className={`${actionButtonClass} border-ah-magenta/25 bg-ah-magenta/10 text-ah-magenta hover:bg-ah-magenta hover:text-black`}
           >
             <FaWaveSquare />
+            <span className="hidden xl:inline">Visualizer</span>
           </motion.button>
           <motion.button
             whileHover={{ scale: 1.1 }}
@@ -390,9 +423,10 @@ ${inquiryMessage}
               e.stopPropagation();
               handleInquiry(beat);
             }}
-            className="p-2 rounded-lg bg-yellow-600/20 hover:bg-yellow-600/30 text-yellow-400 transition-all duration-200"
+            className={`${actionButtonClass} border-ah-ember/25 bg-ah-ember/10 text-ah-ember hover:bg-ah-ember hover:text-black`}
           >
             <FaDollarSign />
+            <span className="hidden xl:inline">Inquire</span>
           </motion.button>
         </div>
       </td>
@@ -406,12 +440,23 @@ ${inquiryMessage}
       animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
       transition={{ delay: reduceMotion ? 0 : Math.min(index, 12) * 0.03 }}
       whileHover={{ y: -5 }}
-      className="group content-auto relative flex flex-col gap-3 p-4 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-2xl border border-gray-700 hover:border-purple-500/50 transition-all duration-300 cursor-pointer overflow-hidden"
+      className="ah-sleeve-card group content-auto relative flex cursor-pointer flex-col gap-3 p-4 transition-all duration-300 hover:border-ah-magenta/45"
+      onMouseEnter={() =>
+        setHoveredEntity({
+          type: "beat",
+          id: beat.audioFile,
+          title: beat.beatName,
+          image: beat.cover,
+          audioUrl: beat.audioFile,
+        color: "#F4B64A",
+        })
+      }
+      onMouseLeave={clearHoveredEntity}
       onClick={() => handleBeatSelect(beat)}
     >
-      <div className="absolute inset-0 bg-gradient-to-br from-purple-600/0 via-emerald-600/0 to-purple-600/0 group-hover:from-purple-600/10 group-hover:via-emerald-600/10 group-hover:to-purple-600/10 transition-all duration-500" />
+      <div className="absolute inset-0 bg-gradient-to-br from-ah-ember/0 via-transparent to-ah-blue/0 transition-all duration-500 group-hover:from-ah-ember/8 group-hover:to-ah-blue/6" />
       
-      <div className="absolute top-2 right-2 z-10 flex gap-1 opacity-100 transition-opacity duration-300 md:opacity-0 md:group-hover:opacity-100">
+      <div className="absolute left-3 right-3 top-3 z-10 grid grid-cols-3 gap-1 opacity-100 transition-opacity duration-300 md:opacity-0 md:group-hover:opacity-100">
         <motion.button
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
@@ -420,7 +465,7 @@ ${inquiryMessage}
             e.stopPropagation();
             togglePreview(beat);
           }}
-          className="p-2 bg-black/50 backdrop-blur-sm rounded-lg hover:bg-purple-600/30 text-purple-400"
+          className="inline-flex items-center justify-center gap-1 rounded-md border border-ah-electric/25 bg-black/60 px-2 py-2 text-[9px] uppercase tracking-[0.12em] text-ah-electric backdrop-blur-sm hover:bg-ah-electric hover:text-black"
           title="Play 30-sec preview"
         >
           {previewBeat?.beat.audioFile === beat.audioFile && isPreviewPlaying ? (
@@ -428,6 +473,7 @@ ${inquiryMessage}
           ) : (
             <FaPlay />
           )}
+          <span className="hidden lg:inline">Preview</span>
         </motion.button>
         <motion.button
           whileHover={{ scale: 1.1 }}
@@ -437,10 +483,11 @@ ${inquiryMessage}
             e.stopPropagation();
             handleBeatSelect(beat);
           }}
-          className="p-2 bg-black/50 backdrop-blur-sm rounded-lg hover:bg-emerald-600/30 text-emerald-400"
+          className="inline-flex items-center justify-center gap-1 rounded-md border border-ah-magenta/25 bg-black/60 px-2 py-2 text-[9px] uppercase tracking-[0.12em] text-ah-magenta backdrop-blur-sm hover:bg-ah-magenta hover:text-black"
           title="Full beat + visualizer"
         >
           <FaWaveSquare />
+          <span className="hidden lg:inline">Stage</span>
         </motion.button>
         <motion.button
           whileHover={{ scale: 1.1 }}
@@ -450,35 +497,47 @@ ${inquiryMessage}
             e.stopPropagation();
             handleInquiry(beat);
           }}
-          className="p-2 bg-black/50 backdrop-blur-sm rounded-lg hover:bg-yellow-600/30 text-yellow-400"
+          className="inline-flex items-center justify-center gap-1 rounded-md border border-ah-ember/25 bg-black/60 px-2 py-2 text-[9px] uppercase tracking-[0.12em] text-ah-ember backdrop-blur-sm hover:bg-ah-ember hover:text-black"
           title="Inquire about this beat"
         >
           <FaDollarSign />
+          <span className="hidden lg:inline">Inquire</span>
         </motion.button>
       </div>
 
-      <div className="relative aspect-square rounded-xl overflow-hidden">
+      <div className="relative aspect-square overflow-hidden rounded-md border border-white/10 bg-black/50">
+        <div className="ah-vinyl-disc absolute -right-[18%] top-1/2 h-3/4 w-3/4 -translate-y-1/2 opacity-65 transition duration-500 group-hover:rotate-90 group-hover:opacity-95" />
         <Image
           src={beat.cover}
           alt={`${cleanBeatName(beat.beatName)} cover art`}
           fill
-          className="object-cover group-hover:scale-110 transition-transform duration-500"
+          className="relative object-cover transition-transform duration-500 group-hover:translate-x-[-4%] group-hover:scale-105"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </div>
       
       <div className="relative z-10">
-        <h3 className="font-bold text-white truncate group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-purple-300 group-hover:to-emerald-300 transition-all duration-300">
+        <h3 className="truncate font-bold text-white transition-all duration-300 group-hover:text-ah-magenta">
           {beat.beatName}
         </h3>
         <p className="text-sm text-gray-400 truncate">{beat.beatProducer}</p>
         <div className="flex items-center gap-2 mt-1">
-          <span className="text-xs px-2 py-0.5 bg-purple-900/20 text-purple-300 rounded-full">
-            {beat.beatKey}
+          <span className="rounded-sm border border-ah-electric/20 bg-ah-electric/10 px-2 py-0.5 text-xs text-ah-electric">
+            {beat.beatKey || "Unknown key"}
           </span>
           {beat.beatPerMin && (
             <span className="text-xs text-gray-500">{beat.beatPerMin} BPM</span>
           )}
+        </div>
+        <div className="mt-2 flex flex-wrap gap-1">
+          {deriveBeatVibes(beat).map((vibe) => (
+            <span
+              key={vibe}
+              className="rounded-sm border border-ah-magenta/20 bg-ah-magenta/10 px-2 py-0.5 text-[9px] uppercase tracking-[0.13em] text-ah-magenta"
+            >
+              {vibe}
+            </span>
+          ))}
         </div>
       </div>
     </motion.div>
@@ -491,33 +550,45 @@ ${inquiryMessage}
       animate={reduceMotion ? { opacity: 1 } : { opacity: 1, x: 0 }}
       transition={{ delay: reduceMotion ? 0 : Math.min(index, 12) * 0.02 }}
       whileHover={{ x: 5 }}
-      className="group content-auto flex flex-col items-start gap-4 p-4 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 rounded-2xl border border-gray-700 hover:border-purple-500/50 shadow-lg hover:shadow-purple-500/10 transition-all duration-300 cursor-pointer md:flex-row md:items-center md:p-6"
+      className="ah-sleeve-card group content-auto flex cursor-pointer flex-col items-start gap-4 p-4 transition-all duration-300 hover:border-ah-magenta/45 md:flex-row md:items-center md:p-5"
+      onMouseEnter={() =>
+        setHoveredEntity({
+          type: "beat",
+          id: beat.audioFile,
+          title: beat.beatName,
+          image: beat.cover,
+          audioUrl: beat.audioFile,
+          color: "#F4B64A",
+        })
+      }
+      onMouseLeave={clearHoveredEntity}
       onClick={() => handleBeatSelect(beat)}
     >
       <motion.div
-        whileHover={{ scale: 1.05, rotate: 2 }}
-        className="relative h-16 w-16 md:h-20 md:w-20 rounded-xl overflow-hidden flex-shrink-0"
+        whileHover={{ scale: 1.03 }}
+        className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-md border border-white/10 md:h-20 md:w-20"
       >
+        <div className="ah-vinyl-disc absolute -right-4 top-1/2 h-14 w-14 -translate-y-1/2 opacity-65" />
         <Image
           src={beat.cover}
           alt={`${cleanBeatName(beat.beatName)} cover art`}
           fill
-          className="object-cover"
+          className="relative object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-600/0 to-emerald-600/0 group-hover:from-purple-600/20 group-hover:to-emerald-600/20 transition-all duration-300" />
+        <div className="absolute inset-0 bg-gradient-to-br from-ah-red/0 to-ah-teal/0 transition-all duration-300 group-hover:from-ah-red/20 group-hover:to-ah-teal/20" />
       </motion.div>
 
       <div className="flex flex-col flex-1 min-w-0">
-        <span className="font-bold text-lg text-white truncate group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-purple-300 group-hover:to-emerald-300 transition-all duration-300">
+        <span className="truncate text-lg font-bold text-white transition-all duration-300 group-hover:text-ah-magenta">
           {beat.beatName}
         </span>
         <span className="text-sm text-gray-400 truncate">
           {beat.beatProducer}
         </span>
         <div className="flex items-center gap-2 mt-1">
-          <span className="text-xs px-2 py-0.5 bg-purple-900/20 text-purple-300 rounded-full">
-            {beat.beatKey}
-          </span>
+          <span className="rounded-sm border border-ah-electric/20 bg-ah-electric/10 px-2 py-0.5 text-xs text-ah-electric">
+          {beat.beatKey || "Unknown key"}
+        </span>
           {beat.beatPerMin && (
             <span className="text-xs text-gray-500">{beat.beatPerMin} BPM</span>
           )}
@@ -533,7 +604,7 @@ ${inquiryMessage}
             e.stopPropagation();
             togglePreview(beat);
           }}
-          className="flex-1 rounded-xl bg-purple-600/20 p-3 text-purple-400 transition-all duration-200 hover:bg-purple-600/30 md:flex-none"
+          className={`${actionButtonClass} flex-1 border-ah-electric/25 bg-ah-electric/10 text-ah-electric hover:bg-ah-electric hover:text-black md:flex-none`}
           title="Play 30-sec preview"
         >
           {previewBeat?.beat.audioFile === beat.audioFile && isPreviewPlaying ? (
@@ -541,6 +612,7 @@ ${inquiryMessage}
           ) : (
             <FaPlay className="w-4 h-4" />
           )}
+          <span>Preview</span>
         </motion.button>
         <motion.button
           whileHover={{ scale: 1.1 }}
@@ -550,10 +622,11 @@ ${inquiryMessage}
             e.stopPropagation();
             handleBeatSelect(beat);
           }}
-          className="flex-1 rounded-xl bg-emerald-600/20 p-3 text-emerald-400 transition-all duration-200 hover:bg-emerald-600/30 md:flex-none"
+          className={`${actionButtonClass} flex-1 border-ah-magenta/25 bg-ah-magenta/10 text-ah-magenta hover:bg-ah-magenta hover:text-black md:flex-none`}
           title="Full beat + visualizer"
         >
           <FaWaveSquare className="w-4 h-4" />
+          <span>Visualizer</span>
         </motion.button>
         <motion.button
           whileHover={{ scale: 1.1 }}
@@ -563,10 +636,11 @@ ${inquiryMessage}
             e.stopPropagation();
             handleInquiry(beat);
           }}
-          className="flex-1 rounded-xl bg-yellow-600/20 p-3 text-yellow-400 transition-all duration-200 hover:bg-yellow-600/30 md:flex-none"
+          className={`${actionButtonClass} flex-1 border-ah-ember/25 bg-ah-ember/10 text-ah-ember hover:bg-ah-ember hover:text-black md:flex-none`}
           title="Inquire about this beat"
         >
           <FaDollarSign className="w-4 h-4" />
+          <span>Inquire</span>
         </motion.button>
       </div>
     </motion.div>
@@ -574,7 +648,7 @@ ${inquiryMessage}
 
   /* ───────────── JSX ───────────── */
   return (
-    <div className="relative w-full min-h-screen min-h-[100svh] overflow-hidden bg-black text-white">
+    <div className="relative w-full min-h-screen min-h-[100svh] overflow-hidden bg-transparent text-white">
       {/* Animated background */}
       <motion.div
         className="absolute inset-0"
@@ -582,8 +656,8 @@ ${inquiryMessage}
         animate={{ opacity: 1 }}
         transition={{ duration: 1 }}
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-black to-emerald-900/20" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-purple-900/10 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-br from-ah-ember/6 via-black/10 to-ah-blue/6" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-ah-ember/8 via-transparent to-transparent" />
       </motion.div>
 
       <div className="relative z-10 flex min-h-screen min-h-[100svh] flex-col">
@@ -591,26 +665,30 @@ ${inquiryMessage}
         <motion.header
           initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -20 }}
           animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
-          className="flex flex-wrap items-center justify-between gap-4 border-b border-gray-800 px-4 py-6 md:px-8"
+          className="ah-transmission-panel flex flex-wrap items-center justify-between gap-4 px-4 py-6 md:px-8"
         >
-          <motion.h1
-            className="flex items-center gap-3 text-xl font-black sm:text-2xl md:text-3xl"
+          <motion.div
             initial={{ letterSpacing: "0.2em", opacity: 0 }}
             animate={{ letterSpacing: "0.05em", opacity: 1 }}
             transition={{ duration: 0.5 }}
           >
-            <FaMusic className="text-purple-400" />
-            <span className="break-words text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-emerald-300">
-              BEATS MARKETPLACE
-            </span>
-          </motion.h1>
+            <p className="text-[10px] uppercase tracking-[0.2em] text-ah-chrome/70">
+              Beat Vault / Crate Browser
+            </p>
+            <h1 className="mt-1 flex items-center gap-3 text-xl font-black sm:text-2xl md:text-3xl">
+              <FaMusic className="text-ah-ember" />
+              <span className="break-words text-white">
+                DROP THE NEEDLE
+              </span>
+            </h1>
+          </motion.div>
 
           {/* View toggles */}
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2 }}
-            className="flex bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-800 p-1"
+            className="flex rounded-md border border-white/12 bg-black/45 p-1 backdrop-blur-sm"
           >
             {[
               { mode: "list" as const, icon: FaListUl, title: "List view" },
@@ -621,9 +699,9 @@ ${inquiryMessage}
                 key={mode}
                 title={title}
                 onClick={() => setViewMode(mode)}
-                className={`p-2.5 rounded-lg transition-all duration-200 ${
+                className={`rounded-md p-2.5 transition-all duration-200 ${
                   viewMode === mode
-                    ? "bg-gradient-to-r from-purple-600 to-emerald-600 text-white"
+                    ? "bg-ah-magenta text-black"
                     : "text-gray-400 hover:text-white"
                 }`}
               >
@@ -637,27 +715,27 @@ ${inquiryMessage}
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.3 }}
-            className="flex w-full rounded-xl border border-gray-800 bg-gray-900/50 p-1 backdrop-blur-sm sm:w-auto"
+            className="flex w-full rounded-md border border-white/12 bg-black/45 p-1 backdrop-blur-sm sm:w-auto"
           >
             <button
               onClick={() => onTabChange("beats")}
-              className={`flex-1 rounded-lg px-4 py-2 font-medium transition-all duration-200 sm:flex-none ${
+              className={`flex-1 rounded-md px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] transition-all duration-200 sm:flex-none ${
                 !isBeatVisualizer
-                  ? "bg-gradient-to-r from-purple-600 to-emerald-600 text-white"
+                  ? "bg-ah-ember text-black"
                   : "text-gray-400 hover:text-white"
               }`}
             >
-              Beats
+              Beat Vault
             </button>
             <button
               onClick={() => onTabChange("visualizer")}
-              className={`flex-1 rounded-lg px-4 py-2 font-medium transition-all duration-200 sm:flex-none ${
+              className={`flex-1 rounded-md px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] transition-all duration-200 sm:flex-none ${
                 isBeatVisualizer
-                  ? "bg-gradient-to-r from-purple-600 to-emerald-600 text-white"
+                  ? "bg-ah-electric text-black"
                   : "text-gray-400 hover:text-white"
               }`}
             >
-              Visualizer
+              Vinyl Stage
             </button>
           </motion.div>
         </motion.header>
@@ -668,30 +746,19 @@ ${inquiryMessage}
           transition={{ delay: reduceMotion ? 0 : 0.35 }}
           className="px-4 pb-4 md:px-8"
         >
-          <div className="relative overflow-hidden rounded-2xl border border-gray-800 bg-black/50 px-3 py-3">
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(900px_circle_at_0%_0%,rgba(147,51,234,.16),transparent_60%)]" />
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(900px_circle_at_100%_100%,rgba(16,185,129,.14),transparent_60%)]" />
-            <motion.div
-              className="relative flex w-max gap-3"
-              animate={reduceMotion ? undefined : { x: ["0%", "-50%"] }}
-              transition={reduceMotion ? undefined : { duration: 28, repeat: Infinity, ease: "linear" }}
-            >
-              {decorationRail.map((src, idx) => (
-                <div
-                  key={`${src}-${idx}`}
-                  className="relative h-16 w-24 overflow-hidden rounded-lg border border-white/10"
-                >
-                  <Image
-                    src={src}
-                    alt="Audio visualizer decoration"
-                    fill
-                    sizes="96px"
-                    className="object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/65 to-transparent" />
-                </div>
-              ))}
-            </motion.div>
+          <div className="grid gap-2 border border-white/10 bg-black/35 p-3 sm:grid-cols-3">
+            {[
+              ["Crate Count", `${beatsWithCovers.length} sleeves indexed`],
+              ["Filtered Signal", `${totalBeats} matching records`],
+              ["Needle Path", "Preview / Stage / Inquire"],
+            ].map(([label, value]) => (
+              <div key={label} className="border border-white/10 bg-white/[0.025] px-3 py-3">
+                <p className="text-[10px] uppercase tracking-[0.18em] text-ah-magenta">
+                  {label}
+                </p>
+                <p className="mt-1 text-sm text-white/78">{value}</p>
+              </div>
+            ))}
           </div>
         </motion.div>
 
@@ -700,20 +767,20 @@ ${inquiryMessage}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: reduceMotion ? 0 : 0.4 }}
-          className="flex flex-wrap items-center gap-3 border-b border-gray-800 px-4 py-4 md:px-8"
+          className="mt-4 flex flex-wrap items-center gap-3 border-y border-white/10 bg-black/25 px-4 py-4 backdrop-blur-md md:px-8"
         >
           <button
             onClick={() => setShowFilters((s) => !s)}
-            className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors"
+            className="flex items-center gap-2 text-sm text-gray-400 transition-colors hover:text-white"
           >
-            <FaFilter className={showFilters ? "text-purple-400" : ""} />
+            <FaFilter className={showFilters ? "text-ah-magenta" : ""} />
             Filters ({activeFilterCount})
           </button>
 
           {activeFilterCount > 0 && (
             <button
               onClick={resetFilters}
-              className="rounded-lg border border-gray-800 bg-gray-900/45 px-3 py-1 text-xs uppercase tracking-[0.16em] text-gray-400 transition hover:border-purple-500 hover:text-white"
+              className="rounded-md border border-white/10 bg-black/45 px-3 py-1 text-xs uppercase tracking-[0.16em] text-gray-400 transition hover:border-ah-red hover:text-white"
             >
               Clear Filters
             </button>
@@ -728,7 +795,7 @@ ${inquiryMessage}
                 setBeatsPerPage(v === "all" ? "all" : Number(v));
                 setCurrentPage(1);
               }}
-              className="bg-gray-900/50 backdrop-blur-sm rounded-lg px-3 py-1 border border-gray-800 text-white focus:border-purple-500 outline-none transition-colors"
+              className="rounded-md border border-white/10 bg-black/45 px-3 py-1 text-white backdrop-blur-sm transition-colors focus:border-ah-electric focus:outline-none"
             >
               <option value={10}>10</option>
               <option value={25}>25</option>
@@ -743,10 +810,6 @@ ${inquiryMessage}
           </div>
         </motion.div>
 
-        <div className="px-4 pb-2 text-[11px] uppercase tracking-[0.16em] text-gray-500 md:px-8">
-          Tip: combine name + BPM filters to zero in on licensing-ready picks faster.
-        </div>
-
         {/* Filters panel */}
         <AnimatePresence>
           {showFilters && (
@@ -754,7 +817,7 @@ ${inquiryMessage}
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden border-b border-gray-800"
+              className="overflow-hidden border-b border-white/10"
             >
               <div className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 md:grid-cols-3 md:px-8 lg:grid-cols-6">
                 {[
@@ -769,7 +832,7 @@ ${inquiryMessage}
                     placeholder={placeholder}
                     value={value}
                     onChange={(e) => setter(e.target.value)}
-                    className="bg-gray-900/50 backdrop-blur-sm rounded-lg px-4 py-2 text-sm border border-gray-800 focus:border-purple-500 outline-none transition-colors placeholder-gray-500"
+                    className="rounded-md border border-white/10 bg-black/45 px-4 py-2 text-sm backdrop-blur-sm transition-colors placeholder-gray-500 focus:border-ah-electric focus:outline-none"
                   />
                 ))}
                 <input
@@ -779,7 +842,7 @@ ${inquiryMessage}
                   onChange={(e) =>
                     setFilterBeatPerMinMin(e.target.value === "" ? "" : Number(e.target.value))
                   }
-                  className="bg-gray-900/50 backdrop-blur-sm rounded-lg px-4 py-2 text-sm border border-gray-800 focus:border-purple-500 outline-none transition-colors placeholder-gray-500"
+                  className="rounded-md border border-white/10 bg-black/45 px-4 py-2 text-sm backdrop-blur-sm transition-colors placeholder-gray-500 focus:border-ah-electric focus:outline-none"
                 />
                 <input
                   type="number"
@@ -788,7 +851,7 @@ ${inquiryMessage}
                   onChange={(e) =>
                     setFilterBeatPerMinMax(e.target.value === "" ? "" : Number(e.target.value))
                   }
-                  className="bg-gray-900/50 backdrop-blur-sm rounded-lg px-4 py-2 text-sm border border-gray-800 focus:border-purple-500 outline-none transition-colors placeholder-gray-500"
+                  className="rounded-md border border-white/10 bg-black/45 px-4 py-2 text-sm backdrop-blur-sm transition-colors placeholder-gray-500 focus:border-ah-electric focus:outline-none"
                 />
               </div>
             </motion.div>
@@ -799,8 +862,8 @@ ${inquiryMessage}
           {viewMode === "list" && (
             <div className="overflow-x-auto pb-4">
               <table className="w-full">
-                <thead className="sticky top-0 z-10 bg-black/95 backdrop-blur-sm">
-                  <tr className="border-b border-gray-800 text-left text-sm text-gray-400">
+                <thead className="sticky top-0 z-10 bg-black/80 backdrop-blur-sm">
+                  <tr className="border-b border-white/10 text-left text-sm text-gray-400">
                     <th className="py-3 pl-4 md:pl-6"></th>
                     <th className="py-3 px-4">Title</th>
                     <th className="py-3 px-4 hidden md:table-cell">Producer</th>
@@ -845,7 +908,7 @@ ${inquiryMessage}
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 24 }}
-              className="z-20 border-t border-gray-800 bg-black/90 px-4 py-2 backdrop-blur-md md:px-8 md:py-4"
+              className="z-20 border-t border-white/10 bg-black/70 px-4 py-2 backdrop-blur-md md:px-8 md:py-4"
             >
               <div className="flex items-center justify-center gap-2 md:gap-4">
                 <motion.button
@@ -853,7 +916,7 @@ ${inquiryMessage}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
                   disabled={currentPage === 1}
-                  className="rounded-lg border border-gray-800 bg-gray-900/50 p-1.5 transition-colors hover:border-purple-500 disabled:cursor-not-allowed disabled:opacity-40 md:p-2"
+                  className="rounded-lg border border-white/10 bg-black/45 p-1.5 transition-colors hover:border-ah-blue disabled:cursor-not-allowed disabled:opacity-40 md:p-2"
                   aria-label="Previous page"
                 >
                   <FaChevronLeft className="h-4 w-4 md:h-5 md:w-5" />
@@ -875,8 +938,8 @@ ${inquiryMessage}
                         onClick={() => setCurrentPage(pageNum)}
                         className={`h-8 w-8 rounded-lg font-medium transition-all duration-200 md:h-10 md:w-10 ${
                           currentPage === pageNum
-                            ? "bg-gradient-to-r from-purple-600 to-emerald-600 text-white"
-                            : "border border-gray-800 bg-gray-900/50 text-gray-400 hover:border-purple-500 hover:text-white"
+                            ? "bg-ah-red text-white"
+                            : "border border-white/10 bg-black/45 text-gray-400 hover:border-ah-blue hover:text-white"
                         }`}
                         aria-label={`Go to page ${pageNum}`}
                       >
@@ -891,7 +954,7 @@ ${inquiryMessage}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
                   disabled={currentPage === totalPages}
-                  className="rounded-lg border border-gray-800 bg-gray-900/50 p-1.5 transition-colors hover:border-purple-500 disabled:cursor-not-allowed disabled:opacity-40 md:p-2"
+                  className="rounded-lg border border-white/10 bg-black/45 p-1.5 transition-colors hover:border-ah-blue disabled:cursor-not-allowed disabled:opacity-40 md:p-2"
                   aria-label="Next page"
                 >
                   <FaChevronRight className="h-4 w-4 md:h-5 md:w-5" />
@@ -909,12 +972,12 @@ ${inquiryMessage}
             initial={{ opacity: 0, y: 50, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 50, scale: 0.9 }}
-            className="fixed bottom-[calc(env(safe-area-inset-bottom,0px)+4.75rem)] left-4 right-4 z-30 flex items-center gap-4 rounded-2xl border border-purple-500/30 bg-gray-900/95 p-4 shadow-2xl shadow-purple-500/20 backdrop-blur-xl sm:left-auto sm:right-8 sm:max-w-sm md:bottom-8"
+            className="ah-transmission-panel fixed bottom-20 left-4 right-4 z-30 flex items-center gap-4 border-ah-electric/30 p-4 shadow-2xl shadow-ah-electric/20 backdrop-blur-xl sm:left-auto sm:right-8 sm:max-w-sm md:bottom-8"
           >
             <motion.div
               animate={{ rotate: isPreviewPlaying ? 360 : 0 }}
               transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-              className="relative w-12 h-12 rounded-xl overflow-hidden flex-shrink-0"
+              className="ah-vinyl-disc relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-full"
             >
               <Image
                 src={previewBeat.cover}
@@ -948,14 +1011,14 @@ ${inquiryMessage}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/95 p-4 pb-[calc(env(safe-area-inset-bottom,0px)+1rem)] pt-[calc(env(safe-area-inset-top,0px)+1rem)] backdrop-blur-xl"
+            className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/88 p-4 pb-[calc(env(safe-area-inset-bottom,0px)+1rem)] pt-[calc(env(safe-area-inset-top,0px)+1rem)] backdrop-blur-xl"
             onClick={closeMobileModal}
           >
             <motion.div
               initial={{ scale: 0.9, y: 50 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 50 }}
-              className="relative my-auto max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-3xl border border-purple-500/30 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-6 shadow-2xl md:p-8"
+              className="ah-transmission-panel relative my-auto max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto border-ah-red/30 p-6 shadow-2xl md:p-8"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Close button */}
@@ -971,9 +1034,9 @@ ${inquiryMessage}
               {/* Album art */}
               <motion.div
                 initial={{ scale: 0 }}
-                animate={{ scale: 1, rotate: [0, 5, -5, 0] }}
+                animate={{ scale: 1 }}
                 transition={{ duration: 0.5 }}
-                className="relative mx-auto mb-6 h-40 w-40 overflow-hidden rounded-2xl shadow-2xl sm:h-48 sm:w-48"
+                className="relative mx-auto mb-6 h-40 w-40 overflow-hidden rounded-md border border-white/12 shadow-2xl sm:h-48 sm:w-48"
               >
                 <Image
                   src={mobileModalBeat.beat.cover}
@@ -981,11 +1044,7 @@ ${inquiryMessage}
                   fill
                   className="object-cover"
                 />
-                <motion.div
-                  animate={{ opacity: [0.3, 0.6, 0.3] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                  className="absolute inset-0 bg-gradient-to-br from-purple-600/20 to-emerald-600/20"
-                />
+                <div className="absolute inset-0 bg-gradient-to-br from-ah-ember/12 to-ah-blue/10" />
               </motion.div>
 
               {/* Beat info */}
@@ -995,8 +1054,8 @@ ${inquiryMessage}
                 </h3>
                 <p className="text-gray-400">{mobileModalBeat.beat.beatProducer}</p>
                 <div className="flex items-center justify-center gap-3 mt-3">
-                  <span className="px-3 py-1 bg-purple-900/30 text-purple-300 rounded-full text-sm">
-                    {mobileModalBeat.beat.beatKey}
+                  <span className="rounded-sm border border-ah-blue/20 bg-ah-blue/10 px-3 py-1 text-sm text-ah-blue">
+                    {mobileModalBeat.beat.beatKey || "Unknown key"}
                   </span>
                   {mobileModalBeat.beat.beatPerMin && (
                     <span className="text-sm text-gray-500">
@@ -1011,22 +1070,22 @@ ${inquiryMessage}
                 <motion.div
                   animate={{ scale: [1, 1.2, 1] }}
                   transition={{ duration: 0.6, repeat: Infinity }}
-                  className="w-3 h-3 bg-purple-500 rounded-full"
+                  className="h-3 w-3 rounded-full bg-ah-teal"
                 />
-                <FaVolumeUp className="text-purple-400" />
+                <FaVolumeUp className="text-ah-teal" />
                 <span className="text-gray-400 text-sm">Now Playing</span>
               </div>
 
               {/* Warning message */}
-              <div className="bg-yellow-900/20 border border-yellow-600/30 rounded-xl p-4 mb-6">
+              <div className="mb-6 rounded-md border border-ah-ember/30 bg-ah-ember/10 p-4">
                 <div className="flex items-start gap-3">
-                  <FaHeadphones className="text-yellow-500 flex-shrink-0 mt-0.5" />
+                  <FaHeadphones className="mt-0.5 flex-shrink-0 text-ah-ember" />
                   <div>
-                    <p className="text-yellow-200 font-medium mb-1">
-                      Audio Visualizer Not Available
+                    <p className="mb-1 font-medium text-ah-ember">
+                      Vinyl Stage Is Desktop-Optimized
                     </p>
-                    <p className="text-yellow-300/70 text-sm">
-                      For the best experience with audio visualizer, please use a desktop device.
+                    <p className="text-sm text-white/68">
+                      Mobile preview starts here first so the full visualizer does not surprise the device.
                     </p>
                   </div>
                 </div>
@@ -1038,7 +1097,7 @@ ${inquiryMessage}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => handleInquiry(mobileModalBeat.beat)}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-yellow-600 to-orange-600 py-3 font-medium text-white transition-all duration-300 hover:shadow-lg hover:shadow-yellow-500/25"
+                  className="ah-ember-button flex w-full items-center justify-center gap-2 rounded-md py-3 font-medium transition-all duration-300"
                 >
                   <FaDollarSign />
                   Inquire About This Beat
@@ -1051,15 +1110,15 @@ ${inquiryMessage}
                     closeMobileModal();
                     onBeatSelect(mobileModalBeat.beat.audioFile);
                   }}
-                  className="w-full py-3 bg-gradient-to-r from-purple-600 to-emerald-600 text-white font-medium rounded-xl hover:shadow-lg hover:shadow-purple-500/25 transition-all duration-300"
+                  className="w-full rounded-md bg-ah-magenta py-3 font-medium text-black transition-all duration-300 hover:shadow-ah-glow-magenta"
                 >
-                  View Visualizer Anyway
+                  Open Vinyl Stage Anyway
                 </motion.button>
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={closeMobileModal}
-                  className="w-full rounded-xl border border-gray-700 bg-gray-800/50 py-3 font-medium text-gray-300 transition-all duration-300 hover:border-gray-600"
+                  className="w-full rounded-md border border-white/14 bg-black/45 py-3 font-medium text-gray-300 transition-all duration-300 hover:border-white/30"
                 >
                   Continue Listening
                 </motion.button>
@@ -1076,21 +1135,21 @@ ${inquiryMessage}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/95 p-4 pb-[calc(env(safe-area-inset-bottom,0px)+1rem)] pt-[calc(env(safe-area-inset-top,0px)+1rem)] backdrop-blur-xl"
+            className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/88 p-4 pb-[calc(env(safe-area-inset-bottom,0px)+1rem)] pt-[calc(env(safe-area-inset-top,0px)+1rem)] backdrop-blur-xl"
             onClick={() => setInquiryBeat(null)}
           >
             <motion.div
               initial={{ scale: 0.9, y: 50 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 50 }}
-              className="my-auto max-h-[calc(100dvh-2rem)] w-full max-w-2xl overflow-y-auto rounded-3xl border border-purple-500/30 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-6 shadow-2xl md:p-8"
+              className="ah-transmission-panel my-auto max-h-[calc(100dvh-2rem)] w-full max-w-2xl overflow-y-auto border-ah-ember/30 p-6 shadow-2xl md:p-8"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                  <FaEnvelope className="text-purple-400" />
-                  Beat Inquiry
+                  <FaEnvelope className="text-ah-ember" />
+                  Beat Licensing Inquiry
                 </h2>
                 <motion.button
                   whileHover={{ scale: 1.1, rotate: 90 }}
@@ -1103,7 +1162,7 @@ ${inquiryMessage}
               </div>
 
               {/* Beat info */}
-              <div className="mb-6 flex flex-col items-start gap-4 rounded-xl bg-gray-800/50 p-4 sm:flex-row sm:items-center">
+              <div className="mb-6 flex flex-col items-start gap-4 rounded-md border border-white/10 bg-black/35 p-4 sm:flex-row sm:items-center">
                 <div className="relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
                   <Image
                     src={inquiryBeat.cover}
@@ -1116,8 +1175,8 @@ ${inquiryMessage}
                   <h3 className="font-bold text-white">{cleanBeatName(inquiryBeat.beatName)}</h3>
                   <p className="text-sm text-gray-400">{inquiryBeat.beatProducer}</p>
                   <div className="flex items-center gap-2 mt-1">
-                    <span className="text-xs px-2 py-0.5 bg-purple-900/30 text-purple-300 rounded-full">
-                      {inquiryBeat.beatKey}
+                    <span className="rounded-sm border border-ah-blue/20 bg-ah-blue/10 px-2 py-0.5 text-xs text-ah-blue">
+                      {inquiryBeat.beatKey || "Unknown key"}
                     </span>
                     {inquiryBeat.beatPerMin && (
                       <span className="text-xs text-gray-500">{inquiryBeat.beatPerMin} BPM</span>
@@ -1140,7 +1199,7 @@ ${inquiryMessage}
                     required
                     value={inquiryName}
                     onChange={(e) => setInquiryName(e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:border-purple-500 focus:outline-none transition-colors"
+                    className="w-full rounded-md border border-white/10 bg-black/45 px-4 py-3 text-white placeholder-gray-500 transition-colors focus:border-ah-electric focus:outline-none"
                     placeholder="John Doe"
                   />
                 </div>
@@ -1154,7 +1213,7 @@ ${inquiryMessage}
                     required
                     value={inquiryEmail}
                     onChange={(e) => setInquiryEmail(e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:border-purple-500 focus:outline-none transition-colors"
+                    className="w-full rounded-md border border-white/10 bg-black/45 px-4 py-3 text-white placeholder-gray-500 transition-colors focus:border-ah-electric focus:outline-none"
                     placeholder="john@example.com"
                   />
                 </div>
@@ -1167,7 +1226,7 @@ ${inquiryMessage}
                     type="tel"
                     value={inquiryPhone}
                     onChange={(e) => setInquiryPhone(e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:border-purple-500 focus:outline-none transition-colors"
+                    className="w-full rounded-md border border-white/10 bg-black/45 px-4 py-3 text-white placeholder-gray-500 transition-colors focus:border-ah-electric focus:outline-none"
                     placeholder="+1 (555) 123-4567"
                   />
                 </div>
@@ -1181,7 +1240,7 @@ ${inquiryMessage}
                     value={inquiryMessage}
                     onChange={(e) => setInquiryMessage(e.target.value)}
                     rows={5}
-                    className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:border-purple-500 focus:outline-none transition-colors resize-none"
+                    className="w-full resize-none rounded-md border border-white/10 bg-black/45 px-4 py-3 text-white placeholder-gray-500 transition-colors focus:border-ah-electric focus:outline-none"
                     placeholder="Tell us about your project..."
                   />
                 </div>
@@ -1191,7 +1250,7 @@ ${inquiryMessage}
                     type="submit"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-emerald-600 py-3 font-medium text-white transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/25 sm:flex-1"
+                    className="flex w-full items-center justify-center gap-2 rounded-md bg-ah-red py-3 font-medium text-white transition-all duration-300 hover:shadow-ah-glow-red sm:flex-1"
                   >
                     <FaPaperPlane />
                     Send Inquiry
@@ -1201,7 +1260,7 @@ ${inquiryMessage}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => setInquiryBeat(null)}
-                    className="w-full rounded-xl border border-gray-700 bg-gray-800/50 px-6 py-3 font-medium text-gray-300 transition-all duration-300 hover:border-gray-600 sm:w-auto"
+                    className="w-full rounded-md border border-white/14 bg-black/45 px-6 py-3 font-medium text-gray-300 transition-all duration-300 hover:border-white/30 sm:w-auto"
                   >
                     Cancel
                   </motion.button>
@@ -1209,7 +1268,7 @@ ${inquiryMessage}
               </form>
 
               <p className="text-xs text-gray-500 text-center mt-4">
-                Your inquiry will be sent to contact@antiheroes.co
+                Your licensing inquiry will open through contact@antiheroes.co
               </p>
             </motion.div>
           </motion.div>

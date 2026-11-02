@@ -1,6 +1,7 @@
 "use client";
 
 import { useVisualizer } from "@/context/VisualizerContext";
+import { useImmersiveStore } from "@/store/useImmersiveStore";
 import { useRouteStore } from "@/store/useRouteStore";
 import { motion } from "framer-motion";
 import Image from "next/image";
@@ -26,18 +27,21 @@ const navAnim = {
 };
 
 export default function TopBarNavbar({ onHamburgerClick }: TopBarNavbarProps) {
-  const { activeRoute, setActiveRoute, setVisualizerMode } = useRouteStore();
+  const { activeRoute, setActiveRoute, setVisualizerMode, setHoveredRoute } = useRouteStore();
+  const pulseRoute = useImmersiveStore((state) => state.pulseRoute);
   const { setIsBeatVisualizer } = useVisualizer();
 
   const handleBeats = () => {
     setVisualizerMode(false);
     setIsBeatVisualizer(false);
+    pulseRoute();
     setActiveRoute("beats");
   };
 
   const handleVisualizer = () => {
     setVisualizerMode(true);
     setIsBeatVisualizer(true);
+    pulseRoute();
     setActiveRoute("beats-visualizer");
   };
 
@@ -48,9 +52,14 @@ export default function TopBarNavbar({ onHamburgerClick }: TopBarNavbarProps) {
       animate="show"
       variants={navAnim}
     >
-      <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-2 rounded-2xl border border-white/12 bg-black/65 px-3 py-2.5 backdrop-blur-xl md:px-4 md:py-3">
+      <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-2 rounded-lg border border-white/14 bg-black/70 px-3 py-2.5 shadow-[0_18px_70px_rgba(0,0,0,.34)] backdrop-blur-xl md:px-4 md:py-3">
         <button
-          onClick={() => setActiveRoute("home")}
+          onClick={() => {
+            pulseRoute();
+            setActiveRoute("home");
+          }}
+          onMouseEnter={() => setHoveredRoute("home")}
+          onMouseLeave={() => setHoveredRoute(undefined)}
           className="flex min-w-0 items-center gap-2 text-left"
           aria-label="Go to home"
         >
@@ -65,8 +74,8 @@ export default function TopBarNavbar({ onHamburgerClick }: TopBarNavbarProps) {
             <p className="truncate font-[var(--font-display)] text-[0.95rem] uppercase tracking-[0.08em] text-white sm:text-xl sm:tracking-wider">
               Anti-Heroes
             </p>
-            <p className="hidden text-[10px] uppercase tracking-[0.18em] text-ah-soft md:block">
-              Independent Music Platform
+            <p className="hidden text-[10px] uppercase tracking-[0.18em] text-ah-electric md:block">
+              Vinyl Transmission System
             </p>
           </div>
         </button>
@@ -74,23 +83,27 @@ export default function TopBarNavbar({ onHamburgerClick }: TopBarNavbarProps) {
         <div className="hidden items-center gap-2 md:flex">
           <button
             onClick={handleBeats}
+            onMouseEnter={() => setHoveredRoute("beats")}
+            onMouseLeave={() => setHoveredRoute(undefined)}
             className={`rounded-sm border px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.2em] transition ${
               activeRoute === "beats"
-                ? "border-ah-red/70 bg-ah-red/14 text-white shadow-ah-glow-red"
-                : "border-white/16 text-white hover:border-ah-red/70 hover:text-ah-red"
+                ? "border-ah-ember/70 bg-ah-ember/14 text-ah-ember"
+                : "border-white/16 bg-black/25 text-white hover:border-ah-ember/70 hover:text-ah-ember"
             }`}
           >
-            Beats
+            Beat Vault
           </button>
           <button
             onClick={handleVisualizer}
+            onMouseEnter={() => setHoveredRoute("beats-visualizer")}
+            onMouseLeave={() => setHoveredRoute(undefined)}
             className={`rounded-sm px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-white transition ${
               activeRoute === "beats-visualizer"
-                ? "bg-ah-blue shadow-ah-glow-blue"
-                : "border border-ah-blue/65 bg-ah-blue/12 hover:bg-ah-blue hover:shadow-ah-glow-blue"
+                ? "bg-ah-electric text-black shadow-ah-glow-cyan"
+                : "border border-ah-electric/55 bg-ah-electric/10 text-ah-electric hover:bg-ah-electric hover:text-black hover:shadow-ah-glow-cyan"
             }`}
           >
-            Visualizer
+            Vinyl Stage
           </button>
         </div>
 
@@ -135,7 +148,7 @@ export default function TopBarNavbar({ onHamburgerClick }: TopBarNavbarProps) {
 
         <button
           onClick={onHamburgerClick}
-          className="rounded-md border border-white/16 p-2.5 text-white transition hover:border-white/40 md:ml-3"
+          className="rounded-md border border-white/16 bg-white/[0.02] p-2.5 text-white transition hover:border-ah-magenta/55 hover:text-ah-magenta md:ml-3"
           aria-label="Open menu"
         >
           <FaBars size={18} />

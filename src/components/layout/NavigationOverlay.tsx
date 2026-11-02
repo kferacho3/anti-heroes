@@ -24,6 +24,24 @@ const routeIcons: Partial<Record<Route, ComponentType<{ className?: string }>>> 
   xaeneptune: FaGlobe,
 }
 
+const routeLabels: Partial<Record<Route, string>> = {
+  music: 'signal',
+  artist: 'artists',
+  beats: 'vault',
+  albums: 'archive',
+  connect: 'portal',
+  xaeneptune: 'dossier',
+}
+
+const desktopRouteLabels: Partial<Record<Route, string>> = {
+  music: 'Spotify Signal',
+  artist: 'Artist Constellation',
+  beats: 'Beat Vault',
+  albums: 'Release Archive',
+  connect: 'Collab Portal',
+  xaeneptune: 'Producer Dossier',
+}
+
 export default function NavigationOverlay({
   handleRouteChange,
   environmentMode,
@@ -60,7 +78,7 @@ export default function NavigationOverlay({
       animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
       transition={{ duration: reduceMotion ? 0.18 : 0.35 }}
     >
-      <div className="mx-auto w-full max-w-[680px] rounded-2xl border border-white/14 bg-black/65 p-2 backdrop-blur-xl md:w-fit md:max-w-none md:rounded-full md:p-3">
+      <div className="mx-auto w-full max-w-[700px] rounded-lg border border-white/14 bg-black/68 p-2 shadow-[0_18px_70px_rgba(0,0,0,.42)] backdrop-blur-xl md:w-fit md:max-w-none md:rounded-full md:p-2">
         {isMobile ? (
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
             {allRoutes.map((route) => {
@@ -73,14 +91,14 @@ export default function NavigationOverlay({
                   onClick={() => handleRouteChange(route)}
                   onMouseEnter={() => setHoveredRoute(route)}
                   onMouseLeave={() => setHoveredRoute(undefined)}
-                  className={`flex min-h-[52px] min-w-0 flex-col items-center justify-center gap-1 rounded-xl border px-2 py-2 text-[9px] font-semibold uppercase tracking-[0.11em] transition ${
+                  className={`flex min-h-[52px] min-w-0 flex-col items-center justify-center gap-1 rounded-md border px-2 py-2 text-[9px] font-semibold uppercase tracking-[0.11em] transition ${
                     active || hovered
-                      ? 'border-ah-red/60 bg-ah-red/14 text-white'
+                      ? 'border-ah-magenta/60 bg-ah-magenta/14 text-ah-magenta'
                       : 'border-white/14 bg-white/[0.03] text-ah-soft hover:text-white'
                   }`}
                 >
                   <Icon className="h-3.5 w-3.5" />
-                  <span>{route === 'xaeneptune' ? 'xae' : route}</span>
+                  <span>{routeLabels[route] || route}</span>
                 </button>
               )
             })}
@@ -89,7 +107,7 @@ export default function NavigationOverlay({
               onClick={toggleEnvironment}
               className={`col-span-3 mt-1 flex items-center justify-center gap-2 rounded-lg border px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] transition sm:col-span-4 ${
                 environmentMode === 'night'
-                  ? 'border-ah-blue/40 bg-ah-blue/14 text-ah-blue'
+                  ? 'border-ah-electric/40 bg-ah-electric/14 text-ah-electric'
                   : 'border-ah-red/40 bg-ah-red/14 text-ah-red'
               }`}
             >
@@ -118,23 +136,23 @@ export default function NavigationOverlay({
                   onClick={() => handleRouteChange(route)}
                   onMouseEnter={() => setHoveredRoute(route)}
                   onMouseLeave={() => setHoveredRoute(undefined)}
-                  className={`flex items-center gap-2 rounded-full border px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.17em] transition ${
+                  className={`flex items-center gap-2 rounded-full border px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] transition ${
                     active || hovered
-                      ? 'border-ah-red/65 bg-ah-red/14 text-white'
+                      ? 'border-ah-magenta/65 bg-ah-magenta/14 text-ah-magenta'
                       : 'border-white/14 bg-white/[0.02] text-ah-soft hover:text-white'
                   }`}
                 >
                   <Icon className="h-3.5 w-3.5" />
-                  <span>{route === 'xaeneptune' ? 'Xae Neptune' : route}</span>
+                  <span>{desktopRouteLabels[route] || route}</span>
                 </button>
               )
             })}
 
             <button
               onClick={toggleEnvironment}
-              className={`ml-1 flex items-center gap-2 rounded-full border px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.17em] transition ${
+              className={`ml-1 flex items-center gap-2 rounded-full border px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] transition ${
                 environmentMode === 'night'
-                  ? 'border-ah-blue/40 bg-ah-blue/12 text-ah-blue'
+                  ? 'border-ah-electric/40 bg-ah-electric/12 text-ah-electric'
                   : 'border-ah-red/40 bg-ah-red/12 text-ah-red'
               }`}
             >

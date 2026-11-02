@@ -3,12 +3,30 @@
 @tailwind utilities;
 
 :root {
+  --ah-obsidian: #050507;
   --ah-black: #0b0b0e;
+  --ah-graphite: #111118;
+  --ah-graphite-2: #191923;
   --ah-red: #d0192a;
+  --ah-red-deep: #7a0712;
   --ah-blue: #1e6fff;
+  --ah-cobalt: #102a7a;
+  --ah-teal: #22f0d0;
+  --ah-cyan: #00c2ff;
+  --ah-electric: #31f7ff;
+  --ah-magenta: #ff2bd6;
+  --ah-violet: #8a3ffc;
+  --ah-lavender: #c084fc;
+  --ah-ember: #f4b64a;
+  --ah-ember-deep: #c57a1d;
+  --ah-carbon: #07070b;
+  --ah-carbon-2: #101018;
+  --ah-chrome: #d8e2ee;
   --ah-white: #f5f5f5;
   --ah-gray: #1a1a1f;
   --ah-soft: #a0a0a0;
+  --ah-pointer-x: 18%;
+  --ah-pointer-y: 18%;
   color-scheme: dark;
 }
 
@@ -46,7 +64,7 @@ html {
 
 body {
   margin: 0;
-  background: var(--ah-black);
+  background: var(--ah-obsidian);
   color: var(--ah-white);
   font-family: var(--font-body), "Manrope", system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -66,7 +84,7 @@ body {
 }
 
 ::selection {
-  background: rgba(208, 25, 42, 0.35);
+  background: rgba(244, 182, 74, 0.28);
   color: var(--ah-white);
 }
 
@@ -92,7 +110,7 @@ body {
   pointer-events: none;
   position: absolute;
   inset: 0;
-  opacity: 0.1;
+  opacity: 0.055;
   mix-blend-mode: soft-light;
   background-image:
     radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.25) 0.7px, transparent 1px),
@@ -103,24 +121,278 @@ body {
 }
 
 .ah-card {
-  border: 1px solid rgba(245, 245, 245, 0.12);
+  overflow: hidden;
+  border: 1px solid rgba(245, 245, 245, 0.1);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01)),
-    rgba(26, 26, 31, 0.68);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
+    linear-gradient(145deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.015) 54%, rgba(244, 182, 74, 0.025)),
+    rgba(11, 11, 14, 0.74);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.065),
+    0 16px 48px rgba(0, 0, 0, 0.28);
+  -webkit-backdrop-filter: blur(12px) saturate(1.02);
+  backdrop-filter: blur(12px) saturate(1.02);
 }
 
 @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
   .ah-card {
-    background: rgba(22, 22, 28, 0.94);
+    background: rgba(18, 18, 24, 0.94);
   }
+}
+
+.ah-card,
+.ah-vault-card {
+  border-radius: 8px;
+}
+
+.ah-scan-frame {
+  border-radius: 6px;
+}
+
+.ah-card::before,
+.ah-vault-card::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background:
+    linear-gradient(115deg, transparent 0 42%, rgba(255, 255, 255, 0.09) 50%, transparent 60%),
+    radial-gradient(520px circle at var(--ah-pointer-x, 20%) var(--ah-pointer-y, 20%), rgba(244, 182, 74, 0.08), transparent 64%);
+  transform: translateX(-12%);
+  transition:
+    opacity 220ms ease,
+    transform 420ms ease;
+}
+
+.ah-card:hover::before,
+.ah-card:focus-within::before,
+.ah-vault-card:hover::before,
+.ah-vault-card:focus-within::before {
+  opacity: 0.58;
+  transform: translateX(0);
 }
 
 .ah-pill {
   border: 1px solid rgba(245, 245, 245, 0.18);
   background: rgba(11, 11, 14, 0.65);
   color: var(--ah-white);
+}
+
+.ah-vault-card {
+  overflow: hidden;
+  border: 1px solid rgba(245, 245, 245, 0.105);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.015)),
+    linear-gradient(135deg, rgba(244, 182, 74, 0.05), rgba(30, 111, 255, 0.035) 52%, rgba(208, 25, 42, 0.03)),
+    rgba(7, 7, 10, 0.76);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    inset 0 -1px 0 rgba(244, 182, 74, 0.04),
+    0 18px 56px rgba(0, 0, 0, 0.34);
+  -webkit-backdrop-filter: blur(13px) saturate(1.04);
+  backdrop-filter: blur(13px) saturate(1.04);
+}
+
+.ah-transmission-panel {
+  overflow: hidden;
+  border: 1px solid rgba(216, 226, 238, 0.14);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.018) 42%, rgba(0, 0, 0, 0.22)),
+    radial-gradient(680px circle at 12% 0%, rgba(255, 43, 214, 0.105), transparent 56%),
+    radial-gradient(620px circle at 88% 8%, rgba(49, 247, 255, 0.1), transparent 58%),
+    rgba(6, 6, 10, 0.78);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.09),
+    inset 0 -1px 0 rgba(49, 247, 255, 0.055),
+    0 20px 70px rgba(0, 0, 0, 0.34);
+  -webkit-backdrop-filter: blur(16px) saturate(1.08);
+  backdrop-filter: blur(16px) saturate(1.08);
+}
+
+.ah-transmission-panel::after {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  opacity: 0.38;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.028) 1px, transparent 1px),
+    linear-gradient(0deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: linear-gradient(180deg, black, transparent 88%);
+}
+
+.ah-sleeve-card {
+  overflow: hidden;
+  border: 1px solid rgba(216, 226, 238, 0.14);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.018) 45%, rgba(255, 43, 214, 0.042)),
+    linear-gradient(180deg, rgba(6, 6, 10, 0.88), rgba(8, 8, 13, 0.76));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 18px 58px rgba(0, 0, 0, 0.34);
+  -webkit-backdrop-filter: blur(12px) saturate(1.02);
+  backdrop-filter: blur(12px) saturate(1.02);
+}
+
+.ah-transmission-panel:not(.fixed):not(.absolute):not(.sticky),
+.ah-sleeve-card:not(.fixed):not(.absolute):not(.sticky) {
+  position: relative;
+}
+
+.ah-sleeve-card::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  opacity: 0.42;
+  background:
+    radial-gradient(440px circle at var(--ah-pointer-x, 18%) var(--ah-pointer-y, 18%), rgba(49, 247, 255, 0.1), transparent 60%),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 9px);
+  mix-blend-mode: screen;
+}
+
+.ah-vinyl-disc {
+  position: relative;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at center, rgba(244, 182, 74, 0.96) 0 12%, #050507 12.5% 18%, transparent 18.5%),
+    repeating-radial-gradient(circle at center, rgba(255, 255, 255, 0.13) 0 1px, transparent 1px 8px),
+    radial-gradient(circle at 32% 24%, rgba(49, 247, 255, 0.24), transparent 24%),
+    #050507;
+  box-shadow:
+    inset 0 0 28px rgba(0, 0, 0, 0.84),
+    0 18px 60px rgba(0, 0, 0, 0.38);
+}
+
+.ah-vinyl-disc::after {
+  content: "";
+  position: absolute;
+  inset: 13%;
+  border-radius: inherit;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.ah-signal-text {
+  color: var(--ah-electric);
+  text-shadow: 0 0 22px rgba(49, 247, 255, 0.22);
+}
+
+.ah-magenta-text {
+  color: var(--ah-magenta);
+  text-shadow: 0 0 22px rgba(255, 43, 214, 0.22);
+}
+
+:where(.ah-card, .ah-vault-card, .ah-scan-frame) {
+  position: relative;
+}
+
+.ah-scan-frame {
+  overflow: hidden;
+}
+
+.ah-scan-frame::after {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: -1px;
+  opacity: 0;
+  background:
+    linear-gradient(90deg, transparent 0 22%, rgba(244, 182, 74, 0.18) 50%, rgba(255, 255, 255, 0.04) 62%, transparent 78%),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.045) 0 1px, transparent 1px 8px);
+  mix-blend-mode: screen;
+  transform: translateX(-120%);
+  transition:
+    opacity 180ms ease,
+    transform 620ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.group:hover .ah-scan-frame::after,
+.group:focus-within .ah-scan-frame::after,
+.ah-scan-frame:hover::after,
+.ah-scan-frame:focus-within::after {
+  opacity: 1;
+  transform: translateX(120%);
+}
+
+.ah-micro-grid {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.055) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+.ah-stage-grid {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.032) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.026) 1px, transparent 1px);
+  background-size: 34px 34px;
+  mask-image: radial-gradient(circle at 50% 42%, black, transparent 74%);
+}
+
+.ah-stage-scan {
+  background:
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.026) 0 1px, transparent 1px 10px),
+    linear-gradient(90deg, transparent, var(--ah-stage-wash, rgba(244, 182, 74, 0.12)), transparent);
+  animation: ah-scan-drift 9s linear infinite;
+  mix-blend-mode: screen;
+}
+
+.ah-route-wash {
+  background: linear-gradient(110deg, transparent, var(--ah-stage-wash), transparent);
+  opacity: 0;
+  transform: translateX(-120%);
+  animation: ah-route-wash 820ms cubic-bezier(0.22, 1, 0.36, 1);
+  mix-blend-mode: screen;
+}
+
+.ah-glass-button {
+  border: 1px solid rgba(245, 245, 245, 0.14);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02)),
+    rgba(5, 5, 7, 0.58);
+  color: var(--ah-white);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
+.ah-ember-button {
+  border: 1px solid rgba(244, 182, 74, 0.58);
+  background:
+    linear-gradient(135deg, rgba(244, 182, 74, 0.95), rgba(197, 122, 29, 0.86)),
+    var(--ah-ember);
+  color: #09090d;
+  box-shadow: 0 14px 42px rgba(244, 182, 74, 0.18);
+}
+
+@keyframes ah-scan-drift {
+  from {
+    background-position:
+      0 0,
+      -120vw 0;
+  }
+  to {
+    background-position:
+      0 64px,
+      120vw 0;
+  }
+}
+
+@keyframes ah-route-wash {
+  0% {
+    opacity: 0;
+    transform: translateX(-120%);
+  }
+  25% {
+    opacity: 0.26;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(120%);
+  }
 }
 
 button,

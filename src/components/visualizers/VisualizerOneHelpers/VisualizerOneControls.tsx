@@ -14,12 +14,12 @@ interface Props {
 }
 
 const select =
-  "bg-black/60 border border-teal-500/50 px-3 py-2 rounded-lg text-xs text-teal-100 " +
-  "hover:border-teal-400 hover:bg-black/80 focus:border-teal-300 focus:bg-black/80 " +
+  "bg-black/60 border border-ah-electric/50 px-3 py-2 rounded-md text-xs text-ah-electric " +
+  "hover:border-ah-electric hover:bg-black/80 focus:border-ah-electric focus:bg-black/80 " +
   "outline-none w-full transition-all duration-200 cursor-pointer";
 
 const labelClass = "flex flex-col gap-1 text-xs";
-const labelTextClass = "font-semibold text-teal-200 uppercase tracking-wider text-[10px]";
+const labelTextClass = "font-semibold text-ah-magenta uppercase tracking-wider text-[10px]";
 
 export function VisualizerOneControls({
   isMobile,
@@ -41,15 +41,15 @@ export function VisualizerOneControls({
     <div
       className={`bottom-6 z-40 font-mono
                  ${collapsed ? 'flex items-center justify-center' : containerPadding}
-                 ${collapsed ? '' : 'rounded-xl bg-black/85 backdrop-blur-xl shadow-2xl shadow-teal-500/40 text-teal-100'}
+                 ${collapsed ? '' : 'rounded-md border border-ah-electric/25 bg-black/85 backdrop-blur-xl shadow-2xl shadow-ah-electric/25 text-ah-electric'}
                  transition-all duration-300`}
       style={{ width: containerWidth }}
     >
       {/* minimiser */}
       <button
         className={`${collapsed ? 'flex items-center justify-center w-full h-full' : `absolute ${isMobile ? 'top-2 right-2' : 'top-3 right-3'}`}
-                   text-teal-300 ${isMobile ? 'text-xl' : 'text-2xl'} select-none
-                   hover:text-teal-200 transition-all duration-200
+                   text-ah-electric ${isMobile ? 'text-xl' : 'text-2xl'} select-none
+                   hover:text-white transition-all duration-200
                    ${collapsed ? 'hover:scale-110 active:scale-95' : ''}`}
         onClick={() => setCollapsed((c) => !c)}
         title={collapsed ? "Expand Controls" : "Collapse Controls"}
@@ -63,10 +63,10 @@ export function VisualizerOneControls({
       {!collapsed && (
         <>
           <div className="mb-3">
-            <h3 className={`${isMobile ? 'text-xs' : 'text-sm'} font-bold text-teal-300 tracking-wider mb-1`}>
-              VISUALIZER v1.0
+            <h3 className={`${isMobile ? 'text-xs' : 'text-sm'} font-bold text-ah-electric tracking-wider mb-1`}>
+              VINYL STAGE CONTROLS
             </h3>
-            <div className="h-px bg-gradient-to-r from-teal-500/50 to-transparent"></div>
+            <div className="h-px bg-gradient-to-r from-ah-electric/50 to-transparent"></div>
           </div>
 
           <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-2`}>

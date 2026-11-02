@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { FaExternalLinkAlt, FaSearch } from 'react-icons/fa'
 import { openExternal } from '@/utils/openExternal'
+import { useImmersiveStore } from '@/store/useImmersiveStore'
 
 interface SpotifyArtist {
   name: string
@@ -78,6 +79,9 @@ export default function Music() {
   const [reloadKey, setReloadKey] = useState(0)
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
+  const setHoveredEntity = useImmersiveStore((state) => state.setHoveredEntity)
+  const clearHoveredEntity = useImmersiveStore((state) => state.clearHoveredEntity)
+  const setPreviewState = useImmersiveStore((state) => state.setPreviewState)
 
   const artistId = '7iysPipkcsfGFVEgUMDzHQ'
   const playlistId = '1NL9L9zkZjkxlAVV3Qcqfh'
@@ -185,6 +189,10 @@ export default function Music() {
   }, [activeTab, search])
 
   useEffect(() => {
+    return () => setPreviewState(false, 0)
+  }, [setPreviewState])
+
+  useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null
       const isTyping =
@@ -211,12 +219,13 @@ export default function Music() {
   return (
     <section>
       <header className="mb-8">
-        <p className="text-xs uppercase tracking-[0.24em] text-ah-soft">Spotify Feed</p>
+        <p className="text-xs uppercase tracking-[0.24em] text-ah-electric">Spotify Signal</p>
         <h2 className="mt-3 font-[var(--font-display)] text-4xl uppercase tracking-ah-tight md:text-5xl">
-          Music
+          Tracks As Proof Records
         </h2>
         <p className="mt-2 max-w-2xl text-sm text-ah-soft md:text-base">
-          Live top tracks and playlist data, curated around Xae Neptune.
+          Top tracks and playlist cuts are pulled through server-side Spotify
+          routes so signals stay current without exposing credentials.
         </p>
 
         <div className="mt-5 flex flex-wrap items-center gap-2">
@@ -237,12 +246,12 @@ export default function Music() {
       {(topTracksError || playlistError) && (
         <div className="mb-6 space-y-2">
           {topTracksError && (
-            <p className="rounded-xl border border-ah-red/35 bg-ah-red/10 px-4 py-3 text-sm text-ah-soft">
+              <p className="rounded-md border border-ah-red/35 bg-ah-red/10 px-4 py-3 text-sm text-ah-soft">
               Top Tracks: {topTracksError}
             </p>
           )}
           {playlistError && (
-            <p className="rounded-xl border border-ah-red/35 bg-ah-red/10 px-4 py-3 text-sm text-ah-soft">
+              <p className="rounded-md border border-ah-red/35 bg-ah-red/10 px-4 py-3 text-sm text-ah-soft">
               Playlist: {playlistError}
             </p>
           )}
@@ -260,7 +269,7 @@ export default function Music() {
               onClick={() => setActiveTab(tab.key as Tab)}
               className={`rounded-sm px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] transition sm:tracking-[0.2em] ${
                 activeTab === tab.key
-                  ? 'bg-ah-blue text-white shadow-ah-glow-blue'
+                  ? 'bg-ah-electric text-black shadow-ah-glow-cyan'
                   : 'border border-white/14 bg-white/[0.02] text-ah-soft hover:text-white'
               }`}
             >
@@ -276,22 +285,18 @@ export default function Music() {
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search tracks, artists, albums"
-            className="w-full rounded-xl border border-white/14 bg-black/45 py-2 pl-10 pr-3 text-sm text-white placeholder:text-ah-soft/70 focus:border-ah-blue/45 focus:outline-none"
+          className="w-full rounded-md border border-white/14 bg-black/45 py-2 pl-10 pr-3 text-sm text-white placeholder:text-ah-soft/70 focus:border-ah-electric/45 focus:outline-none"
           />
         </label>
 
         <button
           onClick={() => setReloadKey((current) => current + 1)}
           disabled={loadingTopTracks || loadingPlaylist}
-          className="w-full rounded-sm border border-white/14 bg-white/[0.02] px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-ah-soft transition hover:border-ah-blue/45 hover:text-white disabled:cursor-not-allowed disabled:opacity-60 md:w-auto md:tracking-[0.2em]"
+          className="w-full rounded-sm border border-white/14 bg-white/[0.02] px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-ah-soft transition hover:border-ah-electric/45 hover:text-white disabled:cursor-not-allowed disabled:opacity-60 md:w-auto md:tracking-[0.2em]"
         >
           {loadingTopTracks || loadingPlaylist ? 'Refreshing...' : 'Refresh Feed'}
         </button>
       </div>
-
-      <p className="mb-6 text-[11px] uppercase tracking-[0.18em] text-ah-soft">
-        Shortcut: press `/` to search, `Shift + R` to refresh the feed.
-      </p>
 
       <AnimatePresence mode="wait">
         <motion.div
@@ -302,15 +307,18 @@ export default function Music() {
           transition={{ duration: reduceMotion ? 0.2 : 0.3 }}
         >
           {loading ? (
-            <div className="flex h-64 items-center justify-center">
-              <motion.div
-                className="h-12 w-12 rounded-full border-2 border-ah-blue border-t-transparent"
-                animate={{ rotate: 360 }}
-                transition={{ duration: 0.9, repeat: Infinity, ease: 'linear' }}
-              />
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              {Array.from({ length: 6 }, (_, index) => (
+                <div key={index} className="ah-sleeve-card p-4">
+                  <div className="mb-4 aspect-square animate-pulse rounded-md border border-white/10 bg-white/5" />
+                  <div className="h-5 w-4/5 animate-pulse rounded bg-white/10" />
+                  <div className="mt-2 h-3 w-2/5 animate-pulse rounded bg-white/10" />
+                  <div className="mt-4 h-8 animate-pulse rounded-sm bg-white/10" />
+                </div>
+              ))}
             </div>
           ) : filteredTracks.length === 0 ? (
-            <p className="rounded-2xl border border-white/12 bg-white/[0.02] px-4 py-8 text-center text-ah-soft">
+            <p className="rounded-md border border-white/12 bg-white/[0.02] px-4 py-8 text-center text-ah-soft">
               {activeError
                 ? 'Spotify data is unavailable for this section right now.'
                 : 'No tracks found for your current search.'}
@@ -327,7 +335,19 @@ export default function Music() {
                     initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 12 }}
                     animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
                     transition={{ delay: reduceMotion ? 0 : Math.min(index, 10) * 0.02 }}
-                    className="group ah-card content-auto rounded-2xl p-4"
+                    onMouseEnter={() =>
+                      setHoveredEntity({
+                        type: 'track',
+                        id: track.id,
+                        title: track.name,
+                        image: albumImage,
+                        color: '#1E6FFF',
+                      })
+                    }
+                    onMouseLeave={clearHoveredEntity}
+                    className={`group ah-sleeve-card content-auto p-4 transition md:hover:-translate-y-1 ${
+                      currentlyPlaying === track.id ? 'border-ah-electric/55 shadow-ah-glow-cyan' : ''
+                    }`}
                   >
                     <button
                       onClick={() => {
@@ -335,7 +355,7 @@ export default function Music() {
                       }}
                       className="w-full text-left"
                     >
-                      <div className="relative aspect-square overflow-hidden rounded-xl border border-white/10">
+                      <div className="ah-scan-frame relative aspect-square overflow-hidden rounded-md border border-white/10">
                         {albumImage ? (
                           <Image
                             src={albumImage}
@@ -351,7 +371,7 @@ export default function Music() {
                       <h3 className="mt-4 line-clamp-2 font-[var(--font-display)] text-xl uppercase tracking-wide text-white">
                         {track.name}
                       </h3>
-                      <p className="mt-1 line-clamp-1 text-xs uppercase tracking-[0.16em] text-ah-soft">
+                      <p className="mt-1 line-clamp-1 text-xs uppercase tracking-[0.16em] text-ah-electric">
                         {track.artists.map((artist) => artist.name).join(', ')}
                       </p>
                       {track.album?.name && (
@@ -370,8 +390,18 @@ export default function Music() {
                           controls
                           src={track.preview_url}
                           className="h-8 w-full"
-                          onPlay={() => setCurrentlyPlaying(track.id)}
-                          onPause={() => setCurrentlyPlaying(null)}
+                          onPlay={() => {
+                            setCurrentlyPlaying(track.id)
+                            setPreviewState(true, 0.62)
+                          }}
+                          onPause={() => {
+                            setCurrentlyPlaying(null)
+                            setPreviewState(false, 0)
+                          }}
+                          onEnded={() => {
+                            setCurrentlyPlaying(null)
+                            setPreviewState(false, 0)
+                          }}
                           style={{
                             filter:
                               currentlyPlaying === track.id ? 'saturate(1.3)' : 'saturate(0.9)',
@@ -388,7 +418,7 @@ export default function Music() {
                           href={spotifyUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex h-8 items-center justify-center rounded-sm border border-ah-blue/45 px-3 text-[10px] font-semibold uppercase tracking-[0.17em] text-ah-blue transition hover:bg-ah-blue/15 hover:text-white"
+                          className="inline-flex h-8 items-center justify-center rounded-sm border border-ah-electric/45 px-3 text-[10px] font-semibold uppercase tracking-[0.17em] text-ah-electric transition hover:bg-ah-electric/15 hover:text-white"
                         >
                           <FaExternalLinkAlt />
                         </a>

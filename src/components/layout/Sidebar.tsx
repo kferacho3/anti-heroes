@@ -1,6 +1,8 @@
 "use client";
 
 import { Route } from "@/store/useRouteStore";
+import { useImmersiveStore } from "@/store/useImmersiveStore";
+import { useRouteStore } from "@/store/useRouteStore";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import Image from "next/image";
 import { useEffect } from "react";
@@ -14,17 +16,19 @@ type SidebarProps = {
 };
 
 const links: Array<{ label: string; route: Route }> = [
-  { label: "Home", route: "home" },
-  { label: "Music", route: "music" },
-  { label: "Artist", route: "artist" },
-  { label: "Beats", route: "beats" },
-  { label: "Albums", route: "albums" },
-  { label: "Xae Neptune", route: "xaeneptune" },
-  { label: "Connect", route: "connect" },
+  { label: "Sonic Vault Portal", route: "home" },
+  { label: "Spotify Signal Feed", route: "music" },
+  { label: "Artist Constellation", route: "artist" },
+  { label: "Beat Vault", route: "beats" },
+  { label: "Release Archive", route: "albums" },
+  { label: "Producer Dossier", route: "xaeneptune" },
+  { label: "Collab Portal", route: "connect" },
 ];
 
 export default function Sidebar({ isOpen, onClose, activeRoute, setActiveRoute }: SidebarProps) {
   const reduceMotion = useReducedMotion();
+  const setHoveredRoute = useRouteStore((state) => state.setHoveredRoute);
+  const pulseRoute = useImmersiveStore((state) => state.pulseRoute);
 
   useEffect(() => {
     if (!isOpen) return undefined;
@@ -81,7 +85,7 @@ export default function Sidebar({ isOpen, onClose, activeRoute, setActiveRoute }
                     Anti-Heroes
                   </p>
                   <p className="text-[10px] uppercase tracking-[0.18em] text-ah-soft">
-                    Navigation
+                    Transmission Menu
                   </p>
                 </div>
               </div>
@@ -100,14 +104,17 @@ export default function Sidebar({ isOpen, onClose, activeRoute, setActiveRoute }
                   <li key={link.route}>
                     <button
                       aria-current={activeRoute === link.route ? "page" : undefined}
+                      onMouseEnter={() => setHoveredRoute(link.route)}
+                      onMouseLeave={() => setHoveredRoute(undefined)}
                       onClick={() => {
+                        pulseRoute();
                         setActiveRoute(link.route);
                         onClose();
                       }}
-                      className={`w-full rounded-xl border px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.2em] transition ${
+                      className={`w-full rounded-md border px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.2em] transition ${
                         activeRoute === link.route
-                          ? "border-ah-red/55 bg-ah-red/14 text-white shadow-ah-glow-red"
-                          : "border-white/10 bg-white/[0.02] text-white hover:border-ah-red/50 hover:bg-ah-red/10"
+                          ? "border-ah-magenta/55 bg-ah-magenta/14 text-ah-magenta"
+                          : "border-white/10 bg-white/[0.02] text-white hover:border-ah-electric/50 hover:bg-ah-electric/10"
                       }`}
                     >
                       {link.label}
@@ -117,7 +124,7 @@ export default function Sidebar({ isOpen, onClose, activeRoute, setActiveRoute }
               </ul>
             </nav>
 
-            <div className="mt-7 rounded-2xl border border-white/12 bg-white/[0.02] p-4">
+            <div className="mt-7 rounded-lg border border-white/12 bg-white/[0.02] p-4">
               <p className="mb-3 text-[11px] uppercase tracking-[0.2em] text-ah-soft">
                 External Platforms
               </p>

@@ -4,7 +4,6 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ChangeEvent, FormEvent, ReactNode, useState } from "react";
 import {
   FaCheckCircle,
-  FaClock,
   FaEnvelope,
   FaHandshake,
   FaHeadphones,
@@ -19,19 +18,22 @@ interface FormData {
   name: string;
   email: string;
   phone: string;
+  artistName: string;
+  socialLink: string;
+  beatInterest: string;
+  projectLink: string;
   inquiryType: string;
   subject: string;
   message: string;
 }
 
 const inquiryTypes = [
-  { value: "beats", label: "Beat Purchase/Licensing", icon: FaMusic },
-  { value: "collab", label: "Collaboration", icon: FaHandshake },
-  { value: "studio", label: "Studio Time", icon: FaClock },
+  { value: "beats", label: "Beat Licensing Inquiry", icon: FaMusic },
+  { value: "collab", label: "Collaboration Inquiry", icon: FaHandshake },
+  { value: "submit", label: "Submit Work Made With A Beat", icon: FaMicrophone },
+  { value: "custom", label: "Custom Production", icon: FaHeadphones },
   { value: "engineering", label: "Mix & Master", icon: FaTools },
-  { value: "production", label: "Music Production", icon: FaHeadphones },
-  { value: "features", label: "Feature Request", icon: FaMicrophone },
-  { value: "general", label: "General Inquiry", icon: FaQuestionCircle },
+  { value: "general", label: "General Contact", icon: FaQuestionCircle },
 ];
 
 export default function Connect() {
@@ -40,10 +42,15 @@ export default function Connect() {
     name: "",
     email: "",
     phone: "",
+    artistName: "",
+    socialLink: "",
+    beatInterest: "",
+    projectLink: "",
     inquiryType: "",
     subject: "",
     message: "",
   });
+  const [acknowledged, setAcknowledged] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [errors, setErrors] = useState<Partial<FormData>>({});
@@ -66,6 +73,7 @@ export default function Connect() {
     if (!formData.inquiryType) nextErrors.inquiryType = "Please select an inquiry type";
     if (!formData.subject.trim()) nextErrors.subject = "Subject is required";
     if (!formData.message.trim()) nextErrors.message = "Message is required";
+    if (!acknowledged) nextErrors.message = nextErrors.message || "Please acknowledge the submission note";
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   };
@@ -83,7 +91,12 @@ export default function Connect() {
 Name: ${formData.name}
 Email: ${formData.email}
 Phone: ${formData.phone || "Not provided"}
+Artist Name: ${formData.artistName || "Not provided"}
+Social / Spotify / SoundCloud: ${formData.socialLink || "Not provided"}
+Beat Interested In: ${formData.beatInterest || "Not provided"}
+Project / Demo Link: ${formData.projectLink || "Not provided"}
 Inquiry Type: ${inquiryLabel}
+Acknowledgment: Submitting does not guarantee collaboration, repost, promotion, placement, licensing, or exposure.
 
 Message:
 ${formData.message}`.trim();
@@ -102,10 +115,15 @@ ${formData.message}`.trim();
           name: "",
           email: "",
           phone: "",
+          artistName: "",
+          socialLink: "",
+          beatInterest: "",
+          projectLink: "",
           inquiryType: "",
           subject: "",
           message: "",
         });
+        setAcknowledged(false);
       }, 2500);
     }, 800);
   };
@@ -123,15 +141,16 @@ ${formData.message}`.trim();
           animate={reduceMotion ? { opacity: 1 } : { y: 0, opacity: 1 }}
           exit={reduceMotion ? { opacity: 0 } : { y: 24, opacity: 0 }}
           transition={reduceMotion ? { duration: 0.18 } : { type: "spring", stiffness: 250, damping: 24 }}
-          className="ah-card relative my-auto max-h-[calc(100dvh-1.5rem)] w-full max-w-3xl overflow-y-auto overscroll-contain rounded-3xl p-4 sm:max-h-[860px] sm:p-5 md:p-8"
+          className="ah-transmission-panel relative my-auto max-h-[calc(100dvh-1.5rem)] w-full max-w-3xl overflow-y-auto overscroll-contain p-4 sm:max-h-[860px] sm:p-5 md:p-8"
         >
           <header className="mb-6">
-            <p className="text-xs uppercase tracking-[0.24em] text-ah-soft">Direct Contact</p>
+            <p className="text-xs uppercase tracking-[0.24em] text-ah-magenta">Collab & Licensing Portal</p>
             <h2 className="mt-3 font-[var(--font-display)] text-4xl uppercase tracking-ah-tight md:text-5xl">
-              Let&apos;s Connect
+              Submit The Record Path
             </h2>
             <p className="mt-2 max-w-xl text-sm text-ah-soft">
-              Licensing, production, collaboration, and custom project inquiries.
+              Licensing, collaboration, custom production, engineering, and selected-work
+              review for projects connected to Anti-Heroes / Xae Neptune.
             </p>
             <div className="mt-4 flex flex-wrap items-center gap-2">
               <span className="rounded-full border border-white/14 bg-white/[0.03] px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-ah-soft">
@@ -146,7 +165,7 @@ ${formData.message}`.trim();
           <AnimatePresence>
             {showSuccess && (
               <motion.div
-                className="mb-5 flex items-center gap-2 rounded-xl border border-ah-blue/40 bg-ah-blue/10 px-4 py-3 text-ah-blue"
+                className="mb-5 flex items-center gap-2 rounded-md border border-ah-electric/40 bg-ah-electric/10 px-4 py-3 text-ah-electric"
                 initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -10 }}
                 animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
                 exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -10 }}
@@ -159,7 +178,7 @@ ${formData.message}`.trim();
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <p className="text-[11px] uppercase tracking-[0.18em] text-ah-soft">
-              Click any inquiry tile to auto-fill category and subject.
+              Selected records may be reviewed for licensing next steps, collaboration opportunities, and potential mutual exposure.
             </p>
 
             <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
@@ -176,10 +195,10 @@ ${formData.message}`.trim();
                         `${type.label} Request`,
                     }))
                   }
-                  className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-left text-[10px] uppercase tracking-[0.12em] transition sm:text-[11px] sm:tracking-[0.14em] ${
+                  className={`flex items-center gap-2 rounded-md border px-3 py-2 text-left text-[10px] uppercase tracking-[0.12em] transition sm:text-[11px] sm:tracking-[0.14em] ${
                     formData.inquiryType === type.value
-                      ? "border-ah-red/45 bg-ah-red/10 text-white"
-                      : "border-white/12 bg-white/[0.02] text-ah-soft hover:border-ah-blue/40 hover:text-white"
+                      ? "border-ah-magenta/45 bg-ah-magenta/10 text-white"
+                      : "border-white/12 bg-white/[0.02] text-ah-soft hover:border-ah-electric/40 hover:text-white"
                   }`}
                 >
                   <type.icon />
@@ -232,6 +251,54 @@ ${formData.message}`.trim();
                 />
               </Field>
 
+              <Field label="Artist Name" error={errors.artistName}>
+                <input
+                  type="text"
+                  name="artistName"
+                  value={formData.artistName}
+                  onChange={handleChange}
+                  placeholder="Your artist name"
+                  className={inputClass(errors.artistName)}
+                />
+              </Field>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <Field label="Social / Spotify / SoundCloud" error={errors.socialLink}>
+                <input
+                  type="url"
+                  name="socialLink"
+                  value={formData.socialLink}
+                  onChange={handleChange}
+                  placeholder="https://..."
+                  className={inputClass(errors.socialLink)}
+                />
+              </Field>
+
+              <Field label="Beat Interested In" error={errors.beatInterest}>
+                <input
+                  type="text"
+                  name="beatInterest"
+                  value={formData.beatInterest}
+                  onChange={handleChange}
+                  placeholder="Beat title or audio link"
+                  className={inputClass(errors.beatInterest)}
+                />
+              </Field>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <Field label="Project / Demo Link" error={errors.projectLink}>
+                <input
+                  type="url"
+                  name="projectLink"
+                  value={formData.projectLink}
+                  onChange={handleChange}
+                  placeholder="Private demo, WIP, or release link"
+                  className={inputClass(errors.projectLink)}
+                />
+              </Field>
+
               <Field label="Inquiry Type" error={errors.inquiryType}>
                 <select
                   name="inquiryType"
@@ -273,11 +340,25 @@ ${formData.message}`.trim();
               />
             </Field>
 
+            <label className="flex items-start gap-3 rounded-md border border-ah-ember/25 bg-ah-ember/10 p-3 text-xs leading-relaxed text-white/74">
+              <input
+                type="checkbox"
+                checked={acknowledged}
+                onChange={(event) => setAcknowledged(event.target.checked)}
+                className="mt-1 h-4 w-4 accent-ah-ember"
+              />
+              <span>
+                Submitting does not guarantee collaboration, repost, promotion,
+                placement, licensing, or exposure. Selected work may be reviewed for
+                potential mutual exposure opportunities and next steps.
+              </span>
+            </label>
+
             <div className="pt-2">
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full rounded-sm bg-ah-red px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white transition hover:shadow-ah-glow-red disabled:cursor-not-allowed disabled:opacity-65"
+                className="w-full rounded-sm bg-ah-magenta px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-black transition hover:shadow-ah-glow-magenta disabled:cursor-not-allowed disabled:opacity-65"
               >
                 {isSubmitting ? "Preparing..." : "Send Inquiry"}
               </button>
@@ -315,8 +396,8 @@ ${formData.message}`.trim();
 }
 
 function inputClass(error?: string) {
-  return `w-full rounded-xl border bg-black/55 px-4 py-2.5 text-sm text-white placeholder:text-ah-soft/70 focus:outline-none ${
-    error ? "border-ah-red" : "border-white/14 focus:border-ah-blue/60"
+  return `w-full rounded-md border bg-black/55 px-4 py-2.5 text-sm text-white placeholder:text-ah-soft/70 focus:outline-none ${
+    error ? "border-ah-red" : "border-white/14 focus:border-ah-electric/60"
   }`;
 }
 

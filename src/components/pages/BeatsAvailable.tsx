@@ -1,6 +1,7 @@
 "use client";
 
 import { useVisualizer } from "@/context/VisualizerContext";
+import { beatsData } from "@/data/beatData";
 import { useRouteStore } from "@/store/useRouteStore";
 import React, { useState } from "react";
 import BeatsList from "./BeatsList";
@@ -25,7 +26,7 @@ export default function BeatsAvailable(): React.ReactElement {
       setVisualizerMode(true);
       setIsBeatVisualizer(true);
       if (!selectedBeat) {
-        const defaultBeat = "/audio/sample-beat.mp3";
+        const defaultBeat = beatsData[0]?.audioFile || "";
         setSelectedBeat({ audioUrl: defaultBeat });
         setAudioUrlForBeat(defaultBeat);
       }
